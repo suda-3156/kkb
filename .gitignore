@@ -1,0 +1,19 @@
+# build
+build/
+dist/
+
+# env
+*.env*
+!.env.example
+# secrets variables are written in .env* files, and .envrc is only used to load them
+!.envrc
+
+# work
+memo
+logs/
+tmp/
+temp/
+*.local.md
+
+# go
+air_tmp

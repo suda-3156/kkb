@@ -1,0 +1,70 @@
+version: "3"
+
+includes:
+  go:
+    taskfile: ./go/taskfile.yml
+    dir: ./go
+
+tasks:
+  default:
+    cmds:
+      - task -l --sort none
+    silent: true
+
+  start:api:
+    desc: Start the api container
+    cmds:
+      - |
+        docker compose up -d --build api
+        echo "API container started successfully"
+    silent: true
+
+  # start:all:
+  #   desc: Start all containers
+  #   cmds:
+  #     - task: start:db
+  #     - task: start:api
+  #     - |
+  #       echo "`pnpm run dev` to start the frontend"
+  #   silent: true
+
+  # down:all:
+  #   desc: Stop all containers
+  #   cmds:
+  #     - |
+  #       docker compose down
+  #       if [ -d ./backend/air_tmp ]; then
+  #         echo "Removing air_tmp directory";
+  #         rm -rf ./backend/air_tmp;
+  #       fi
+  #       echo "All containers stopped successfully"
+  #   silent: true
+
+  # reset:all:
+  #   desc: Reset all containers and remove all data
+  #   cmds:
+  #     - |
+  #       docker compose down --rmi all --volumes --remove-orphans
+  #       if [ -d ./backend/air_tmp ]; then
+  #         echo "Removing air_tmp directory";
+  #         rm -rf ./backend/air_tmp;
+  #       fi
+  #       if [ -d ./docker/mysql/logs ]; then
+  #         echo "Removing mysql logs directory";
+  #         rm -rf ./docker/mysql/logs;
+  #       fi
+  #   silent: true
+
+  log:api:
+    desc: Show logs for the api container
+    cmds:
+      - |
+        docker compose logs -f api
+    silent: true
+
+  bash:api:
+    desc: Open a bash shell in the api container
+    cmds:
+      - |
+        docker compose exec api bash
+    silent: true
