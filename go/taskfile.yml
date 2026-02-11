@@ -1,0 +1,33 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task -l --sort none
+    silent: true
+
+  test:
+    desc: "Run Go tests \t usage: `task <prefix>:test -- <package_path>` or `task <prefix>:test`"
+    dir: .
+    cmds:
+      - |
+        export ENV=test
+        export PURPOSE=test
+        if [ -z "{{ .CLI_ARGS }}" ]; then
+          go test -v ./...
+          exit 0
+        fi
+        go test -v {{ .CLI_ARGS }}
+    silent: true
+
+  lint:
+    desc: "Run Go linters \t usage: `task <prefix>:lint -- <package_path>` or `task <prefix>:lint`"
+    dir: .
+    cmds:
+      - |
+        if [ -z "{{ .CLI_ARGS }}" ]; then
+          golangci-lint run ./...
+          exit 0
+        fi
+        golangci-lint run {{ .CLI_ARGS }}
+    silent: true

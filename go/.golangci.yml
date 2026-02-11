@@ -1,0 +1,106 @@
+# Reference: https://github.com/golangci/golangci-lint/blob/01976885c399cf1ed32ba76b0ad4787fdbc7539f/.golangci.reference.yml
+version: "2"
+
+linters:
+  # standard preset contains these: errcheck, govet, ineffassign, staticcheck, unused
+  default: standard
+  enable:
+    - bodyclose
+    - copyloopvar
+    - cyclop
+    - dogsled
+    - dupl
+    - exhaustive
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gosec
+    - importas
+    - intrange
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - revive
+    - sloglint
+    - unconvert
+    - unparam
+    - whitespace
+
+  settings:
+    cyclop:
+      max-complexity: 10
+      package-average: 5.0
+    dupl:
+      # Tokens count to trigger issue.
+      # Default: 150
+      threshold: 150
+    exhaustive:
+      default-signifies-exhaustive: true
+    funlen:
+      lines: -1 # the number of lines (code + empty lines) is not a right metric and leads to code without empty line or one-liner.
+      statements: 50
+    goconst:
+      # Minimum occurrences of constant string to trigger issue.
+      # Default: 3
+      min-occurrences: 3
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+      disabled-checks:
+        - dupImport # https://github.com/go-critic/go-critic/issues/845
+        - ifElseChain
+        - octalLiteral
+        - whyNoLint
+    gocyclo:
+      min-complexity: 15
+    lll:
+      line-length: 140
+      tab-width: 4
+    misspell:
+      locale: US
+      ignore-rules:
+        - "importas" # linter name
+    nolintlint:
+      allow-unused: false # report any unused nolint directives
+      require-explanation: true # require an explanation for nolint directives
+      require-specific: true # require nolint directives to be specific about which linter is being skipped
+    revive:
+      rules:
+        - name: indent-error-flow
+        - name: unexported-return
+          disabled: true
+        - name: unused-parameter
+        - name: unused-receiver
+
+  exclusions:
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+      - legacy
+    paths:
+      - ent
+      - graph/model
+      - graph/generated.go
+      # Not implemented yet. ---↓
+      - graph/resolver
+      - graph/complexity.go
+      # ---↑
+    rules:
+      - path: (.+)_test\.go
+        linters:
+          - goconst
+          - funlen
+          - cyclop
+          - dupl
+          - mnd
+          - lll
