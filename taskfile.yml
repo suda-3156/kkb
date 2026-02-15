@@ -1,6 +1,10 @@
 version: "3"
 
 includes:
+  db:
+    taskfile: ./db/taskfile.yml
+    dir: ./db
+
   go:
     taskfile: ./go/taskfile.yml
     dir: ./go
@@ -11,49 +15,68 @@ tasks:
       - task -l --sort none
     silent: true
 
+  start:db:
+    desc: Start the db container
+    cmds:
+      - |
+        if [ ! -d ./db/docker/logs ]; then
+          echo "Creating mysql logs directory";
+          mkdir -p ./db/docker/logs;
+          touch ./db/docker/logs/mysql-error.log;
+          touch ./db/docker/logs/mysql-slow.log;
+          touch ./db/docker/logs/mysql-query.log;
+        fi
+        docker compose up -d db
+    silent: true
+
   start:api:
     desc: Start the api container
     cmds:
       - |
         docker compose up -d --build api
-        echo "API container started successfully"
     silent: true
 
-  # start:all:
-  #   desc: Start all containers
-  #   cmds:
-  #     - task: start:db
-  #     - task: start:api
-  #     - |
-  #       echo "`pnpm run dev` to start the frontend"
-  #   silent: true
+  start:all:
+    desc: Start all containers
+    cmds:
+      - task: start:db
+      - task: start:api
+      - |
+        echo "`pnpm run dev` to start the frontend"
+    silent: true
 
-  # down:all:
-  #   desc: Stop all containers
-  #   cmds:
-  #     - |
-  #       docker compose down
-  #       if [ -d ./backend/air_tmp ]; then
-  #         echo "Removing air_tmp directory";
-  #         rm -rf ./backend/air_tmp;
-  #       fi
-  #       echo "All containers stopped successfully"
-  #   silent: true
+  down:all:
+    desc: Stop all containers
+    cmds:
+      - |
+        docker compose down
+        if [ -d ./go/air_tmp ]; then
+          echo "Removing air_tmp directory";
+          rm -rf ./go/air_tmp;
+        fi
+    silent: true
 
-  # reset:all:
-  #   desc: Reset all containers and remove all data
-  #   cmds:
-  #     - |
-  #       docker compose down --rmi all --volumes --remove-orphans
-  #       if [ -d ./backend/air_tmp ]; then
-  #         echo "Removing air_tmp directory";
-  #         rm -rf ./backend/air_tmp;
-  #       fi
-  #       if [ -d ./docker/mysql/logs ]; then
-  #         echo "Removing mysql logs directory";
-  #         rm -rf ./docker/mysql/logs;
-  #       fi
-  #   silent: true
+  reset:all:
+    desc: Reset all containers and remove all data
+    cmds:
+      - |
+        docker compose down --rmi all --volumes --remove-orphans
+        if [ -d ./go/air_tmp ]; then
+          echo "Removing air_tmp directory";
+          rm -rf ./go/air_tmp;
+        fi
+        if [ -d ./db/docker/logs ]; then
+          echo "Removing mysql logs directory";
+          rm -rf ./db/docker/logs;
+        fi
+    silent: true
+
+  log:db:
+    desc: Show logs for the db container
+    cmds:
+      - |
+        docker compose logs -f db
+    silent: true
 
   log:api:
     desc: Show logs for the api container
@@ -67,4 +90,11 @@ tasks:
     cmds:
       - |
         docker compose exec api bash
+    silent: true
+
+  bash:db:
+    desc: Open a bash shell in the db container
+    cmds:
+      - |
+        docker compose exec db bash
     silent: true

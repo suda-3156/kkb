@@ -1,4 +1,24 @@
 services:
+
+  db:
+    container_name: ${PROJECT_NAME}-db
+    image: mysql:8.4
+    env_file:
+      - ./.env.local
+    volumes:
+      - app-data:/var/lib/mysql
+      - ./db/docker/logs:/var/log/mysql
+      - ./db/docker/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
   api:
     container_name: ${PROJECT_NAME}-api
     build:
@@ -12,9 +32,9 @@ services:
       - "8080:8080"
     stdin_open: true
     tty: true
-    # depends_on:
-    #   db:
-    #     condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - app-network
 

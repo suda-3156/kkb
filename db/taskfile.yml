@@ -1,0 +1,52 @@
+version: "3"
+
+tasks:
+  create-schema:
+    desc: "Create schema migration file \t usage: task <prefix>:create-schema NAME=<migration_name>"
+    vars:
+      NAME: "{{ .NAME }}"
+    dir: ../go
+    cmds:
+      - |
+        if [ -z "{{ .NAME }}" ]; then
+          echo "Error: NAME variable is required."
+          exit 1
+        fi
+        echo "Creating schema migration: {{ .NAME }}"
+        atlas migrate diff {{ .NAME }} \
+          --dir file://../db/migrations \
+          --to "ent://ent/schema" \
+          --dev-url "docker://mysql/8.4/atlas"
+    silent: true
+
+  schema:diff:
+    desc: "Diff between sql schema files and Ent schema \t usage: task <prefix>:schema:diff"
+    dir: ../go
+    cmds:
+      - |
+        atlas schema diff \
+          --from file://../db/migrations \
+          --to "ent://ent/schema" \
+          --dev-url "docker://mysql/8.4/atlas"
+    silent: true
+
+  # Using ent. automigration instead of atlas migrations for local development.
+  # status:local:
+  #   desc: "Show local migration status \t usage: task <prefix>:status:local"
+  #   dir: ../go
+  #   cmds:
+  #     - |
+  #       atlas migrate status \
+  #         --dir file://../db/migrations \
+  #         --url "mysql://{{ .MYSQL_USER }}:{{ .MYSQL_PASSWORD }}@localhost:{{ .MYSQL_PORT }}/{{ .MYSQL_DATABASE }}"
+  #   silent: true
+
+  # apply:local:
+  #   desc: "Apply local migrations \t usage: task <prefix>:apply:local"
+  #   dir: ../go
+  #   cmds:
+  #     - |
+  #       atlas migrate apply \
+  #         --dir file://../db/migrations \
+  #         --url "mysql://{{ .MYSQL_USER }}:{{ .MYSQL_PASSWORD }}@localhost:{{ .MYSQL_PORT }}/{{ .MYSQL_DATABASE }}"
+  #   silent: true
