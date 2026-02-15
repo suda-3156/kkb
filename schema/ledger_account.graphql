@@ -1,0 +1,70 @@
+# Ledger Account Schema Definitions
+
+enum LedgerAccountKind {
+  ASSET
+  LIABILITY
+  EXPENSE
+  REVENUE
+  EQUITY
+}
+
+type LedgerAccount implements Node {
+  id: ID!
+  parent: LedgerAccount
+  name: String!
+  kind: LedgerAccountKind!
+  isGroup: Boolean!
+  isArchived: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LedgerAccountConnection {
+  edges: [LedgerAccountEdge]
+  nodes: [LedgerAccount]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type LedgerAccountEdge {
+  cursor: ID!
+  node: LedgerAccount!
+}
+
+extend type Query {
+  ledgerAccount(id: ID!): LedgerAccount
+
+  ledgerAccounts(
+    first: Int
+    after: ID
+    last: Int
+    before: ID
+    kind: LedgerAccountKind
+    includeArchived: Boolean = false
+  ): LedgerAccountConnection!
+}
+
+extend type Mutation {
+  createLedgerAccount(input: CreateLedgerAccountInput!): LedgerAccount!
+
+  updateLedgerAccount(input: UpdateLedgerAccountInput!): LedgerAccount!
+
+  archiveLedgerAccount(id: ID!): LedgerAccount!
+
+  unarchiveLedgerAccount(id: ID!): LedgerAccount!
+}
+
+input CreateLedgerAccountInput {
+  parentId: ID
+  name: String!
+  kind: LedgerAccountKind!
+  isGroup: Boolean! = false
+}
+
+input UpdateLedgerAccountInput {
+  id: ID!
+  parentId: ID
+  unsetParent: Boolean = false
+  name: String
+  updatedAt: DateTime!
+}

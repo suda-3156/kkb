@@ -1,0 +1,18 @@
+scalar DateTime
+scalar Date # 2006-01-02 format
+interface Node {
+  id: ID! # Public ID (pulid ID format)
+}
+
+type PageInfo {
+  startCursor: ID
+  endCursor: ID
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+}
+
+type Query {
+  healthCheck: String!
+
+  node(id: ID!): Node
+}

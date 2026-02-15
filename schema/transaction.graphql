@@ -1,0 +1,126 @@
+# Transaction Schema Definitions
+
+enum JournalEntryKind {
+  DEBIT
+  CREDIT
+}
+
+type JournalEntry implements Node {
+  id: ID!
+  ledgerAccount: LedgerAccount!
+  amount: Int!
+  kind: JournalEntryKind!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Transaction implements Node {
+  id: ID!
+  entries: [JournalEntry!]!
+  date: Date!
+  description: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TransactionConnection {
+  edges: [TransactionEdge]
+  nodes: [Transaction]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type TransactionEdge {
+  cursor: ID!
+  node: Transaction!
+}
+
+extend type Query {
+  transaction(id: ID!): Transaction
+
+  transactions(
+    first: Int
+    after: ID
+    last: Int
+    before: ID
+    startDate: Date
+    endDate: Date
+    ledgerAccountId: ID
+  ): TransactionConnection!
+}
+
+extend type Mutation {
+  createTransaction(input: CreateTransactionInput!): Transaction!
+
+  updateTransaction(input: UpdateTransactionInput!): Transaction!
+
+  deleteTransaction(id: ID!): DeleteTransactionPayload!
+
+  # recordExpense(input: RecordExpenseInput!): Transaction!
+
+  # recordRevenue(input: RecordRevenueInput!): Transaction!
+
+  # recordTransfer(input: RecordTransferInput!): Transaction!
+
+  # adjustAccountBalance(input: AdjustAccountBalanceInput!): Transaction!
+}
+
+input JournalEntryInput {
+  ledgerAccountId: ID!
+  amount: Int!
+  kind: JournalEntryKind!
+}
+
+input CreateTransactionInput {
+  entries: [JournalEntryInput!]!
+  date: Date!
+  description: String!
+}
+
+input UpdateTransactionInput {
+  id: ID!
+  entries: [JournalEntryInput!]
+  date: Date
+  description: String
+  updatedAt: DateTime!
+}
+
+type DeleteTransactionPayload {
+  success: Boolean!
+}
+
+# input FromAccountWithAmount {
+#   accountId: ID!
+#   amount: Int!
+# }
+
+# input RecordExpenseInput {
+#   fromAccounts: [FromAccountWithAmount!]!
+#   expenseAccountId: ID!
+#   amount: Int!
+#   date: Date!
+#   description: String!
+# }
+
+# input RecordRevenueInput {
+#   toAccountId: ID!
+#   revenueAccountId: ID!
+#   amount: Int!
+#   date: Date!
+#   description: String!
+# }
+
+# input RecordTransferInput {
+#   fromAccountId: ID!
+#   toAccountId: ID!
+#   amount: Int!
+#   date: Date!
+#   description: String!
+# }
+
+# input AdjustAccountBalanceInput {
+#   accountId: ID!
+#   newBalance: Int!
+#   date: Date!
+#   description: String
+# }
