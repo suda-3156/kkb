@@ -1,4 +1,3 @@
-# Use with docker/go/air.dockerfile
 root = "."
 testdata_dir = "testdata"
 tmp_dir = "air_tmp"

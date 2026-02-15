@@ -1,0 +1,70 @@
+schema:
+  - ../schema/*.graphql
+
+exec:
+  package: graph
+  layout: single-file
+  filename: graph/generated.go
+
+model:
+  filename: graph/model/models_gen.go
+  package: model
+
+resolver:
+  package: resolver
+  layout: follow-schema
+  dir: graph/resolver
+  filename_template: "{name}.resolvers.go"
+
+call_argument_directives_with_null: true
+
+autobind:
+
+models:
+  ID:
+    model:
+      - github.com/suda-3156/kkb/go/pkg/pulid.ID
+
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int32
+  Int64:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+
+  DateTime:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time
+      - github.com/99designs/gqlgen/graphql.DateTime
+
+  Date:
+    model:
+      - github.com/suda-3156/kkb/go/pkg/date.Date
+
+  AccountBalance:
+    fields:
+      ledgerAccount:
+        resolver: true
+
+  CategorySpending:
+    fields:
+      ledgerAccount:
+        resolver: true
+
+  CategorySpendingReport:
+    fields:
+      categories:
+        resolver: true
+
+  LedgerAccount:
+    fields:
+      parent:
+        resolver: true
+
+  JournalEntry:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.JournalEntry
+    fields:
+      ledgerAccount:
+        resolver: true
