@@ -18,6 +18,7 @@ type LedgerAccount struct {
 func (LedgerAccount) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("public_id").
+			// prefix: "lac_"
 			GoType(pulid.ID("")).
 			SchemaType(map[string]string{
 				"mysql": "char(30)",
@@ -28,6 +29,7 @@ func (LedgerAccount) Fields() []ent.Field {
 			Unique().
 			Immutable(),
 		field.Bytes("account_name").
+			// MaxLen(). TODO: Set max length for account name
 			NotEmpty(),
 		field.Int("kind").
 			NonNegative(),
