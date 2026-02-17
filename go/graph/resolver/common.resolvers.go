@@ -8,6 +8,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
@@ -16,7 +17,7 @@ import (
 
 // HealthCheck is the resolver for the healthCheck field.
 func (r *queryResolver) HealthCheck(ctx context.Context) (string, error) {
-	panic(fmt.Errorf("not implemented: HealthCheck - healthCheck"))
+	return fmt.Sprintf("OK - %s", time.Now().Format("2006-01-02 15:04:05")), nil
 }
 
 // Node is the resolver for the node field.
