@@ -41,8 +41,7 @@ tasks:
     cmds:
       - task: start:db
       - task: start:api
-      - |
-        echo "`pnpm run dev` to start the frontend"
+      - echo "[TODO] pnpm run dev to start the frontend"
     silent: true
 
   down:all:
