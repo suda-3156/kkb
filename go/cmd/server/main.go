@@ -13,6 +13,8 @@ import (
 
 	"github.com/suda-3156/kkb/go/internal/config"
 	"github.com/suda-3156/kkb/go/internal/connection"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/kms"
+	ledgeraccount "github.com/suda-3156/kkb/go/internal/usecase/ledger_account"
 
 	"github.com/suda-3156/kkb/go/ent"
 	entmigrate "github.com/suda-3156/kkb/go/ent/migrate"
@@ -46,14 +48,20 @@ func entDebugLog(client *ent.Client) {
 	_, _ = client.Debug().LedgerAccount.Query().All(context.Background())
 }
 
-func start(cfg *config.AppConfig) *http.Server {
+func start(cfg config.Config, db *ent.Client) *http.Server {
 	slog.Info(
 		"Starting HTTP server...",
-		slog.Int("port", cfg.Server.Port),
+		slog.Int("port", cfg.GetAppConfig().Server.Port),
 	)
 
+	kmsClient := kms.New(cfg.GetSecret())
+
+	lac := ledgeraccount.New(kmsClient, db)
+
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
-		Resolvers:  &resolver.Resolver{},
+		Resolvers: &resolver.Resolver{
+			Lac: lac,
+		},
 		Complexity: graph.ComplexityConfig(),
 	}))
 
@@ -73,7 +81,7 @@ func start(cfg *config.AppConfig) *http.Server {
 	mux.Handle("/query", srv)
 
 	httpServer := &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.Server.Port),
+		Addr:              fmt.Sprintf(":%d", cfg.GetAppConfig().Server.Port),
 		Handler:           mux,
 		ReadTimeout:       15 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
@@ -150,7 +158,7 @@ func run() error {
 		entDebugLog(db)
 	}
 
-	httpServer := start(cfg.GetAppConfig())
+	httpServer := start(cfg, db)
 
 	if err := shutdown(cfg.GetAppConfig(), httpServer, db, 30*time.Second); err != nil {
 		if closeErr := db.Close(); closeErr != nil {

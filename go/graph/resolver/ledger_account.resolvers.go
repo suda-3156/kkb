@@ -21,7 +21,7 @@ func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAcc
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.
 func (r *mutationResolver) CreateLedgerAccount(ctx context.Context, input model.CreateLedgerAccountInput) (*model.LedgerAccount, error) {
-	panic(fmt.Errorf("not implemented: CreateLedgerAccount - createLedgerAccount"))
+	return r.Lac.Create(ctx, input)
 }
 
 // UpdateLedgerAccount is the resolver for the updateLedgerAccount field.

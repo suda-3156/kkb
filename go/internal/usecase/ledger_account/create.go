@@ -1,0 +1,118 @@
+package ledgeraccount
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+
+	"github.com/suda-3156/kkb/go/ent"
+	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	graph "github.com/suda-3156/kkb/go/graph/model"
+	apperr "github.com/suda-3156/kkb/go/pkg/error"
+	"github.com/suda-3156/kkb/go/pkg/pulid"
+)
+
+func (u *LedgerAccountUseCase) Create(
+	ctx context.Context,
+	input graph.CreateLedgerAccountInput,
+) (*graph.LedgerAccount, error) {
+	slog.InfoContext(
+		ctx,
+		"Ledger Account UseCase - Create: started",
+	)
+
+	// Encrypt
+	encryptedName, err := u.kms.Encrypt(ctx, input.Name)
+	if err != nil {
+		return nil, apperr.NewInternalServerError(err)
+	}
+
+	var account *graph.LedgerAccount
+	var errTx error
+	if err := u.db.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = u.createTx(ctx, input, encryptedName)
+		return errTx
+	}); err != nil {
+		return nil, err
+	}
+
+	return account, nil
+}
+
+func (u *LedgerAccountUseCase) createTx(
+	ctx context.Context,
+	input graph.CreateLedgerAccountInput,
+	encryptedName []byte,
+) (*graph.LedgerAccount, error) {
+	var parent *ent.LedgerAccount
+	var err error
+	if input.ParentID != nil {
+		parent, err = u.db.LedgerAccount.Query().
+			Where(ledgeraccount.PublicID(*input.ParentID)).
+			Only(ctx)
+		if err != nil {
+			return nil, apperr.NewNotFoundError(
+				fmt.Errorf("parent ledger account not found"),
+			)
+		}
+
+		if parent.ArchivedAt != nil {
+			return nil, apperr.NewBadRequestError(
+				fmt.Errorf("cannot create ledger account under archived parent"),
+			)
+		}
+
+		if !parent.IsGroup {
+			return nil, apperr.NewBadRequestError(
+				fmt.Errorf("cannot create ledger account under non-group parent"),
+			)
+		}
+	}
+
+	var parentID *int
+	if parent != nil {
+		parentID = &parent.ID
+	}
+
+	publicID := pulid.MustNew("lac_")
+
+	// TODO: Decide which to use Enum, Int or relation on MySQL.
+	var kind int
+	switch input.Kind {
+	case "ASSET":
+		kind = 1
+	case "LIABILITY":
+		kind = 2
+	case "EQUITY":
+		kind = 3
+	case "REVENUE":
+		kind = 4
+	case "EXPENSE":
+		kind = 5
+	default:
+		return nil, apperr.NewBadRequestError(
+			fmt.Errorf("invalid ledger account kind"),
+		)
+	}
+
+	created, err := u.db.LedgerAccount.Create().
+		SetPublicID(publicID).
+		SetAccountName(encryptedName).
+		SetIsGroup(input.IsGroup).
+		SetKind(kind).
+		SetNillableParentID(parentID).
+		Save(ctx)
+	if err != nil {
+		return nil, apperr.NewInternalServerError(err)
+	}
+
+	return &graph.LedgerAccount{
+		ID:         created.PublicID,
+		Name:       input.Name,
+		Kind:       input.Kind,
+		IsGroup:    created.IsGroup,
+		ArchivedAt: &created.CreatedAt,
+		CreatedAt:  created.CreatedAt,
+		UpdatedAt:  created.UpdatedAt,
+	}, nil
+}

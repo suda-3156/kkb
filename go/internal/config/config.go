@@ -90,6 +90,7 @@ func (c *config) loadConfigOnce() {
 
 	c.secret = &Secret{
 		ENV: "local",
+		DEK: []byte("your-32-byte-long-dek-goes-here!"),
 	}
 
 	slog.InfoContext(

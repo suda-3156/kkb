@@ -65,9 +65,9 @@ type ComplexityRoot struct {
 	}
 
 	LedgerAccount struct {
+		ArchivedAt func(childComplexity int) int
 		CreatedAt  func(childComplexity int) int
 		ID         func(childComplexity int) int
-		IsArchived func(childComplexity int) int
 		IsGroup    func(childComplexity int) int
 		Kind       func(childComplexity int) int
 		Name       func(childComplexity int) int
@@ -222,6 +222,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.JournalEntry.UpdatedAt(childComplexity), true
 
+	case "LedgerAccount.archivedAt":
+		if e.complexity.LedgerAccount.ArchivedAt == nil {
+			break
+		}
+
+		return e.complexity.LedgerAccount.ArchivedAt(childComplexity), true
 	case "LedgerAccount.createdAt":
 		if e.complexity.LedgerAccount.CreatedAt == nil {
 			break
@@ -234,12 +240,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LedgerAccount.ID(childComplexity), true
-	case "LedgerAccount.isArchived":
-		if e.complexity.LedgerAccount.IsArchived == nil {
-			break
-		}
-
-		return e.complexity.LedgerAccount.IsArchived(childComplexity), true
 	case "LedgerAccount.isGroup":
 		if e.complexity.LedgerAccount.IsGroup == nil {
 			break
@@ -694,7 +694,7 @@ type LedgerAccount implements Node {
   name: String!
   kind: LedgerAccountKind!
   isGroup: Boolean!
-  isArchived: Boolean!
+  archivedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -1225,8 +1225,8 @@ func (ec *executionContext) fieldContext_JournalEntry_ledgerAccount(_ context.Co
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -1417,8 +1417,8 @@ func (ec *executionContext) fieldContext_LedgerAccount_parent(_ context.Context,
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -1517,30 +1517,30 @@ func (ec *executionContext) fieldContext_LedgerAccount_isGroup(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _LedgerAccount_isArchived(ctx context.Context, field graphql.CollectedField, obj *model.LedgerAccount) (ret graphql.Marshaler) {
+func (ec *executionContext) _LedgerAccount_archivedAt(ctx context.Context, field graphql.CollectedField, obj *model.LedgerAccount) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_LedgerAccount_isArchived,
+		ec.fieldContext_LedgerAccount_archivedAt,
 		func(ctx context.Context) (any, error) {
-			return obj.IsArchived, nil
+			return obj.ArchivedAt, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		ec.marshalODateTime2ᚖtimeᚐTime,
 		true,
-		true,
+		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_LedgerAccount_isArchived(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LedgerAccount_archivedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LedgerAccount",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			return nil, errors.New("field of type DateTime does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1673,8 +1673,8 @@ func (ec *executionContext) fieldContext_LedgerAccountConnection_nodes(_ context
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -1817,8 +1817,8 @@ func (ec *executionContext) fieldContext_LedgerAccountEdge_node(_ context.Contex
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -1865,8 +1865,8 @@ func (ec *executionContext) fieldContext_Mutation_createLedgerAccount(ctx contex
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -1924,8 +1924,8 @@ func (ec *executionContext) fieldContext_Mutation_updateLedgerAccount(ctx contex
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -1983,8 +1983,8 @@ func (ec *executionContext) fieldContext_Mutation_archiveLedgerAccount(ctx conte
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -2042,8 +2042,8 @@ func (ec *executionContext) fieldContext_Mutation_unarchiveLedgerAccount(ctx con
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -2442,8 +2442,8 @@ func (ec *executionContext) fieldContext_Query_ledgerAccount(ctx context.Context
 				return ec.fieldContext_LedgerAccount_kind(ctx, field)
 			case "isGroup":
 				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
-			case "isArchived":
-				return ec.fieldContext_LedgerAccount_isArchived(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
@@ -5071,11 +5071,8 @@ func (ec *executionContext) _LedgerAccount(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "isArchived":
-			out.Values[i] = ec._LedgerAccount_isArchived(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
+		case "archivedAt":
+			out.Values[i] = ec._LedgerAccount_archivedAt(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._LedgerAccount_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -6579,6 +6576,24 @@ func (ec *executionContext) marshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋg
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalODateTime2ᚖtimeᚐTime(ctx context.Context, v any) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalTime(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋpkgᚋpulidᚐID(ctx context.Context, v any) (*pulid.ID, error) {

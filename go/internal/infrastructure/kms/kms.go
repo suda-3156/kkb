@@ -61,14 +61,11 @@ func (k *kms) Encrypt(ctx context.Context, plaintext string) ([]byte, error) {
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
-	fmt.Printf("nonce size: %d\n", gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
 	cipherText := gcm.Seal(nil, nonce, plaintextBytes, nil)
-	fmt.Printf("plaintext byte length: %d\n", len(plaintextBytes))
-	fmt.Printf("cipherText byte length: %d\n", len(cipherText))
 	cipherText = append(nonce, cipherText...)
 
 	return cipherText, nil

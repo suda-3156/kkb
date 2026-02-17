@@ -34,8 +34,8 @@ func (LedgerAccount) Fields() []ent.Field {
 		field.Int("kind").
 			NonNegative(),
 		field.Bool("is_group"),
-		field.Bytes("archived_at").
-			Optional(),
+		field.Bytes("archived_at"). // datetime
+						Optional(),
 		field.Time("created_at").
 			SchemaType(map[string]string{
 				"mysql": "datetime(6)",

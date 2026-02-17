@@ -14,7 +14,7 @@ type LedgerAccount implements Node {
   name: String!
   kind: LedgerAccountKind!
   isGroup: Boolean!
-  isArchived: Boolean!
+  archivedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
 }

@@ -47,7 +47,7 @@ type LedgerAccount struct {
 	Name       string            `json:"name"`
 	Kind       LedgerAccountKind `json:"kind"`
 	IsGroup    bool              `json:"isGroup"`
-	IsArchived bool              `json:"isArchived"`
+	ArchivedAt *time.Time        `json:"archivedAt,omitempty"`
 	CreatedAt  time.Time         `json:"createdAt"`
 	UpdatedAt  time.Time         `json:"updatedAt"`
 }
