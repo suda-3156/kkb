@@ -71,7 +71,7 @@ func (c *config) loadConfigOnce() {
 		Username: "username",
 		Password: "password",
 		TCP: TCP{
-			Host: "localhost",
+			Host: "db",
 			Port: 3306,
 		},
 	}

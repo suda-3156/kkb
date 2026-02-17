@@ -2,13 +2,13 @@ package logger
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"time"
 )
 
 type logHandler struct {
 	slog.Handler
-	projectID string
 }
 
 // traceIDKey is a custom type for context keys to avoid collisions
@@ -17,8 +17,19 @@ type traceIDKey struct{}
 // TraceIDKey is the key used to store trace ID in context
 var TraceIDKey = traceIDKey{}
 
-func New(h slog.Handler, projectID string) *logHandler {
-	return &logHandler{Handler: h, projectID: projectID}
+func Setup(logLevel string) *slog.Logger {
+	lggr := slog.New(
+		New(
+			slog.NewJSONHandler(log.Writer(), Options(logLevel)),
+			// projectID,
+		),
+	)
+	slog.SetDefault(lggr)
+	return lggr
+}
+
+func New(h slog.Handler) *logHandler {
+	return &logHandler{Handler: h}
 }
 
 //nolint:gocritic // hugeParam: slog.Handler interface requires value receiver for slog.Record
@@ -29,9 +40,6 @@ func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	r.AddAttrs(slog.String("trace_id", v))
-
-	v = "projects/" + h.projectID + "/traces/" + v
-	r.AddAttrs(slog.String("logging.googleapis.com/trace", v))
 
 	return h.Handler.Handle(ctx, r)
 }

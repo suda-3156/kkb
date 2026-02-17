@@ -8,19 +8,17 @@ import (
 	"log/slog"
 
 	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/internal/config"
+
+	entsql "entgo.io/ent/dialect/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func OpenDB(cfg *config.AppConfig) (*ent.Client, error) {
 	var dbPool *sql.DB
 	var err error
 
-	// if cfg.DB.CloudSQLConn != (config.CloudSQLConn{}) {
-	// 	slog.Info("OpenDB: Using Cloud SQL Connector")
-	// 	dbPool, err = connectWithConnector(cfg)
-	// } else
 	if cfg.DB.TCP != (config.TCP{}) {
 		slog.Info("OpenDB: Using TCP connection")
 		dbPool, err = connectWithTCP(cfg)
