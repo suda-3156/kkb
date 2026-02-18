@@ -58,7 +58,8 @@ func (LedgerAccount) Fields() []ent.Field {
 			// MaxLen(). // TODO: Set max length for account name
 			NotEmpty(),
 		field.Enum("kind").
-			GoType(LedgerAccountKind("")),
+			GoType(LedgerAccountKind("")).
+			Immutable(),
 		field.Bool("is_group"),
 		field.Bytes("archived_at").
 			// Encrypted field

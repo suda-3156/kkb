@@ -64,7 +64,9 @@ input CreateLedgerAccountInput {
 input UpdateLedgerAccountInput {
   id: ID!
   parentId: ID
-  unsetParent: Boolean = false
+  unsetParent: Boolean! = false
   name: String
-  updatedAt: DateTime!
+  # The kind is immutable.
+  isGroup: Boolean # Under some conditions, changes allowed.
+  updatedAt: DateTime! # For optimistic locking
 }

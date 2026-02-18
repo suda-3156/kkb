@@ -26,7 +26,7 @@ func (r *mutationResolver) CreateLedgerAccount(ctx context.Context, input model.
 
 // UpdateLedgerAccount is the resolver for the updateLedgerAccount field.
 func (r *mutationResolver) UpdateLedgerAccount(ctx context.Context, input model.UpdateLedgerAccountInput) (*model.LedgerAccount, error) {
-	panic(fmt.Errorf("not implemented: UpdateLedgerAccount - updateLedgerAccount"))
+	return r.Lac.Update(ctx, input)
 }
 
 // ArchiveLedgerAccount is the resolver for the archiveLedgerAccount field.

@@ -744,9 +744,11 @@ input CreateLedgerAccountInput {
 input UpdateLedgerAccountInput {
   id: ID!
   parentId: ID
-  unsetParent: Boolean = false
+  unsetParent: Boolean! = false
   name: String
-  updatedAt: DateTime!
+  # The kind is immutable.
+  isGroup: Boolean # Under some conditions, changes allowed.
+  updatedAt: DateTime! # For optimistic locking
 }
 `, BuiltIn: false},
 	{Name: "../../schema/transaction.graphql", Input: `# Transaction Schema Definitions
@@ -4728,7 +4730,7 @@ func (ec *executionContext) unmarshalInputUpdateLedgerAccountInput(ctx context.C
 		asMap["unsetParent"] = false
 	}
 
-	fieldsInOrder := [...]string{"id", "parentId", "unsetParent", "name", "updatedAt"}
+	fieldsInOrder := [...]string{"id", "parentId", "unsetParent", "name", "isGroup", "updatedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4751,7 +4753,7 @@ func (ec *executionContext) unmarshalInputUpdateLedgerAccountInput(ctx context.C
 			it.ParentID = data
 		case "unsetParent":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("unsetParent"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4763,6 +4765,13 @@ func (ec *executionContext) unmarshalInputUpdateLedgerAccountInput(ctx context.C
 				return it, err
 			}
 			it.Name = data
+		case "isGroup":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isGroup"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsGroup = data
 		case "updatedAt":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			data, err := ec.unmarshalNDateTime2timeᚐTime(ctx, v)

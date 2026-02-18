@@ -21,3 +21,20 @@ func convertKindToEnt(kind graph.LedgerAccountKind) ent.LedgerAccountKind {
 		panic("invalid ledger account kind")
 	}
 }
+
+func convertKindToGraph(kind ent.LedgerAccountKind) graph.LedgerAccountKind {
+	switch kind {
+	case ent.Asset:
+		return graph.LedgerAccountKindAsset
+	case ent.Liability:
+		return graph.LedgerAccountKindLiability
+	case ent.Expense:
+		return graph.LedgerAccountKindExpense
+	case ent.Revenue:
+		return graph.LedgerAccountKindRevenue
+	case ent.Equity:
+		return graph.LedgerAccountKindEquity
+	default:
+		panic("invalid ledger account kind")
+	}
+}

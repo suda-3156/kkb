@@ -107,8 +107,9 @@ type TransactionEdge struct {
 type UpdateLedgerAccountInput struct {
 	ID          pulid.ID  `json:"id"`
 	ParentID    *pulid.ID `json:"parentId,omitempty"`
-	UnsetParent *bool     `json:"unsetParent,omitempty"`
+	UnsetParent bool      `json:"unsetParent"`
 	Name        *string   `json:"name,omitempty"`
+	IsGroup     *bool     `json:"isGroup,omitempty"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 

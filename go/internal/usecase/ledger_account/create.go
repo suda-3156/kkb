@@ -21,6 +21,13 @@ func (u *UseCase) Create(
 		"Ledger Account UseCase - Create: started",
 	)
 
+	// Check if the input is valid.
+	if input.Name == "" {
+		return nil, apperr.NewBadRequestError(
+			fmt.Errorf("name is required"),
+		)
+	}
+
 	// Encrypt
 	encryptedName, err := u.kms.Encrypt(ctx, input.Name)
 	if err != nil {
@@ -65,6 +72,12 @@ func (u *UseCase) createTx(
 		if !parent.IsGroup {
 			return nil, apperr.NewBadRequestError(
 				fmt.Errorf("cannot create ledger account under non-group parent"),
+			)
+		}
+
+		if parent.Kind != convertKindToEnt(input.Kind) {
+			return nil, apperr.NewBadRequestError(
+				fmt.Errorf("parent ledger account kind must match the new account kind"),
 			)
 		}
 	}
