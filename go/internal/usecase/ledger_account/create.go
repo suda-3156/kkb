@@ -12,7 +12,7 @@ import (
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
-func (u *LedgerAccountUseCase) Create(
+func (u *UseCase) Create(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
@@ -39,7 +39,7 @@ func (u *LedgerAccountUseCase) Create(
 	return account, nil
 }
 
-func (u *LedgerAccountUseCase) createTx(
+func (u *UseCase) createTx(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
 	encryptedName []byte,

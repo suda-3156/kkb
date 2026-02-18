@@ -8,5 +8,5 @@ import ledgeraccount "github.com/suda-3156/kkb/go/internal/usecase/ledger_accoun
 // here.
 
 type Resolver struct {
-	Lac *ledgeraccount.LedgerAccountUseCase
+	Lac *ledgeraccount.UseCase
 }
