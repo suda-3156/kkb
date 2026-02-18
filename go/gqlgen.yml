@@ -58,6 +58,8 @@ models:
         resolver: true
 
   LedgerAccount:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.LedgerAccount
     fields:
       parent:
         resolver: true

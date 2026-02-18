@@ -51,10 +51,17 @@ func (u *UseCase) createTx(
 	input graph.CreateLedgerAccountInput,
 	encryptedName []byte,
 ) (*graph.LedgerAccount, error) {
+	// Get client from transaction context
+	client := u.db
+	tx := u.db.TxFromCtx(ctx)
+	if tx != nil {
+		client = tx.Client()
+	}
+
 	var parent *ent.LedgerAccount
 	var err error
 	if input.ParentID != nil {
-		parent, err = u.db.LedgerAccount.Query().
+		parent, err = client.LedgerAccount.Query().
 			Where(ledgeraccount.PublicID(*input.ParentID)).
 			Only(ctx)
 		if err != nil {
@@ -91,7 +98,7 @@ func (u *UseCase) createTx(
 
 	kind := convertKindToEnt(input.Kind)
 
-	created, err := u.db.LedgerAccount.Create().
+	created, err := client.LedgerAccount.Create().
 		SetPublicID(publicID).
 		SetAccountName(encryptedName).
 		SetIsGroup(input.IsGroup).
@@ -102,13 +109,5 @@ func (u *UseCase) createTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return &graph.LedgerAccount{
-		ID:         created.PublicID,
-		Name:       input.Name,
-		Kind:       input.Kind,
-		IsGroup:    created.IsGroup,
-		ArchivedAt: &created.CreatedAt,
-		CreatedAt:  created.CreatedAt,
-		UpdatedAt:  created.UpdatedAt,
-	}, nil
+	return u.convertToGraph(ctx, created)
 }

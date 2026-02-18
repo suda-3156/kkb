@@ -15,7 +15,7 @@ type JournalEntry struct {
 	UpdatedAt     time.Time        `json:"updatedAt"`
 
 	// Internal field for efficient querying
-	LedgerAccountIDInt int `json:"-"`
+	IntID int `json:"-"`
 }
 
 func (JournalEntry) IsNode()              {}

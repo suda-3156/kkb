@@ -10,11 +10,14 @@
 - unarchive
 - fetch one
 - fetch many
-- seeding script
 
 `delete` query は実装しない。(実装するなら、cascade deletion か、以降先の ledger accountを指定するかなどあるので、後で考える。)
 
 ### Dataloader, etc.
+
+- dataloader
+- complexity
+- seeding script
 
 ### Queries: Transaction
 

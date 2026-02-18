@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
@@ -61,8 +60,15 @@ func (u *UseCase) updateTx(
 	input graph.UpdateLedgerAccountInput,
 	encryptedName []byte,
 ) (*graph.LedgerAccount, error) {
+	// Get client from transaction context
+	client := u.db
+	tx := u.db.TxFromCtx(ctx)
+	if tx != nil {
+		client = tx.Client()
+	}
+
 	// Get the existing ledger account
-	existing, err := u.db.LedgerAccount.Query().
+	existing, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(input.ID)).
 		Only(ctx)
 	if err != nil {
@@ -85,7 +91,7 @@ func (u *UseCase) updateTx(
 	// Check parent account if parent ID is provided
 	var parent *ent.LedgerAccount = nil
 	if input.ParentID != nil && input.ParentID != &existing.Edges.Parent.PublicID {
-		parent, err = u.db.LedgerAccount.Query().
+		parent, err = client.LedgerAccount.Query().
 			Where(ledgeraccount.PublicID(*input.ParentID)).
 			Only(ctx)
 		if err != nil {
@@ -153,31 +159,5 @@ func (u *UseCase) updateTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	// Response
-	decryptedName, err := u.kms.Decrypt(ctx, updated.AccountName)
-	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
-	}
-
-	var decryptedArchivedAt time.Time
-	if updated.ArchivedAt != nil {
-		str, err := u.kms.Decrypt(ctx, updated.ArchivedAt)
-		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
-		}
-		decryptedArchivedAt, err = time.Parse(time.RFC3339, str)
-		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
-		}
-	}
-
-	return &graph.LedgerAccount{
-		ID:         updated.PublicID,
-		Name:       decryptedName,
-		Kind:       convertKindToGraph(updated.Kind),
-		IsGroup:    updated.IsGroup,
-		ArchivedAt: &decryptedArchivedAt,
-		CreatedAt:  updated.CreatedAt,
-		UpdatedAt:  updated.UpdatedAt,
-	}, nil
+	return u.convertToGraph(ctx, updated)
 }

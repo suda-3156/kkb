@@ -41,20 +41,6 @@ type JournalEntryInput struct {
 	Kind            JournalEntryKind `json:"kind"`
 }
 
-type LedgerAccount struct {
-	ID         pulid.ID          `json:"id"`
-	Parent     *LedgerAccount    `json:"parent,omitempty"`
-	Name       string            `json:"name"`
-	Kind       LedgerAccountKind `json:"kind"`
-	IsGroup    bool              `json:"isGroup"`
-	ArchivedAt *time.Time        `json:"archivedAt,omitempty"`
-	CreatedAt  time.Time         `json:"createdAt"`
-	UpdatedAt  time.Time         `json:"updatedAt"`
-}
-
-func (LedgerAccount) IsNode()              {}
-func (this LedgerAccount) GetID() pulid.ID { return this.ID }
-
 type LedgerAccountConnection struct {
 	Edges      []*LedgerAccountEdge `json:"edges,omitempty"`
 	Nodes      []*LedgerAccount     `json:"nodes,omitempty"`

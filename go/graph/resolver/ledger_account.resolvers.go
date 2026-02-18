@@ -16,7 +16,7 @@ import (
 
 // Parent is the resolver for the parent field.
 func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAccount) (*model.LedgerAccount, error) {
-	panic(fmt.Errorf("not implemented: Parent - parent"))
+	return r.Lac.Get(ctx, &obj.ID, &obj.IntID)
 }
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.
@@ -41,12 +41,12 @@ func (r *mutationResolver) UnarchiveLedgerAccount(ctx context.Context, id pulid.
 
 // LedgerAccount is the resolver for the ledgerAccount field.
 func (r *queryResolver) LedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error) {
-	panic(fmt.Errorf("not implemented: LedgerAccount - ledgerAccount"))
+	return r.Lac.Get(ctx, &id, nil)
 }
 
 // LedgerAccounts is the resolver for the ledgerAccounts field.
 func (r *queryResolver) LedgerAccounts(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error) {
-	panic(fmt.Errorf("not implemented: LedgerAccounts - ledgerAccounts"))
+	return r.Lac.List(ctx, first, nil, nil, after, last, before, kind, includeArchived)
 }
 
 // LedgerAccount returns graph.LedgerAccountResolver implementation.
