@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
@@ -36,8 +37,7 @@ type LedgerAccountMutation struct {
 	id              *int
 	public_id       *pulid.ID
 	account_name    *[]byte
-	kind            *int
-	addkind         *int
+	kind            *schema.LedgerAccountKind
 	is_group        *bool
 	archived_at     *[]byte
 	created_at      *time.Time
@@ -224,13 +224,12 @@ func (m *LedgerAccountMutation) ResetAccountName() {
 }
 
 // SetKind sets the "kind" field.
-func (m *LedgerAccountMutation) SetKind(i int) {
-	m.kind = &i
-	m.addkind = nil
+func (m *LedgerAccountMutation) SetKind(sak schema.LedgerAccountKind) {
+	m.kind = &sak
 }
 
 // Kind returns the value of the "kind" field in the mutation.
-func (m *LedgerAccountMutation) Kind() (r int, exists bool) {
+func (m *LedgerAccountMutation) Kind() (r schema.LedgerAccountKind, exists bool) {
 	v := m.kind
 	if v == nil {
 		return
@@ -241,7 +240,7 @@ func (m *LedgerAccountMutation) Kind() (r int, exists bool) {
 // OldKind returns the old "kind" field's value of the LedgerAccount entity.
 // If the LedgerAccount object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LedgerAccountMutation) OldKind(ctx context.Context) (v int, err error) {
+func (m *LedgerAccountMutation) OldKind(ctx context.Context) (v schema.LedgerAccountKind, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldKind is only allowed on UpdateOne operations")
 	}
@@ -255,28 +254,9 @@ func (m *LedgerAccountMutation) OldKind(ctx context.Context) (v int, err error) 
 	return oldValue.Kind, nil
 }
 
-// AddKind adds i to the "kind" field.
-func (m *LedgerAccountMutation) AddKind(i int) {
-	if m.addkind != nil {
-		*m.addkind += i
-	} else {
-		m.addkind = &i
-	}
-}
-
-// AddedKind returns the value that was added to the "kind" field in this mutation.
-func (m *LedgerAccountMutation) AddedKind() (r int, exists bool) {
-	v := m.addkind
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetKind resets all changes to the "kind" field.
 func (m *LedgerAccountMutation) ResetKind() {
 	m.kind = nil
-	m.addkind = nil
 }
 
 // SetIsGroup sets the "is_group" field.
@@ -654,7 +634,7 @@ func (m *LedgerAccountMutation) SetField(name string, value ent.Value) error {
 		m.SetAccountName(v)
 		return nil
 	case ledgeraccount.FieldKind:
-		v, ok := value.(int)
+		v, ok := value.(schema.LedgerAccountKind)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -695,21 +675,13 @@ func (m *LedgerAccountMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *LedgerAccountMutation) AddedFields() []string {
-	var fields []string
-	if m.addkind != nil {
-		fields = append(fields, ledgeraccount.FieldKind)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *LedgerAccountMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case ledgeraccount.FieldKind:
-		return m.AddedKind()
-	}
 	return nil, false
 }
 
@@ -718,13 +690,6 @@ func (m *LedgerAccountMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *LedgerAccountMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case ledgeraccount.FieldKind:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddKind(v)
-		return nil
 	}
 	return fmt.Errorf("unknown LedgerAccount numeric field %s", name)
 }

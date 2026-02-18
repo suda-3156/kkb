@@ -3,10 +3,12 @@
 package ledgeraccount
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/suda-3156/kkb/go/ent/schema"
 )
 
 const (
@@ -82,8 +84,6 @@ var (
 	PublicIDValidator func(string) error
 	// AccountNameValidator is a validator for the "account_name" field. It is called by the builders before save.
 	AccountNameValidator func([]byte) error
-	// KindValidator is a validator for the "kind" field. It is called by the builders before save.
-	KindValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -91,6 +91,16 @@ var (
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
 )
+
+// KindValidator is a validator for the "kind" field enum values. It is called by the builders before save.
+func KindValidator(k schema.LedgerAccountKind) error {
+	switch k {
+	case "ASSET", "LIABILITY", "EXPENSE", "REVENUE", "EQUITY":
+		return nil
+	default:
+		return fmt.Errorf("ledgeraccount: invalid enum value for kind field: %q", k)
+	}
+}
 
 // OrderOption defines the ordering options for the LedgerAccount queries.
 type OrderOption func(*sql.Selector)

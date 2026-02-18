@@ -13,7 +13,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
 		{Name: "account_name", Type: field.TypeBytes},
-		{Name: "kind", Type: field.TypeInt},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"ASSET", "LIABILITY", "EXPENSE", "REVENUE", "EQUITY"}},
 		{Name: "is_group", Type: field.TypeBool},
 		{Name: "archived_at", Type: field.TypeBytes, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},

@@ -14,6 +14,31 @@ type LedgerAccount struct {
 	ent.Schema
 }
 
+// Ledger Account kind Enum
+// Ref: https://entgo.io/docs/schema-fields#enum-fields
+type LedgerAccountKind string
+
+const (
+	Asset     LedgerAccountKind = "ASSET"
+	Liability LedgerAccountKind = "LIABILITY"
+	Expense   LedgerAccountKind = "EXPENSE"
+	Revenue   LedgerAccountKind = "REVENUE"
+	Equity    LedgerAccountKind = "EQUITY"
+)
+
+func (LedgerAccountKind) Values() (kinds []string) {
+	for _, k := range []LedgerAccountKind{
+		Asset,
+		Liability,
+		Expense,
+		Revenue,
+		Equity,
+	} {
+		kinds = append(kinds, string(k))
+	}
+	return
+}
+
 // Fields of the LedgerAccount.
 func (LedgerAccount) Fields() []ent.Field {
 	return []ent.Field{
@@ -29,13 +54,17 @@ func (LedgerAccount) Fields() []ent.Field {
 			Unique().
 			Immutable(),
 		field.Bytes("account_name").
-			// MaxLen(). TODO: Set max length for account name
+			// Encrypted field
+			// MaxLen(). // TODO: Set max length for account name
 			NotEmpty(),
-		field.Int("kind").
-			NonNegative(),
+		field.Enum("kind").
+			GoType(LedgerAccountKind("")),
 		field.Bool("is_group"),
-		field.Bytes("archived_at"). // datetime
-						Optional(),
+		field.Bytes("archived_at").
+			// Encrypted field
+			// Null or datetime string in 2006-01-02T15:04:05+09:00 format
+			// MaxLen(). // TODO: Set max length for archived_at
+			Optional(),
 		field.Time("created_at").
 			SchemaType(map[string]string{
 				"mysql": "datetime(6)",
@@ -55,6 +84,9 @@ func (LedgerAccount) Fields() []ent.Field {
 func (LedgerAccount) Edges() []ent.Edge {
 	return []ent.Edge{
 		// Self-referential for parent-child hierarchy
+		// Due to ent's naming convention, the column name in the database schema
+		// will be "ledger_account_children", but this column actually stores
+		// the parent ID (nullable).
 		edge.To("children", LedgerAccount.Type).
 			From("parent").
 			Unique(),

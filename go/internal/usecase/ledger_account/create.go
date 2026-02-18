@@ -76,24 +76,7 @@ func (u *UseCase) createTx(
 
 	publicID := pulid.MustNew("lac_")
 
-	// TODO: Decide which to use Enum, Int or relation on MySQL.
-	var kind int
-	switch input.Kind {
-	case "ASSET":
-		kind = 1
-	case "LIABILITY":
-		kind = 2
-	case "EQUITY":
-		kind = 3
-	case "REVENUE":
-		kind = 4
-	case "EXPENSE":
-		kind = 5
-	default:
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("invalid ledger account kind"),
-		)
-	}
+	kind := convertKindToEnt(input.Kind)
 
 	created, err := u.db.LedgerAccount.Create().
 		SetPublicID(publicID).

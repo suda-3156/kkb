@@ -2,9 +2,7 @@
 
 ## Phase 1: Backend server
 
-### Queries
-
-#### Ledger account
+### Queries: Ledger account
 
 - create
 - update
@@ -12,14 +10,15 @@
 - unarchive
 - fetch one
 - fetch many
+- seeding script
 
 `delete` query は実装しない。(実装するなら、cascade deletion か、以降先の ledger accountを指定するかなどあるので、後で考える。)
 
-#### Transaction
+### Dataloader, etc.
+
+### Queries: Transaction
 
 - journal entry
-
-### Dataloader, etc.
 
 ### Analysis queries
 

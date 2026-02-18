@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/schema"
 )
 
 // LedgerAccountUpdate is the builder for updating LedgerAccount entities.
@@ -35,23 +36,16 @@ func (_u *LedgerAccountUpdate) SetAccountName(v []byte) *LedgerAccountUpdate {
 }
 
 // SetKind sets the "kind" field.
-func (_u *LedgerAccountUpdate) SetKind(v int) *LedgerAccountUpdate {
-	_u.mutation.ResetKind()
+func (_u *LedgerAccountUpdate) SetKind(v schema.LedgerAccountKind) *LedgerAccountUpdate {
 	_u.mutation.SetKind(v)
 	return _u
 }
 
 // SetNillableKind sets the "kind" field if the given value is not nil.
-func (_u *LedgerAccountUpdate) SetNillableKind(v *int) *LedgerAccountUpdate {
+func (_u *LedgerAccountUpdate) SetNillableKind(v *schema.LedgerAccountKind) *LedgerAccountUpdate {
 	if v != nil {
 		_u.SetKind(*v)
 	}
-	return _u
-}
-
-// AddKind adds value to the "kind" field.
-func (_u *LedgerAccountUpdate) AddKind(v int) *LedgerAccountUpdate {
-	_u.mutation.AddKind(v)
 	return _u
 }
 
@@ -220,10 +214,7 @@ func (_u *LedgerAccountUpdate) sqlSave(ctx context.Context) (_node int, err erro
 		_spec.SetField(ledgeraccount.FieldAccountName, field.TypeBytes, value)
 	}
 	if value, ok := _u.mutation.Kind(); ok {
-		_spec.SetField(ledgeraccount.FieldKind, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedKind(); ok {
-		_spec.AddField(ledgeraccount.FieldKind, field.TypeInt, value)
+		_spec.SetField(ledgeraccount.FieldKind, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.IsGroup(); ok {
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)
@@ -338,23 +329,16 @@ func (_u *LedgerAccountUpdateOne) SetAccountName(v []byte) *LedgerAccountUpdateO
 }
 
 // SetKind sets the "kind" field.
-func (_u *LedgerAccountUpdateOne) SetKind(v int) *LedgerAccountUpdateOne {
-	_u.mutation.ResetKind()
+func (_u *LedgerAccountUpdateOne) SetKind(v schema.LedgerAccountKind) *LedgerAccountUpdateOne {
 	_u.mutation.SetKind(v)
 	return _u
 }
 
 // SetNillableKind sets the "kind" field if the given value is not nil.
-func (_u *LedgerAccountUpdateOne) SetNillableKind(v *int) *LedgerAccountUpdateOne {
+func (_u *LedgerAccountUpdateOne) SetNillableKind(v *schema.LedgerAccountKind) *LedgerAccountUpdateOne {
 	if v != nil {
 		_u.SetKind(*v)
 	}
-	return _u
-}
-
-// AddKind adds value to the "kind" field.
-func (_u *LedgerAccountUpdateOne) AddKind(v int) *LedgerAccountUpdateOne {
-	_u.mutation.AddKind(v)
 	return _u
 }
 
@@ -553,10 +537,7 @@ func (_u *LedgerAccountUpdateOne) sqlSave(ctx context.Context) (_node *LedgerAcc
 		_spec.SetField(ledgeraccount.FieldAccountName, field.TypeBytes, value)
 	}
 	if value, ok := _u.mutation.Kind(); ok {
-		_spec.SetField(ledgeraccount.FieldKind, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedKind(); ok {
-		_spec.AddField(ledgeraccount.FieldKind, field.TypeInt, value)
+		_spec.SetField(ledgeraccount.FieldKind, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.IsGroup(); ok {
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)

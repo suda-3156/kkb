@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
@@ -34,7 +35,7 @@ func (_c *LedgerAccountCreate) SetAccountName(v []byte) *LedgerAccountCreate {
 }
 
 // SetKind sets the "kind" field.
-func (_c *LedgerAccountCreate) SetKind(v int) *LedgerAccountCreate {
+func (_c *LedgerAccountCreate) SetKind(v schema.LedgerAccountKind) *LedgerAccountCreate {
 	_c.mutation.SetKind(v)
 	return _c
 }
@@ -228,7 +229,7 @@ func (_c *LedgerAccountCreate) createSpec() (*LedgerAccount, *sqlgraph.CreateSpe
 		_node.AccountName = value
 	}
 	if value, ok := _c.mutation.Kind(); ok {
-		_spec.SetField(ledgeraccount.FieldKind, field.TypeInt, value)
+		_spec.SetField(ledgeraccount.FieldKind, field.TypeEnum, value)
 		_node.Kind = value
 	}
 	if value, ok := _c.mutation.IsGroup(); ok {

@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
@@ -23,7 +24,7 @@ type LedgerAccount struct {
 	// AccountName holds the value of the "account_name" field.
 	AccountName []byte `json:"account_name,omitempty"`
 	// Kind holds the value of the "kind" field.
-	Kind int `json:"kind,omitempty"`
+	Kind schema.LedgerAccountKind `json:"kind,omitempty"`
 	// IsGroup holds the value of the "is_group" field.
 	IsGroup bool `json:"is_group,omitempty"`
 	// ArchivedAt holds the value of the "archived_at" field.
@@ -81,8 +82,10 @@ func (*LedgerAccount) scanValues(columns []string) ([]any, error) {
 			values[i] = new(pulid.ID)
 		case ledgeraccount.FieldIsGroup:
 			values[i] = new(sql.NullBool)
-		case ledgeraccount.FieldID, ledgeraccount.FieldKind:
+		case ledgeraccount.FieldID:
 			values[i] = new(sql.NullInt64)
+		case ledgeraccount.FieldKind:
+			values[i] = new(sql.NullString)
 		case ledgeraccount.FieldCreatedAt, ledgeraccount.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case ledgeraccount.ForeignKeys[0]: // ledger_account_children
@@ -121,10 +124,10 @@ func (_m *LedgerAccount) assignValues(columns []string, values []any) error {
 				_m.AccountName = *value
 			}
 		case ledgeraccount.FieldKind:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field kind", values[i])
 			} else if value.Valid {
-				_m.Kind = int(value.Int64)
+				_m.Kind = schema.LedgerAccountKind(value.String)
 			}
 		case ledgeraccount.FieldIsGroup:
 			if value, ok := values[i].(*sql.NullBool); !ok {

@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
@@ -64,11 +65,6 @@ func PublicID(v pulid.ID) predicate.LedgerAccount {
 // AccountName applies equality check predicate on the "account_name" field. It's identical to AccountNameEQ.
 func AccountName(v []byte) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldEQ(FieldAccountName, v))
-}
-
-// Kind applies equality check predicate on the "kind" field. It's identical to KindEQ.
-func Kind(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldEQ(FieldKind, v))
 }
 
 // IsGroup applies equality check predicate on the "is_group" field. It's identical to IsGroupEQ.
@@ -202,43 +198,33 @@ func AccountNameLTE(v []byte) predicate.LedgerAccount {
 }
 
 // KindEQ applies the EQ predicate on the "kind" field.
-func KindEQ(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldEQ(FieldKind, v))
+func KindEQ(v schema.LedgerAccountKind) predicate.LedgerAccount {
+	vc := v
+	return predicate.LedgerAccount(sql.FieldEQ(FieldKind, vc))
 }
 
 // KindNEQ applies the NEQ predicate on the "kind" field.
-func KindNEQ(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldNEQ(FieldKind, v))
+func KindNEQ(v schema.LedgerAccountKind) predicate.LedgerAccount {
+	vc := v
+	return predicate.LedgerAccount(sql.FieldNEQ(FieldKind, vc))
 }
 
 // KindIn applies the In predicate on the "kind" field.
-func KindIn(vs ...int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldIn(FieldKind, vs...))
+func KindIn(vs ...schema.LedgerAccountKind) predicate.LedgerAccount {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.LedgerAccount(sql.FieldIn(FieldKind, v...))
 }
 
 // KindNotIn applies the NotIn predicate on the "kind" field.
-func KindNotIn(vs ...int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldNotIn(FieldKind, vs...))
-}
-
-// KindGT applies the GT predicate on the "kind" field.
-func KindGT(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldGT(FieldKind, v))
-}
-
-// KindGTE applies the GTE predicate on the "kind" field.
-func KindGTE(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldGTE(FieldKind, v))
-}
-
-// KindLT applies the LT predicate on the "kind" field.
-func KindLT(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldLT(FieldKind, v))
-}
-
-// KindLTE applies the LTE predicate on the "kind" field.
-func KindLTE(v int) predicate.LedgerAccount {
-	return predicate.LedgerAccount(sql.FieldLTE(FieldKind, v))
+func KindNotIn(vs ...schema.LedgerAccountKind) predicate.LedgerAccount {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.LedgerAccount(sql.FieldNotIn(FieldKind, v...))
 }
 
 // IsGroupEQ applies the EQ predicate on the "is_group" field.
