@@ -21,6 +21,7 @@ func (u *UseCase) Unarchive(
 	slog.InfoContext(
 		ctx,
 		"Ledger Account UseCase - Unarchive: started",
+		slog.String("public_id", id.String()),
 	)
 
 	var account *graph.LedgerAccount
@@ -31,6 +32,12 @@ func (u *UseCase) Unarchive(
 	}); err != nil {
 		return nil, err
 	}
+
+	slog.InfoContext(
+		ctx,
+		"Ledger Account UseCase - Unarchive: completed",
+		slog.String("public_id", id.String()),
+	)
 
 	return account, nil
 }

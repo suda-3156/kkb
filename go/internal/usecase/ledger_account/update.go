@@ -18,6 +18,7 @@ func (u *UseCase) Update(
 	slog.InfoContext(
 		ctx,
 		"Ledger Account UseCase - Update: started",
+		slog.String("public_id", input.ID.String()),
 	)
 
 	// Check if the input is valid.
@@ -51,6 +52,12 @@ func (u *UseCase) Update(
 	}); err != nil {
 		return nil, err
 	}
+
+	slog.InfoContext(
+		ctx,
+		"Ledger Account UseCase - Update: completed",
+		slog.String("public_id", input.ID.String()),
+	)
 
 	return account, nil
 }

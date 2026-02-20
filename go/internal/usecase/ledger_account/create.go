@@ -19,6 +19,8 @@ func (u *UseCase) Create(
 	slog.InfoContext(
 		ctx,
 		"Ledger Account UseCase - Create: started",
+		slog.String("name", input.Name),
+		slog.String("kind", string(input.Kind)),
 	)
 
 	// Check if the input is valid.
@@ -42,6 +44,13 @@ func (u *UseCase) Create(
 	}); err != nil {
 		return nil, err
 	}
+
+	slog.InfoContext(
+		ctx,
+		"Ledger Account UseCase - Create: completed",
+		slog.String("name", input.Name),
+		slog.String("kind", string(input.Kind)),
+	)
 
 	return account, nil
 }
