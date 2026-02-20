@@ -2,7 +2,6 @@
 
 ## go
 
-- `ledger account` で、parent が指定されていない時に、queryで要求された時の振る舞い。
 - ledger account の schema (max length) -> input validation
 
 ### future

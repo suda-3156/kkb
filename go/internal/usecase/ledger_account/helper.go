@@ -75,11 +75,18 @@ func (u *UseCase) convertToGraph(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return &graph.LedgerAccount{
-		ID: lac.PublicID,
-		Parent: &graph.LedgerAccount{
+	var parent *graph.LedgerAccount
+	if lac.Edges.Parent != nil {
+		parent = &graph.LedgerAccount{
 			IntID: lac.Edges.Parent.ID,
-		},
+		}
+	} else {
+		parent = nil
+	}
+
+	return &graph.LedgerAccount{
+		ID:         lac.PublicID,
+		Parent:     parent,
 		Name:       decryptedName,
 		Kind:       convertKindToGraph(lac.Kind),
 		IsGroup:    lac.IsGroup,

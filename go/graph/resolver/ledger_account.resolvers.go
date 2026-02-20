@@ -15,7 +15,10 @@ import (
 
 // Parent is the resolver for the parent field.
 func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAccount) (*model.LedgerAccount, error) {
-	return r.Lac.Get(ctx, &obj.ID, &obj.IntID)
+	if obj.Parent == nil {
+		return nil, nil
+	}
+	return r.Lac.Get(ctx, nil, &obj.Parent.IntID)
 }
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.
