@@ -7,7 +7,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
@@ -36,7 +35,7 @@ func (r *mutationResolver) ArchiveLedgerAccount(ctx context.Context, id pulid.ID
 
 // UnarchiveLedgerAccount is the resolver for the unarchiveLedgerAccount field.
 func (r *mutationResolver) UnarchiveLedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error) {
-	panic(fmt.Errorf("not implemented: UnarchiveLedgerAccount - unarchiveLedgerAccount"))
+	return r.Lac.Unarchive(ctx, id)
 }
 
 // LedgerAccount is the resolver for the ledgerAccount field.
