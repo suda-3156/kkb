@@ -124,5 +124,7 @@ func (u *UseCase) createTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
+	created.Edges.Parent = parent
+
 	return u.convertToGraph(ctx, created)
 }
