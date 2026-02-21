@@ -18,6 +18,7 @@
 - dataloader
 - complexity
 - seeding script
+- env/config
 
 ### Queries: Transaction
 

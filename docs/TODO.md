@@ -2,7 +2,8 @@
 
 ## go
 
-- ledger account の schema (max length) -> input validation
+- slog -> zap
+- env/config load strategy
 
 ### future
 
