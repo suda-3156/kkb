@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // LedgerAccount holds the schema definition for the LedgerAccount entity.

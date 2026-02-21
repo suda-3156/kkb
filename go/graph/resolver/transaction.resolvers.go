@@ -11,8 +11,8 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
-	"github.com/suda-3156/kkb/go/pkg/date"
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	"github.com/suda-3156/kkb/go/internal/date"
+	pulid1 "github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // LedgerAccount is the resolver for the ledgerAccount field.
@@ -31,17 +31,17 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.Up
 }
 
 // DeleteTransaction is the resolver for the deleteTransaction field.
-func (r *mutationResolver) DeleteTransaction(ctx context.Context, id pulid.ID) (*model.DeleteTransactionPayload, error) {
+func (r *mutationResolver) DeleteTransaction(ctx context.Context, id pulid1.ID) (*model.DeleteTransactionPayload, error) {
 	panic(fmt.Errorf("not implemented: DeleteTransaction - deleteTransaction"))
 }
 
 // Transaction is the resolver for the transaction field.
-func (r *queryResolver) Transaction(ctx context.Context, id pulid.ID) (*model.Transaction, error) {
+func (r *queryResolver) Transaction(ctx context.Context, id pulid1.ID) (*model.Transaction, error) {
 	panic(fmt.Errorf("not implemented: Transaction - transaction"))
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date, ledgerAccountID *pulid.ID) (*model.TransactionConnection, error) {
+func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, startDate *date.Date, endDate *date.Date, ledgerAccountID *pulid1.ID) (*model.TransactionConnection, error) {
 	panic(fmt.Errorf("not implemented: Transactions - transactions"))
 }
 

@@ -12,7 +12,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	pulid1 "github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // HealthCheck is the resolver for the healthCheck field.
@@ -21,7 +21,7 @@ func (r *queryResolver) HealthCheck(ctx context.Context) (string, error) {
 }
 
 // Node is the resolver for the node field.
-func (r *queryResolver) Node(ctx context.Context, id pulid.ID) (model.Node, error) {
+func (r *queryResolver) Node(ctx context.Context, id pulid1.ID) (model.Node, error) {
 	panic(fmt.Errorf("not implemented: Node - node"))
 }
 

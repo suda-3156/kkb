@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/suda-3156/kkb/go/pkg/date"
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	"github.com/suda-3156/kkb/go/internal/date"
+	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 type Node interface {

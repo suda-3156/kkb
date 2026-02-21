@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 type JournalEntry struct {

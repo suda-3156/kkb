@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/schema"
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // LedgerAccountCreate is the builder for creating a LedgerAccount entity.

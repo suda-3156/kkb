@@ -7,8 +7,8 @@ import (
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	apperr "github.com/suda-3156/kkb/go/internal/error"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/pkg/error"
 )
 
 func (s *Service) Update(

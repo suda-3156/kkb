@@ -8,8 +8,8 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/pkg/error"
-	"github.com/suda-3156/kkb/go/pkg/pulid"
+	apperr "github.com/suda-3156/kkb/go/internal/error"
+	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 func (s *Service) Get(

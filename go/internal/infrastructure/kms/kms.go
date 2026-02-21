@@ -17,7 +17,7 @@ import (
 	"io"
 
 	"github.com/suda-3156/kkb/go/internal/config"
-	apperr "github.com/suda-3156/kkb/go/pkg/error"
+	apperr "github.com/suda-3156/kkb/go/internal/error"
 )
 
 type KMS interface {

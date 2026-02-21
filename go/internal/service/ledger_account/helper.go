@@ -7,7 +7,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/pkg/error"
+	apperr "github.com/suda-3156/kkb/go/internal/error"
 )
 
 func convertKindToEnt(kind graph.LedgerAccountKind) schema.LedgerAccountKind {
