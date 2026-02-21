@@ -1,0 +1,17 @@
+query {
+  ledgerAccounts(first: 10) {
+    nodes {
+      id
+      parent {
+        name
+      }
+      name
+      kind
+      isGroup
+      archivedAt
+      createdAt
+      updatedAt
+    }
+    totalCount
+  }
+}

@@ -1,0 +1,22 @@
+# This will raise error because the parent is not a group account.
+mutation {
+  createLedgerAccount(
+    input: {
+      name: "test2"
+      parentId: "lac_01KHYXYY6VXE2G8V0B8RY9BHYX"
+      kind: ASSET
+      isGroup: false
+    }
+  ) {
+    id
+    parent {
+      name
+    }
+    name
+    kind
+    isGroup
+    archivedAt
+    createdAt
+    updatedAt
+  }
+}

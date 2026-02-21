@@ -70,7 +70,7 @@ func start(cfg config.Config, db *ent.Client) *http.Server {
 	srv.AddTransport(transport.POST{})
 
 	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
-	srv.Use(extension.FixedComplexityLimit(10))
+	srv.Use(extension.FixedComplexityLimit(50))
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New[string](100),

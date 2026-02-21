@@ -1,0 +1,21 @@
+mutation {
+  updateLedgerAccount(
+    input: {
+      id: "lac_01KHYXYY6VXE2G8V0B8RY9BHYX"
+      name: "test1_group_account"
+      isGroup: true
+      updatedAt: "2026-02-21T01:45:23.419496Z"
+    }
+  ) {
+    id
+    parent {
+      name
+    }
+    name
+    kind
+    isGroup
+    archivedAt
+    createdAt
+    updatedAt
+  }
+}
