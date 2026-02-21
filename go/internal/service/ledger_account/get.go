@@ -12,14 +12,14 @@ import (
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
-func (u *UseCase) Get(
+func (s *Service) Get(
 	ctx context.Context,
 	publicID *pulid.ID,
 	ID *int,
 ) (*graph.LedgerAccount, error) {
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Get: started",
+		"Ledger Account Service - Get: started",
 		slog.String("public_id", func() string {
 			if publicID != nil {
 				return publicID.String()
@@ -41,7 +41,7 @@ func (u *UseCase) Get(
 	}
 
 	// Get the account from the database.
-	query := u.db.LedgerAccount.Query()
+	query := s.db.LedgerAccount.Query()
 	if publicID != nil {
 		query = query.Where(ledgeraccount.PublicID(*publicID))
 	}
@@ -63,7 +63,7 @@ func (u *UseCase) Get(
 
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Get: completed",
+		"Ledger Account Service - Get: completed",
 		slog.String("public_id", func() string {
 			if publicID != nil {
 				return publicID.String()
@@ -78,5 +78,5 @@ func (u *UseCase) Get(
 		}()),
 	)
 
-	return u.convertToGraph(ctx, account)
+	return s.convertToGraph(ctx, account)
 }

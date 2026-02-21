@@ -11,13 +11,13 @@ import (
 	apperr "github.com/suda-3156/kkb/go/pkg/error"
 )
 
-func (u *UseCase) Update(
+func (s *Service) Update(
 	ctx context.Context,
 	input graph.UpdateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Update: started",
+		"Ledger Account Service - Update: started",
 		slog.String("public_id", input.ID.String()),
 	)
 
@@ -44,7 +44,7 @@ func (u *UseCase) Update(
 	var encryptedName []byte
 	var err error
 	if input.Name != nil {
-		encryptedName, err = u.kms.Encrypt(ctx, *input.Name)
+		encryptedName, err = s.kms.Encrypt(ctx, *input.Name)
 		if err != nil {
 			return nil, apperr.NewInternalServerError(err)
 		}
@@ -52,8 +52,8 @@ func (u *UseCase) Update(
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := u.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = u.updateTx(ctx, input, encryptedName)
+	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = s.updateTx(ctx, input, encryptedName)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -61,21 +61,21 @@ func (u *UseCase) Update(
 
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Update: completed",
+		"Ledger Account Service - Update: completed",
 		slog.String("public_id", input.ID.String()),
 	)
 
 	return account, nil
 }
 
-func (u *UseCase) updateTx(
+func (s *Service) updateTx(
 	ctx context.Context,
 	input graph.UpdateLedgerAccountInput,
 	encryptedName []byte,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := u.db
-	tx := u.db.TxFromCtx(ctx)
+	client := s.db
+	tx := s.db.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -172,5 +172,5 @@ func (u *UseCase) updateTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return u.convertToGraph(ctx, updated)
+	return s.convertToGraph(ctx, updated)
 }

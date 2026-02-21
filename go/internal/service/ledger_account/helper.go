@@ -44,11 +44,11 @@ func convertKindToGraph(kind schema.LedgerAccountKind) graph.LedgerAccountKind {
 	}
 }
 
-func (u *UseCase) decryptArchivedAt(ctx context.Context, archivedAt []byte) (*time.Time, error) {
+func (s *Service) decryptArchivedAt(ctx context.Context, archivedAt []byte) (*time.Time, error) {
 	var decrypted time.Time
 
 	if archivedAt != nil {
-		str, err := u.kms.Decrypt(ctx, archivedAt)
+		str, err := s.kms.Decrypt(ctx, archivedAt)
 		if err != nil {
 			return nil, apperr.NewInternalServerError(err)
 		}
@@ -61,16 +61,16 @@ func (u *UseCase) decryptArchivedAt(ctx context.Context, archivedAt []byte) (*ti
 	return &decrypted, nil
 }
 
-func (u *UseCase) convertToGraph(
+func (s *Service) convertToGraph(
 	ctx context.Context,
 	lac *ent.LedgerAccount,
 ) (*graph.LedgerAccount, error) {
-	decryptedName, err := u.kms.Decrypt(ctx, lac.AccountName)
+	decryptedName, err := s.kms.Decrypt(ctx, lac.AccountName)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	decryptedArchivedAt, err := u.decryptArchivedAt(ctx, lac.ArchivedAt)
+	decryptedArchivedAt, err := s.decryptArchivedAt(ctx, lac.ArchivedAt)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
@@ -96,7 +96,7 @@ func (u *UseCase) convertToGraph(
 	}, nil
 }
 
-func (u *UseCase) convertToGraphConnection(
+func (s *Service) convertToGraphConnection(
 	ctx context.Context,
 	lacs []*ent.LedgerAccount,
 	hasPrevPage bool,
@@ -105,7 +105,7 @@ func (u *UseCase) convertToGraphConnection(
 	result := &graph.LedgerAccountConnection{}
 
 	for _, lac := range lacs {
-		converted, err := u.convertToGraph(ctx, lac)
+		converted, err := s.convertToGraph(ctx, lac)
 		if err != nil {
 			return nil, err
 		}

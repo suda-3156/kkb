@@ -1,6 +1,6 @@
 package resolver
 
-import ledgeraccount "github.com/suda-3156/kkb/go/internal/usecase/ledger_account"
+import ledgeraccount "github.com/suda-3156/kkb/go/internal/service/ledger_account"
 
 // This file will not be regenerated automatically.
 //
@@ -8,5 +8,5 @@ import ledgeraccount "github.com/suda-3156/kkb/go/internal/usecase/ledger_accoun
 // here.
 
 type Resolver struct {
-	Lac *ledgeraccount.UseCase
+	Lac *ledgeraccount.Service
 }

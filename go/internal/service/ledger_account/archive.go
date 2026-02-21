@@ -14,20 +14,20 @@ import (
 )
 
 // Archive archives a ledger account and all its descendant accounts.
-func (u *UseCase) Archive(
+func (s *Service) Archive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Archive: started",
+		"Ledger Account Service - Archive: started",
 		slog.String("public_id", id.String()),
 	)
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := u.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = u.archiveTx(ctx, id)
+	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = s.archiveTx(ctx, id)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -35,20 +35,20 @@ func (u *UseCase) Archive(
 
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Archive: completed",
+		"Ledger Account Service - Archive: completed",
 		slog.String("public_id", id.String()),
 	)
 
 	return account, nil
 }
 
-func (u *UseCase) archiveTx(
+func (s *Service) archiveTx(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := u.db
-	tx := u.db.TxFromCtx(ctx)
+	client := s.db
+	tx := s.db.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -68,17 +68,17 @@ func (u *UseCase) archiveTx(
 
 	// Check if the account is already archived.
 	if account.ArchivedAt != nil {
-		return u.convertToGraph(ctx, account)
+		return s.convertToGraph(ctx, account)
 	}
 
 	// Archive the account and its descendants.
 	now := time.Now()
-	encryptedNow, err := u.kms.Encrypt(ctx, now.Format(time.RFC3339))
+	encryptedNow, err := s.kms.Encrypt(ctx, now.Format(time.RFC3339))
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	descendantIDs, err := u.collectDescendantIDs(ctx, client, account.ID)
+	descendantIDs, err := s.collectDescendantIDs(ctx, client, account.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -99,11 +99,11 @@ func (u *UseCase) archiveTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return u.convertToGraph(ctx, account)
+	return s.convertToGraph(ctx, account)
 }
 
 // collectDescendantIDs collects all descendant account IDs using BFS (Breadth-First Search).
-func (u *UseCase) collectDescendantIDs(
+func (s *Service) collectDescendantIDs(
 	ctx context.Context,
 	client *ent.Client,
 	parentID int,

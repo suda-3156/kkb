@@ -11,7 +11,7 @@ import (
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
-func (u *UseCase) List(
+func (s *Service) List(
 	ctx context.Context,
 	first *int32,
 	publicIDs []pulid.ID,
@@ -24,11 +24,11 @@ func (u *UseCase) List(
 ) (*graph.LedgerAccountConnection, error) {
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - List: started",
+		"Ledger Account Service - List: started",
 	)
 
 	var scanDesc bool = false
-	query := u.db.LedgerAccount.Query()
+	query := s.db.LedgerAccount.Query()
 
 	query, scanDesc = applyConditions(
 		first,
@@ -47,18 +47,18 @@ func (u *UseCase) List(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	hasPrevPage, hasNextPage, err := u.getPageInfo(ctx, lacs, scanDesc)
+	hasPrevPage, hasNextPage, err := s.getPageInfo(ctx, lacs, scanDesc)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - List: completed",
+		"Ledger Account Service - List: completed",
 		slog.Int("count", len(lacs)),
 	)
 
-	return u.convertToGraphConnection(ctx, lacs, hasPrevPage, hasNextPage)
+	return s.convertToGraphConnection(ctx, lacs, hasPrevPage, hasNextPage)
 }
 
 func applyConditions(
@@ -117,7 +117,7 @@ func applyConditions(
 	return query, scanDesc
 }
 
-func (u *UseCase) getPageInfo(
+func (s *Service) getPageInfo(
 	ctx context.Context,
 	lacs []*ent.LedgerAccount,
 	scanDesc bool,
@@ -133,7 +133,7 @@ func (u *UseCase) getPageInfo(
 		endCursor := lacs[len(lacs)-1].PublicID
 
 		var err error
-		hasPrevPage, err = u.db.LedgerAccount.Query().
+		hasPrevPage, err = s.db.LedgerAccount.Query().
 			Where(
 				ledgeraccount.PublicIDLT(startCursor),
 			).Exist(ctx)
@@ -141,7 +141,7 @@ func (u *UseCase) getPageInfo(
 			return false, false, apperr.NewInternalServerError(err)
 		}
 
-		hasNextPage, err = u.db.LedgerAccount.Query().
+		hasNextPage, err = s.db.LedgerAccount.Query().
 			Where(
 				ledgeraccount.PublicIDGT(endCursor),
 			).Exist(ctx)

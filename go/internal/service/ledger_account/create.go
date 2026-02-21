@@ -12,13 +12,13 @@ import (
 	"github.com/suda-3156/kkb/go/pkg/pulid"
 )
 
-func (u *UseCase) Create(
+func (s *Service) Create(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Create: started",
+		"Ledger Account Service - Create: started",
 		slog.String("name", input.Name),
 		slog.String("kind", string(input.Kind)),
 	)
@@ -37,15 +37,15 @@ func (u *UseCase) Create(
 	}
 
 	// Encrypt
-	encryptedName, err := u.kms.Encrypt(ctx, input.Name)
+	encryptedName, err := s.kms.Encrypt(ctx, input.Name)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := u.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = u.createTx(ctx, input, encryptedName)
+	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = s.createTx(ctx, input, encryptedName)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (u *UseCase) Create(
 
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Create: completed",
+		"Ledger Account Service - Create: completed",
 		slog.String("name", input.Name),
 		slog.String("kind", string(input.Kind)),
 	)
@@ -61,14 +61,14 @@ func (u *UseCase) Create(
 	return account, nil
 }
 
-func (u *UseCase) createTx(
+func (s *Service) createTx(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
 	encryptedName []byte,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := u.db
-	tx := u.db.TxFromCtx(ctx)
+	client := s.db
+	tx := s.db.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -126,5 +126,5 @@ func (u *UseCase) createTx(
 
 	created.Edges.Parent = parent
 
-	return u.convertToGraph(ctx, created)
+	return s.convertToGraph(ctx, created)
 }

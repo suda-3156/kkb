@@ -14,20 +14,20 @@ import (
 
 // Unarchive unarchives a ledger account only if its parent account is not archived.
 // It does not unarchive descendant accounts.
-func (u *UseCase) Unarchive(
+func (s *Service) Unarchive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Unarchive: started",
+		"Ledger Account Service - Unarchive: started",
 		slog.String("public_id", id.String()),
 	)
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := u.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = u.unarchiveTx(ctx, id)
+	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = s.unarchiveTx(ctx, id)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -35,20 +35,20 @@ func (u *UseCase) Unarchive(
 
 	slog.InfoContext(
 		ctx,
-		"Ledger Account UseCase - Unarchive: completed",
+		"Ledger Account Service - Unarchive: completed",
 		slog.String("public_id", id.String()),
 	)
 
 	return account, nil
 }
 
-func (u *UseCase) unarchiveTx(
+func (s *Service) unarchiveTx(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := u.db
-	tx := u.db.TxFromCtx(ctx)
+	client := s.db
+	tx := s.db.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -85,5 +85,5 @@ func (u *UseCase) unarchiveTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return u.convertToGraph(ctx, account)
+	return s.convertToGraph(ctx, account)
 }

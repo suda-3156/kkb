@@ -14,7 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/config"
 	"github.com/suda-3156/kkb/go/internal/connection"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/kms"
-	ledgeraccount "github.com/suda-3156/kkb/go/internal/usecase/ledger_account"
+	ledgeraccount "github.com/suda-3156/kkb/go/internal/service/ledger_account"
 
 	"github.com/suda-3156/kkb/go/ent"
 	entmigrate "github.com/suda-3156/kkb/go/ent/migrate"
