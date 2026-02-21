@@ -55,7 +55,7 @@ func (LedgerAccount) Fields() []ent.Field {
 			Immutable(),
 		field.Bytes("account_name").
 			// Encrypted field
-			// MaxLen(). // TODO: Set max length for account name
+			MaxLen(500). // 100 chars in UTF8mb4 (~ 400 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			NotEmpty(),
 		field.Enum("kind").
 			GoType(LedgerAccountKind("")).
@@ -64,7 +64,7 @@ func (LedgerAccount) Fields() []ent.Field {
 		field.Bytes("archived_at").
 			// Encrypted field
 			// Null or datetime string in 2006-01-02T15:04:05+09:00 format
-			// MaxLen(). // TODO: Set max length for archived_at
+			MaxLen(125). // datetime 25 bytes + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			Optional(),
 		field.Time("created_at").
 			SchemaType(map[string]string{

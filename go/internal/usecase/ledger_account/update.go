@@ -34,6 +34,12 @@ func (u *UseCase) Update(
 		)
 	}
 
+	if input.Name != nil && len(*input.Name) > 100 {
+		return nil, apperr.NewBadRequestError(
+			fmt.Errorf("name must be at most 100 characters"),
+		)
+	}
+
 	// Encrypt
 	var encryptedName []byte
 	var err error

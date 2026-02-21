@@ -84,6 +84,8 @@ var (
 	PublicIDValidator func(string) error
 	// AccountNameValidator is a validator for the "account_name" field. It is called by the builders before save.
 	AccountNameValidator func([]byte) error
+	// ArchivedAtValidator is a validator for the "archived_at" field. It is called by the builders before save.
+	ArchivedAtValidator func([]byte) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.

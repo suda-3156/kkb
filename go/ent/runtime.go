@@ -37,7 +37,25 @@ func init() {
 	// ledgeraccountDescAccountName is the schema descriptor for account_name field.
 	ledgeraccountDescAccountName := ledgeraccountFields[1].Descriptor()
 	// ledgeraccount.AccountNameValidator is a validator for the "account_name" field. It is called by the builders before save.
-	ledgeraccount.AccountNameValidator = ledgeraccountDescAccountName.Validators[0].(func([]byte) error)
+	ledgeraccount.AccountNameValidator = func() func([]byte) error {
+		validators := ledgeraccountDescAccountName.Validators
+		fns := [...]func([]byte) error{
+			validators[0].(func([]byte) error),
+			validators[1].(func([]byte) error),
+		}
+		return func(account_name []byte) error {
+			for _, fn := range fns {
+				if err := fn(account_name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ledgeraccountDescArchivedAt is the schema descriptor for archived_at field.
+	ledgeraccountDescArchivedAt := ledgeraccountFields[4].Descriptor()
+	// ledgeraccount.ArchivedAtValidator is a validator for the "archived_at" field. It is called by the builders before save.
+	ledgeraccount.ArchivedAtValidator = ledgeraccountDescArchivedAt.Validators[0].(func([]byte) error)
 	// ledgeraccountDescCreatedAt is the schema descriptor for created_at field.
 	ledgeraccountDescCreatedAt := ledgeraccountFields[5].Descriptor()
 	// ledgeraccount.DefaultCreatedAt holds the default value on creation for the created_at field.

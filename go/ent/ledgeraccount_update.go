@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/predicate"
-	"github.com/suda-3156/kkb/go/ent/schema"
 )
 
 // LedgerAccountUpdate is the builder for updating LedgerAccount entities.
@@ -32,20 +31,6 @@ func (_u *LedgerAccountUpdate) Where(ps ...predicate.LedgerAccount) *LedgerAccou
 // SetAccountName sets the "account_name" field.
 func (_u *LedgerAccountUpdate) SetAccountName(v []byte) *LedgerAccountUpdate {
 	_u.mutation.SetAccountName(v)
-	return _u
-}
-
-// SetKind sets the "kind" field.
-func (_u *LedgerAccountUpdate) SetKind(v schema.LedgerAccountKind) *LedgerAccountUpdate {
-	_u.mutation.SetKind(v)
-	return _u
-}
-
-// SetNillableKind sets the "kind" field if the given value is not nil.
-func (_u *LedgerAccountUpdate) SetNillableKind(v *schema.LedgerAccountKind) *LedgerAccountUpdate {
-	if v != nil {
-		_u.SetKind(*v)
-	}
 	return _u
 }
 
@@ -190,9 +175,9 @@ func (_u *LedgerAccountUpdate) check() error {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Kind(); ok {
-		if err := ledgeraccount.KindValidator(v); err != nil {
-			return &ValidationError{Name: "kind", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.kind": %w`, err)}
+	if v, ok := _u.mutation.ArchivedAt(); ok {
+		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
+			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
 		}
 	}
 	return nil
@@ -212,9 +197,6 @@ func (_u *LedgerAccountUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if value, ok := _u.mutation.AccountName(); ok {
 		_spec.SetField(ledgeraccount.FieldAccountName, field.TypeBytes, value)
-	}
-	if value, ok := _u.mutation.Kind(); ok {
-		_spec.SetField(ledgeraccount.FieldKind, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.IsGroup(); ok {
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)
@@ -325,20 +307,6 @@ type LedgerAccountUpdateOne struct {
 // SetAccountName sets the "account_name" field.
 func (_u *LedgerAccountUpdateOne) SetAccountName(v []byte) *LedgerAccountUpdateOne {
 	_u.mutation.SetAccountName(v)
-	return _u
-}
-
-// SetKind sets the "kind" field.
-func (_u *LedgerAccountUpdateOne) SetKind(v schema.LedgerAccountKind) *LedgerAccountUpdateOne {
-	_u.mutation.SetKind(v)
-	return _u
-}
-
-// SetNillableKind sets the "kind" field if the given value is not nil.
-func (_u *LedgerAccountUpdateOne) SetNillableKind(v *schema.LedgerAccountKind) *LedgerAccountUpdateOne {
-	if v != nil {
-		_u.SetKind(*v)
-	}
 	return _u
 }
 
@@ -496,9 +464,9 @@ func (_u *LedgerAccountUpdateOne) check() error {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Kind(); ok {
-		if err := ledgeraccount.KindValidator(v); err != nil {
-			return &ValidationError{Name: "kind", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.kind": %w`, err)}
+	if v, ok := _u.mutation.ArchivedAt(); ok {
+		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
+			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
 		}
 	}
 	return nil
@@ -535,9 +503,6 @@ func (_u *LedgerAccountUpdateOne) sqlSave(ctx context.Context) (_node *LedgerAcc
 	}
 	if value, ok := _u.mutation.AccountName(); ok {
 		_spec.SetField(ledgeraccount.FieldAccountName, field.TypeBytes, value)
-	}
-	if value, ok := _u.mutation.Kind(); ok {
-		_spec.SetField(ledgeraccount.FieldKind, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.IsGroup(); ok {
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)

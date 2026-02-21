@@ -188,6 +188,11 @@ func (_c *LedgerAccountCreate) check() error {
 	if _, ok := _c.mutation.IsGroup(); !ok {
 		return &ValidationError{Name: "is_group", err: errors.New(`ent: missing required field "LedgerAccount.is_group"`)}
 	}
+	if v, ok := _c.mutation.ArchivedAt(); ok {
+		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
+			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "LedgerAccount.created_at"`)}
 	}

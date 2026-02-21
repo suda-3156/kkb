@@ -30,6 +30,12 @@ func (u *UseCase) Create(
 		)
 	}
 
+	if len(input.Name) > 100 {
+		return nil, apperr.NewBadRequestError(
+			fmt.Errorf("name must be at most 100 characters"),
+		)
+	}
+
 	// Encrypt
 	encryptedName, err := u.kms.Encrypt(ctx, input.Name)
 	if err != nil {
