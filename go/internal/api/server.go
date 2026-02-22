@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -31,10 +33,10 @@ func New(config *Config, env *serverenv.ServerEnv) (*Server, error) {
 	}, nil
 }
 
-func (s *Server) ServeMux() *http.ServeMux {
+func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
-		Resolvers:  &resolver.Resolver{},
+		Resolvers:  resolver.New(s.env.Database()),
 		Complexity: graph.ComplexityConfig(),
 	}))
 
@@ -52,6 +54,13 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", srv)
+
+	slog.InfoContext(
+		ctx,
+		"GraphQL server initialized",
+		slog.String("playground", "/"),
+		slog.String("queryEndpoint", "/query"),
+	)
 
 	return mux
 }

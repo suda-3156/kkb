@@ -7,10 +7,34 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/suda-3156/kkb/go/ent"
+	entmigrate "github.com/suda-3156/kkb/go/ent/migrate"
 	"github.com/suda-3156/kkb/go/internal/api"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/server"
 	"github.com/suda-3156/kkb/go/internal/setup"
 )
+
+// TODO: Temporal implement:
+func migrate(client *ent.Client) {
+	slog.Warn("Auto-migrating database schema in local environment...")
+	err := client.Debug().Schema.Create(
+		context.Background(),
+		entmigrate.WithDropIndex(true),
+		entmigrate.WithDropColumn(true),
+	)
+	if err != nil {
+		slog.Error("Failed to migrate schema", slog.String("reason", err.Error()))
+	}
+	slog.Info("Database schema migrated successfully.")
+}
+
+func entDebugLog(client *ent.Client) {
+	slog.Warn("Enabling Ent debug logging in local environment...")
+	// Errors are intentionally ignored - this is just for debug logging confirmation
+	_, _ = client.Debug().LedgerAccount.Query().All(context.Background())
+}
+
+// ---↑
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -44,7 +68,11 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("api.New: %w", err)
 	}
 
+	// TODO: Temporal implement
+	migrate(env.Database().Client)
+	entDebugLog(env.Database().Client)
+
 	server := server.New(cfg.Port)
 
-	return server.ServeHTTP(ctx, srv.ServeMux())
+	return server.ServeHTTP(ctx, srv.ServeMux(ctx))
 }
