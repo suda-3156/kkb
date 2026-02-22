@@ -1,9 +1,6 @@
 package database
 
-import (
-	"fmt"
-	"net/url"
-)
+import "fmt"
 
 type Config struct {
 	Name     string `env:"DB_NAME" json:",omitempty"`
@@ -17,22 +14,12 @@ func (c *Config) DatabaseConfig() *Config {
 	return c
 }
 
+// ConnectionURL returns a DSN string in the format expected by go-sql-driver/mysql:
 func (c *Config) ConnectionURL() string {
-	host := c.Host
-
-	if v := c.Port; v != "" {
-		host = fmt.Sprintf("%s:%s", c.Host, v)
+	addr := c.Host
+	if c.Port != "" {
+		addr = fmt.Sprintf("%s:%s", c.Host, c.Port)
 	}
 
-	u := &url.URL{
-		Scheme: "mysql",
-		Host:   host,
-		Path:   c.Name,
-	}
-
-	if c.User != "" || c.Password != "" {
-		u.User = url.UserPassword(c.User, c.Password)
-	}
-
-	return u.String()
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s", c.User, c.Password, addr, c.Name)
 }

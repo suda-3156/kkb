@@ -3,6 +3,7 @@ package setup
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sethvargo/go-envconfig"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
@@ -25,6 +26,13 @@ func SetupWith(
 	config interface{},
 	lookuper envconfig.Lookuper,
 ) (*serverenv.ServerEnv, error) {
+	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
+		Target:   config,
+		Lookuper: lookuper,
+	}); err != nil {
+		return nil, fmt.Errorf("failed to process environment variables: %w", err)
+	}
+
 	var serverEnvOpts []serverenv.Option
 
 	if provider, ok := config.(DatabaseConfigProvider); ok {

@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"

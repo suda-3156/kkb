@@ -1,0 +1,50 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"os/signal"
+	"syscall"
+
+	"github.com/suda-3156/kkb/go/internal/api"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/server"
+	"github.com/suda-3156/kkb/go/internal/setup"
+)
+
+func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer func() {
+		stop()
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "application panicked", slog.Any("error", r))
+		}
+	}()
+
+	err := run(ctx)
+	stop()
+
+	if err != nil {
+		slog.ErrorContext(ctx, "application error", slog.Any("error", err))
+	}
+
+	slog.InfoContext(ctx, "successful shutdown")
+}
+
+func run(ctx context.Context) error {
+	var cfg api.Config
+	env, err := setup.Setup(ctx, &cfg)
+	if err != nil {
+		return fmt.Errorf("setup.Setup: %w", err)
+	}
+	defer env.Close()
+
+	srv, err := api.New(&cfg, env)
+	if err != nil {
+		return fmt.Errorf("api.New: %w", err)
+	}
+
+	server := server.New(cfg.Port)
+
+	return server.ServeHTTP(ctx, srv.ServeMux())
+}
