@@ -4,15 +4,23 @@ package setup
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/sethvargo/go-envconfig"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	"github.com/suda-3156/kkb/go/internal/serverenv"
 )
 
 // DatabaseConfigProvider ensures that the environment config can provide database configuration.
 type DatabaseConfigProvider interface {
 	DatabaseConfig() *database.Config
+}
+
+// KeyManagerConfigProvider is a marker interface indicating the key manager
+// should be installed.
+type KeyManagerConfigProvider interface {
+	KeyManagerConfig() *keys.Config
 }
 
 // Setup initializes the server environment.
@@ -26,22 +34,73 @@ func SetupWith(
 	config interface{},
 	lookuper envconfig.Lookuper,
 ) (*serverenv.ServerEnv, error) {
-	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
-		Target:   config,
-		Lookuper: lookuper,
-	}); err != nil {
-		return nil, fmt.Errorf("failed to process environment variables: %w", err)
-	}
+	var mutators []envconfig.Mutator
 
 	var serverEnvOpts []serverenv.Option
 
+	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
+		Target:   config,
+		Lookuper: lookuper,
+		Mutators: mutators,
+	}); err != nil {
+		return nil, fmt.Errorf("failed to process environment variables: %w", err)
+	}
+	slog.InfoContext(
+		ctx,
+		"environment variables processed",
+		slog.Any("config", config),
+	)
+
+	// Database configuration
 	if provider, ok := config.(DatabaseConfigProvider); ok {
+		slog.InfoContext(
+			ctx,
+			"configuring database",
+		)
+
 		dbConfig := provider.DatabaseConfig()
 		db, err := database.New(ctx, dbConfig)
 		if err != nil {
 			return nil, err
 		}
+
 		serverEnvOpts = append(serverEnvOpts, serverenv.WithDatabase(db))
+
+		slog.InfoContext(
+			ctx,
+			"database configured",
+			slog.Any("config", dbConfig),
+		)
+	}
+
+	// Key manager configuration
+	if provider, ok := config.(KeyManagerConfigProvider); ok {
+		slog.InfoContext(
+			ctx,
+			"configuring key manager",
+		)
+
+		kmConfig := provider.KeyManagerConfig()
+		if err := envconfig.Process(ctx, &envconfig.Config{
+			Target:   kmConfig,
+			Lookuper: lookuper,
+			Mutators: mutators,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to process key manager environment variables: %w", err)
+		}
+
+		km, err := keys.KeyManagerFor(ctx, kmConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize key manager: %w", err)
+		}
+
+		serverEnvOpts = append(serverEnvOpts, serverenv.WithKeyManager(km))
+
+		slog.InfoContext(
+			ctx,
+			"key manager configured",
+			slog.Any("config", kmConfig),
+		)
 	}
 
 	return serverenv.New(ctx, serverEnvOpts...), nil

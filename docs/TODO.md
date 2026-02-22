@@ -4,6 +4,8 @@
 
 - slog -> zap
 - env/config load strategy
+- dek, key management
+- error, log strategy
 
 ### future
 

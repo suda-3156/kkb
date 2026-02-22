@@ -8,8 +8,14 @@ import (
 )
 
 type KeyManager interface {
-	Encrypt(ctx context.Context, KeyID string, plaintext []byte) ([]byte, error)
-	Decrypt(ctx context.Context, KeyID string, ciphertext []byte) ([]byte, error)
+	Encrypt(ctx context.Context, KeyID string, plaintext, aad []byte) ([]byte, error)
+	Decrypt(ctx context.Context, KeyID string, ciphertext, aad []byte) ([]byte, error)
+}
+
+type EncryptionKeyManager interface {
+	CreateEncryptionKey(ctx context.Context, parent, name string) (string, error)
+	CreateKeyVersion(ctx context.Context, parent string) (string, error)
+	DestroyKeyVersion(ctx context.Context, id string) error
 }
 
 type KeyManagerFunc func(context.Context, *Config) (KeyManager, error)

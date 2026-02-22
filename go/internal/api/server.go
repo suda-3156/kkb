@@ -26,6 +26,9 @@ func New(config *Config, env *serverenv.ServerEnv) (*Server, error) {
 	if env.Database() == nil {
 		return nil, fmt.Errorf("missing database connection in server environment")
 	}
+	if env.KeyManager() == nil {
+		return nil, fmt.Errorf("missing key manager in server environment")
+	}
 
 	return &Server{
 		config: config,
@@ -36,7 +39,9 @@ func New(config *Config, env *serverenv.ServerEnv) (*Server, error) {
 func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
-		Resolvers:  resolver.New(s.env.Database()),
+		Resolvers: resolver.New(
+			s.env.Database(), s.env.KeyManager(),
+		),
 		Complexity: graph.ComplexityConfig(),
 	}))
 
