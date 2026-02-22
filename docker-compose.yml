@@ -32,7 +32,7 @@ services:
     env_file:
       - ./.env.local
     volumes:
-      - ./go/:/app
+      - ./go:/app
     ports:
       - "8080:8080"
     stdin_open: true
