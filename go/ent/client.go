@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 )
 
 // Client is the client that holds all ent builders.
@@ -25,6 +26,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// LedgerAccount is the client for interacting with the LedgerAccount builders.
 	LedgerAccount *LedgerAccountClient
+	// LedgerEncryptionKey is the client for interacting with the LedgerEncryptionKey builders.
+	LedgerEncryptionKey *LedgerEncryptionKeyClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +40,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.LedgerAccount = NewLedgerAccountClient(c.config)
+	c.LedgerEncryptionKey = NewLedgerEncryptionKeyClient(c.config)
 }
 
 type (
@@ -127,9 +131,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		LedgerAccount: NewLedgerAccountClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		LedgerAccount:       NewLedgerAccountClient(cfg),
+		LedgerEncryptionKey: NewLedgerEncryptionKeyClient(cfg),
 	}, nil
 }
 
@@ -147,9 +152,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		LedgerAccount: NewLedgerAccountClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		LedgerAccount:       NewLedgerAccountClient(cfg),
+		LedgerEncryptionKey: NewLedgerEncryptionKeyClient(cfg),
 	}, nil
 }
 
@@ -179,12 +185,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.LedgerAccount.Use(hooks...)
+	c.LedgerEncryptionKey.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.LedgerAccount.Intercept(interceptors...)
+	c.LedgerEncryptionKey.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -192,6 +200,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *LedgerAccountMutation:
 		return c.LedgerAccount.mutate(ctx, m)
+	case *LedgerEncryptionKeyMutation:
+		return c.LedgerEncryptionKey.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -337,6 +347,22 @@ func (c *LedgerAccountClient) QueryChildren(_m *LedgerAccount) *LedgerAccountQue
 	return query
 }
 
+// QueryEncryptionKey queries the encryption_key edge of a LedgerAccount.
+func (c *LedgerAccountClient) QueryEncryptionKey(_m *LedgerAccount) *LedgerEncryptionKeyQuery {
+	query := (&LedgerEncryptionKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, id),
+			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ledgeraccount.EncryptionKeyTable, ledgeraccount.EncryptionKeyColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LedgerAccountClient) Hooks() []Hook {
 	return c.hooks.LedgerAccount
@@ -362,12 +388,161 @@ func (c *LedgerAccountClient) mutate(ctx context.Context, m *LedgerAccountMutati
 	}
 }
 
+// LedgerEncryptionKeyClient is a client for the LedgerEncryptionKey schema.
+type LedgerEncryptionKeyClient struct {
+	config
+}
+
+// NewLedgerEncryptionKeyClient returns a client for the LedgerEncryptionKey from the given config.
+func NewLedgerEncryptionKeyClient(c config) *LedgerEncryptionKeyClient {
+	return &LedgerEncryptionKeyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ledgerencryptionkey.Hooks(f(g(h())))`.
+func (c *LedgerEncryptionKeyClient) Use(hooks ...Hook) {
+	c.hooks.LedgerEncryptionKey = append(c.hooks.LedgerEncryptionKey, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ledgerencryptionkey.Intercept(f(g(h())))`.
+func (c *LedgerEncryptionKeyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LedgerEncryptionKey = append(c.inters.LedgerEncryptionKey, interceptors...)
+}
+
+// Create returns a builder for creating a LedgerEncryptionKey entity.
+func (c *LedgerEncryptionKeyClient) Create() *LedgerEncryptionKeyCreate {
+	mutation := newLedgerEncryptionKeyMutation(c.config, OpCreate)
+	return &LedgerEncryptionKeyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LedgerEncryptionKey entities.
+func (c *LedgerEncryptionKeyClient) CreateBulk(builders ...*LedgerEncryptionKeyCreate) *LedgerEncryptionKeyCreateBulk {
+	return &LedgerEncryptionKeyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LedgerEncryptionKeyClient) MapCreateBulk(slice any, setFunc func(*LedgerEncryptionKeyCreate, int)) *LedgerEncryptionKeyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LedgerEncryptionKeyCreateBulk{err: fmt.Errorf("calling to LedgerEncryptionKeyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LedgerEncryptionKeyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LedgerEncryptionKeyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LedgerEncryptionKey.
+func (c *LedgerEncryptionKeyClient) Update() *LedgerEncryptionKeyUpdate {
+	mutation := newLedgerEncryptionKeyMutation(c.config, OpUpdate)
+	return &LedgerEncryptionKeyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LedgerEncryptionKeyClient) UpdateOne(_m *LedgerEncryptionKey) *LedgerEncryptionKeyUpdateOne {
+	mutation := newLedgerEncryptionKeyMutation(c.config, OpUpdateOne, withLedgerEncryptionKey(_m))
+	return &LedgerEncryptionKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LedgerEncryptionKeyClient) UpdateOneID(id int) *LedgerEncryptionKeyUpdateOne {
+	mutation := newLedgerEncryptionKeyMutation(c.config, OpUpdateOne, withLedgerEncryptionKeyID(id))
+	return &LedgerEncryptionKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LedgerEncryptionKey.
+func (c *LedgerEncryptionKeyClient) Delete() *LedgerEncryptionKeyDelete {
+	mutation := newLedgerEncryptionKeyMutation(c.config, OpDelete)
+	return &LedgerEncryptionKeyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LedgerEncryptionKeyClient) DeleteOne(_m *LedgerEncryptionKey) *LedgerEncryptionKeyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LedgerEncryptionKeyClient) DeleteOneID(id int) *LedgerEncryptionKeyDeleteOne {
+	builder := c.Delete().Where(ledgerencryptionkey.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LedgerEncryptionKeyDeleteOne{builder}
+}
+
+// Query returns a query builder for LedgerEncryptionKey.
+func (c *LedgerEncryptionKeyClient) Query() *LedgerEncryptionKeyQuery {
+	return &LedgerEncryptionKeyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLedgerEncryptionKey},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LedgerEncryptionKey entity by its id.
+func (c *LedgerEncryptionKeyClient) Get(ctx context.Context, id int) (*LedgerEncryptionKey, error) {
+	return c.Query().Where(ledgerencryptionkey.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LedgerEncryptionKeyClient) GetX(ctx context.Context, id int) *LedgerEncryptionKey {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryLedgerAccounts queries the ledger_accounts edge of a LedgerEncryptionKey.
+func (c *LedgerEncryptionKeyClient) QueryLedgerAccounts(_m *LedgerEncryptionKey) *LedgerAccountQuery {
+	query := (&LedgerAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, id),
+			sqlgraph.To(ledgeraccount.Table, ledgeraccount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.LedgerAccountsTable, ledgerencryptionkey.LedgerAccountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LedgerEncryptionKeyClient) Hooks() []Hook {
+	return c.hooks.LedgerEncryptionKey
+}
+
+// Interceptors returns the client interceptors.
+func (c *LedgerEncryptionKeyClient) Interceptors() []Interceptor {
+	return c.inters.LedgerEncryptionKey
+}
+
+func (c *LedgerEncryptionKeyClient) mutate(ctx context.Context, m *LedgerEncryptionKeyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LedgerEncryptionKeyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LedgerEncryptionKeyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LedgerEncryptionKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LedgerEncryptionKeyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LedgerEncryptionKey mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		LedgerAccount []ent.Hook
+		LedgerAccount, LedgerEncryptionKey []ent.Hook
 	}
 	inters struct {
-		LedgerAccount []ent.Interceptor
+		LedgerAccount, LedgerEncryptionKey []ent.Interceptor
 	}
 )

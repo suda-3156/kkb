@@ -5,7 +5,7 @@ import "fmt"
 type Config struct {
 	Name     string `env:"DB_NAME" json:",omitempty"`
 	User     string `env:"DB_USER" json:",omitempty"`
-	Password string `env:"DB_PASSWORD" json:"-"` // ignored by zap's JSON formatter
+	Password string `env:"DB_PASSWORD" json:"-"`
 	Host     string `env:"DB_HOST" json:",omitempty"`
 	Port     string `env:"DB_PORT" json:",omitempty"`
 }

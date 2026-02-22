@@ -34,6 +34,8 @@ const (
 	EdgeParent = "parent"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
 	EdgeChildren = "children"
+	// EdgeEncryptionKey holds the string denoting the encryption_key edge name in mutations.
+	EdgeEncryptionKey = "encryption_key"
 	// Table holds the table name of the ledgeraccount in the database.
 	Table = "ledger_accounts"
 	// ParentTable is the table that holds the parent relation/edge.
@@ -44,6 +46,13 @@ const (
 	ChildrenTable = "ledger_accounts"
 	// ChildrenColumn is the table column denoting the children relation/edge.
 	ChildrenColumn = "ledger_account_children"
+	// EncryptionKeyTable is the table that holds the encryption_key relation/edge.
+	EncryptionKeyTable = "ledger_accounts"
+	// EncryptionKeyInverseTable is the table name for the LedgerEncryptionKey entity.
+	// It exists in this package in order to avoid circular dependency with the "ledgerencryptionkey" package.
+	EncryptionKeyInverseTable = "ledger_encryption_keys"
+	// EncryptionKeyColumn is the table column denoting the encryption_key relation/edge.
+	EncryptionKeyColumn = "ledger_encryption_key_ledger_accounts"
 )
 
 // Columns holds all SQL columns for ledgeraccount fields.
@@ -62,6 +71,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"ledger_account_children",
+	"ledger_encryption_key_ledger_accounts",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -157,6 +167,13 @@ func ByChildren(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newChildrenStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByEncryptionKeyField orders the results by encryption_key field.
+func ByEncryptionKeyField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEncryptionKeyStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newParentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -169,5 +186,12 @@ func newChildrenStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(Table, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ChildrenTable, ChildrenColumn),
+	)
+}
+func newEncryptionKeyStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EncryptionKeyInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, EncryptionKeyTable, EncryptionKeyColumn),
 	)
 }

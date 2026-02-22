@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -35,9 +36,10 @@ type LedgerAccount struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the LedgerAccountQuery when eager-loading is set.
-	Edges                   LedgerAccountEdges `json:"edges"`
-	ledger_account_children *int
-	selectValues            sql.SelectValues
+	Edges                                 LedgerAccountEdges `json:"edges"`
+	ledger_account_children               *int
+	ledger_encryption_key_ledger_accounts *int
+	selectValues                          sql.SelectValues
 }
 
 // LedgerAccountEdges holds the relations/edges for other nodes in the graph.
@@ -46,9 +48,11 @@ type LedgerAccountEdges struct {
 	Parent *LedgerAccount `json:"parent,omitempty"`
 	// Children holds the value of the children edge.
 	Children []*LedgerAccount `json:"children,omitempty"`
+	// EncryptionKey holds the value of the encryption_key edge.
+	EncryptionKey *LedgerEncryptionKey `json:"encryption_key,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // ParentOrErr returns the Parent value or an error if the edge
@@ -71,6 +75,17 @@ func (e LedgerAccountEdges) ChildrenOrErr() ([]*LedgerAccount, error) {
 	return nil, &NotLoadedError{edge: "children"}
 }
 
+// EncryptionKeyOrErr returns the EncryptionKey value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e LedgerAccountEdges) EncryptionKeyOrErr() (*LedgerEncryptionKey, error) {
+	if e.EncryptionKey != nil {
+		return e.EncryptionKey, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: ledgerencryptionkey.Label}
+	}
+	return nil, &NotLoadedError{edge: "encryption_key"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*LedgerAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -89,6 +104,8 @@ func (*LedgerAccount) scanValues(columns []string) ([]any, error) {
 		case ledgeraccount.FieldCreatedAt, ledgeraccount.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case ledgeraccount.ForeignKeys[0]: // ledger_account_children
+			values[i] = new(sql.NullInt64)
+		case ledgeraccount.ForeignKeys[1]: // ledger_encryption_key_ledger_accounts
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -160,6 +177,13 @@ func (_m *LedgerAccount) assignValues(columns []string, values []any) error {
 				_m.ledger_account_children = new(int)
 				*_m.ledger_account_children = int(value.Int64)
 			}
+		case ledgeraccount.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field ledger_encryption_key_ledger_accounts", value)
+			} else if value.Valid {
+				_m.ledger_encryption_key_ledger_accounts = new(int)
+				*_m.ledger_encryption_key_ledger_accounts = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -181,6 +205,11 @@ func (_m *LedgerAccount) QueryParent() *LedgerAccountQuery {
 // QueryChildren queries the "children" edge of the LedgerAccount entity.
 func (_m *LedgerAccount) QueryChildren() *LedgerAccountQuery {
 	return NewLedgerAccountClient(_m.config).QueryChildren(_m)
+}
+
+// QueryEncryptionKey queries the "encryption_key" edge of the LedgerAccount entity.
+func (_m *LedgerAccount) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
+	return NewLedgerAccountClient(_m.config).QueryEncryptionKey(_m)
 }
 
 // Update returns a builder for updating this LedgerAccount.

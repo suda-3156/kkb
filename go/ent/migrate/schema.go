@@ -12,13 +12,14 @@ var (
 	LedgerAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
-		{Name: "account_name", Type: field.TypeBytes, Size: 500},
+		{Name: "account_name", Type: field.TypeBytes, Size: 512},
 		{Name: "kind", Type: field.TypeEnum, Enums: []string{"ASSET", "LIABILITY", "EXPENSE", "REVENUE", "EQUITY"}},
 		{Name: "is_group", Type: field.TypeBool},
-		{Name: "archived_at", Type: field.TypeBytes, Nullable: true, Size: 125},
+		{Name: "archived_at", Type: field.TypeBytes, Nullable: true, Size: 128},
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "ledger_account_children", Type: field.TypeInt, Nullable: true},
+		{Name: "ledger_encryption_key_ledger_accounts", Type: field.TypeInt, Nullable: true},
 	}
 	// LedgerAccountsTable holds the schema information for the "ledger_accounts" table.
 	LedgerAccountsTable = &schema.Table{
@@ -32,14 +33,37 @@ var (
 				RefColumns: []*schema.Column{LedgerAccountsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
+			{
+				Symbol:     "ledger_accounts_ledger_encryption_keys_ledger_accounts",
+				Columns:    []*schema.Column{LedgerAccountsColumns[9]},
+				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
 		},
+	}
+	// LedgerEncryptionKeysColumns holds the columns for the "ledger_encryption_keys" table.
+	LedgerEncryptionKeysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "aad", Type: field.TypeBytes, Size: 32},
+		{Name: "wrapped_cipher", Type: field.TypeBytes, Size: 256},
+		{Name: "allowed", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+	}
+	// LedgerEncryptionKeysTable holds the schema information for the "ledger_encryption_keys" table.
+	LedgerEncryptionKeysTable = &schema.Table{
+		Name:       "ledger_encryption_keys",
+		Columns:    LedgerEncryptionKeysColumns,
+		PrimaryKey: []*schema.Column{LedgerEncryptionKeysColumns[0]},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		LedgerAccountsTable,
+		LedgerEncryptionKeysTable,
 	}
 )
 
 func init() {
 	LedgerAccountsTable.ForeignKeys[0].RefTable = LedgerAccountsTable
+	LedgerAccountsTable.ForeignKeys[1].RefTable = LedgerEncryptionKeysTable
 }

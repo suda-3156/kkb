@@ -55,7 +55,7 @@ func (LedgerAccount) Fields() []ent.Field {
 			Immutable(),
 		field.Bytes("account_name").
 			// Encrypted field
-			MaxLen(500). // 100 chars in UTF8mb4 (~ 400 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
+			MaxLen(512). // 100 chars in UTF8mb4 (~ 400 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			NotEmpty(),
 		field.Enum("kind").
 			GoType(LedgerAccountKind("")).
@@ -64,7 +64,7 @@ func (LedgerAccount) Fields() []ent.Field {
 		field.Bytes("archived_at").
 			// Encrypted field
 			// Null or datetime string in 2006-01-02T15:04:05+09:00 format
-			MaxLen(125). // datetime 25 bytes + overhead for encryption (e.g. 28 bytes for AES-GCM)
+			MaxLen(128). // datetime 25 bytes + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			Optional(),
 		field.Time("created_at").
 			SchemaType(map[string]string{
@@ -93,5 +93,9 @@ func (LedgerAccount) Edges() []ent.Edge {
 			Unique(),
 		// Journal entries using this account
 		// edge.To("journal_entries", JournalEntry.Type),
+		// Ledger encryption key used for encrypting this account's data
+		edge.From("encryption_key", LedgerEncryptionKey.Type).
+			Ref("ledger_accounts").
+			Unique(),
 	}
 }

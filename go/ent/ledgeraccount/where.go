@@ -413,6 +413,29 @@ func HasChildrenWith(preds ...predicate.LedgerAccount) predicate.LedgerAccount {
 	})
 }
 
+// HasEncryptionKey applies the HasEdge predicate on the "encryption_key" edge.
+func HasEncryptionKey() predicate.LedgerAccount {
+	return predicate.LedgerAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, EncryptionKeyTable, EncryptionKeyColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEncryptionKeyWith applies the HasEdge predicate on the "encryption_key" edge with a given conditions (other predicates).
+func HasEncryptionKeyWith(preds ...predicate.LedgerEncryptionKey) predicate.LedgerAccount {
+	return predicate.LedgerAccount(func(s *sql.Selector) {
+		step := newEncryptionKeyStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.LedgerAccount) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.AndPredicates(predicates...))

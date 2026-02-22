@@ -13,19 +13,21 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 )
 
 // LedgerAccountQuery is the builder for querying LedgerAccount entities.
 type LedgerAccountQuery struct {
 	config
-	ctx          *QueryContext
-	order        []ledgeraccount.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.LedgerAccount
-	withParent   *LedgerAccountQuery
-	withChildren *LedgerAccountQuery
-	withFKs      bool
+	ctx               *QueryContext
+	order             []ledgeraccount.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.LedgerAccount
+	withParent        *LedgerAccountQuery
+	withChildren      *LedgerAccountQuery
+	withEncryptionKey *LedgerEncryptionKeyQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -99,6 +101,28 @@ func (_q *LedgerAccountQuery) QueryChildren() *LedgerAccountQuery {
 			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, selector),
 			sqlgraph.To(ledgeraccount.Table, ledgeraccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgeraccount.ChildrenTable, ledgeraccount.ChildrenColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEncryptionKey chains the current query on the "encryption_key" edge.
+func (_q *LedgerAccountQuery) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
+	query := (&LedgerEncryptionKeyClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, selector),
+			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ledgeraccount.EncryptionKeyTable, ledgeraccount.EncryptionKeyColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -293,13 +317,14 @@ func (_q *LedgerAccountQuery) Clone() *LedgerAccountQuery {
 		return nil
 	}
 	return &LedgerAccountQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]ledgeraccount.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.LedgerAccount{}, _q.predicates...),
-		withParent:   _q.withParent.Clone(),
-		withChildren: _q.withChildren.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]ledgeraccount.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.LedgerAccount{}, _q.predicates...),
+		withParent:        _q.withParent.Clone(),
+		withChildren:      _q.withChildren.Clone(),
+		withEncryptionKey: _q.withEncryptionKey.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -325,6 +350,17 @@ func (_q *LedgerAccountQuery) WithChildren(opts ...func(*LedgerAccountQuery)) *L
 		opt(query)
 	}
 	_q.withChildren = query
+	return _q
+}
+
+// WithEncryptionKey tells the query-builder to eager-load the nodes that are connected to
+// the "encryption_key" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerAccountQuery) WithEncryptionKey(opts ...func(*LedgerEncryptionKeyQuery)) *LedgerAccountQuery {
+	query := (&LedgerEncryptionKeyClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withEncryptionKey = query
 	return _q
 }
 
@@ -407,12 +443,13 @@ func (_q *LedgerAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes       = []*LedgerAccount{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withParent != nil,
 			_q.withChildren != nil,
+			_q.withEncryptionKey != nil,
 		}
 	)
-	if _q.withParent != nil {
+	if _q.withParent != nil || _q.withEncryptionKey != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -446,6 +483,12 @@ func (_q *LedgerAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		if err := _q.loadChildren(ctx, query, nodes,
 			func(n *LedgerAccount) { n.Edges.Children = []*LedgerAccount{} },
 			func(n *LedgerAccount, e *LedgerAccount) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withEncryptionKey; query != nil {
+		if err := _q.loadEncryptionKey(ctx, query, nodes, nil,
+			func(n *LedgerAccount, e *LedgerEncryptionKey) { n.Edges.EncryptionKey = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -512,6 +555,38 @@ func (_q *LedgerAccountQuery) loadChildren(ctx context.Context, query *LedgerAcc
 			return fmt.Errorf(`unexpected referenced foreign-key "ledger_account_children" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (_q *LedgerAccountQuery) loadEncryptionKey(ctx context.Context, query *LedgerEncryptionKeyQuery, nodes []*LedgerAccount, init func(*LedgerAccount), assign func(*LedgerAccount, *LedgerEncryptionKey)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*LedgerAccount)
+	for i := range nodes {
+		if nodes[i].ledger_encryption_key_ledger_accounts == nil {
+			continue
+		}
+		fk := *nodes[i].ledger_encryption_key_ledger_accounts
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(ledgerencryptionkey.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "ledger_encryption_key_ledger_accounts" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

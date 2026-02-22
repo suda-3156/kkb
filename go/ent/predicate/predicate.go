@@ -8,3 +8,6 @@ import (
 
 // LedgerAccount is the predicate function for ledgeraccount builders.
 type LedgerAccount func(*sql.Selector)
+
+// LedgerEncryptionKey is the predicate function for ledgerencryptionkey builders.
+type LedgerEncryptionKey func(*sql.Selector)
