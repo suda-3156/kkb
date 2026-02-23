@@ -13,9 +13,15 @@ type KeyManager interface {
 }
 
 type EncryptionKeyManager interface {
-	CreateEncryptionKey(ctx context.Context, parent, name string) (string, error)
-	CreateKeyVersion(ctx context.Context, parent string) (string, error)
-	DestroyKeyVersion(ctx context.Context, id string) error
+	// CreateEncryptionKey creates a new encryption key with the given name under the given group.
+	// Returns the ID (= group/name) of the created key.
+	CreateEncryptionKey(ctx context.Context, group, name string) (string, error)
+
+	// CreateKeyVersion creates a new version of the key with the given ID (= group/name).
+	CreateKeyVersion(ctx context.Context, keyID string) (string, error)
+
+	// DestroyKeyVersion destroys the key version with the given ID (= group/name/version).
+	DestroyKeyVersion(ctx context.Context, keyVersionID string) error
 }
 
 type KeyManagerFunc func(context.Context, *Config) (KeyManager, error)

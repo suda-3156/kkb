@@ -31,6 +31,8 @@ func New(ctx context.Context, cfg *Config) (*DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
+	slog.InfoContext(ctx, "database connection established successfully")
+
 	return &DB{
 		Client: client,
 	}, nil
