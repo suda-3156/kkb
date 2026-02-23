@@ -16,7 +16,7 @@ type Config struct {
 	WrapperKeyID string `env:"ENCRYPTION_KMS_KEY_ID"`
 
 	// Duration for which the encryption keys are cached in memory.
-	CacheTTL time.Duration `env:"ENCRYPTION_CACHE_TTL_SECONDS"`
+	CacheTTL time.Duration `env:"ENCRYPTION_CACHE_TTL"`
 
 	// AAD for ledger data encryption, not for key wrapping.
 	AAD []byte `env:"ENCRYPTION_AAD"`

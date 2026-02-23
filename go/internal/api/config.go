@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	"github.com/suda-3156/kkb/go/internal/setup"
@@ -12,8 +13,9 @@ var (
 )
 
 type Config struct {
-	Database   database.Config
-	KeyManager keys.Config
+	Database         database.Config
+	KeyManager       keys.Config
+	EncryptionManger encryption.Config
 
 	Port string `env:"PORT, default=8080"`
 }

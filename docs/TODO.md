@@ -2,7 +2,7 @@
 
 ## go
 
-- slog -> zap
+- slog -> zap (json tag)
 - env/config load strategy
 - dek, key management
 - error, log strategy

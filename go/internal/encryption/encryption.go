@@ -32,6 +32,8 @@ type EncryptionManager struct {
 
 	// Key ID of the wrapper key used for encrypting DEKs.
 	wrapperKeyID string
+	// AAD for ledger data encryption, not for key wrapping.
+	aad []byte
 
 	// To protect concurrent access to the cache
 	mu sync.RWMutex
@@ -53,6 +55,8 @@ func New(config *Config) *EncryptionManager {
 		db:           config.Database,
 		km:           config.KeyManager,
 		wrapperKeyID: config.WrapperKeyID,
+		aad:          config.AAD,
+		allowed:      make(map[int]*EncryptionKey),
 		cacheTTL:     config.CacheTTL,
 		refreshAfter: now.Add(-2 * config.CacheTTL), // Force refresh on first use
 	}
@@ -87,7 +91,10 @@ func (em *EncryptionManager) maybeRefresh(ctx context.Context) error {
 		return fmt.Errorf("failed to query allowed keys: %w", err)
 	}
 
-	effective := allowed[0] // most recently created allowed key
+	var effective *ent.LedgerEncryptionKey
+	if len(allowed) > 0 {
+		effective = allowed[0] // The most recently created allowed key is the effective key.
+	}
 
 	// If cache IDs contains all allowed keys in the database
 	// and the effective key ID is the same as the cached one, no need to refresh.

@@ -13,16 +13,21 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/resolver"
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/serverenv"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
 type Server struct {
-	config *Config
-	env    *serverenv.ServerEnv
+	cfg *Config
+	env *serverenv.ServerEnv
+
+	em *encryption.EncryptionManager
 }
 
-func New(config *Config, env *serverenv.ServerEnv) (*Server, error) {
+func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, error) {
+	slog.InfoContext(ctx, "initializing GraphQL server")
+
 	if env.Database() == nil {
 		return nil, fmt.Errorf("missing database connection in server environment")
 	}
@@ -30,9 +35,29 @@ func New(config *Config, env *serverenv.ServerEnv) (*Server, error) {
 		return nil, fmt.Errorf("missing key manager in server environment")
 	}
 
+	// Initialize the encryption manager.
+	slog.DebugContext(ctx, "initializing encryption manager")
+
+	if len(cfg.EncryptionManger.AAD) == 0 {
+		return nil, fmt.Errorf("encryption AAD must be provided via ENCRYPTION_AAD environment variable")
+	}
+	emConfig := &encryption.Config{
+		Database:     env.Database(),
+		KeyManager:   env.KeyManager(),
+		WrapperKeyID: cfg.EncryptionManger.WrapperKeyID,
+		CacheTTL:     cfg.EncryptionManger.CacheTTL,
+		AAD:          cfg.EncryptionManger.AAD,
+	}
+	em := encryption.New(emConfig)
+
+	slog.DebugContext(ctx, "encryption manager initialized successfully")
+
+	slog.InfoContext(ctx, "GraphQL server initialized successfully")
+
 	return &Server{
-		config: config,
-		env:    env,
+		cfg: cfg,
+		env: env,
+		em:  em,
 	}, nil
 }
 
@@ -40,7 +65,7 @@ func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
 		Resolvers: resolver.New(
-			s.env.Database(), s.env.KeyManager(),
+			s.env.Database(), s.em,
 		),
 		Complexity: graph.ComplexityConfig(),
 	}))

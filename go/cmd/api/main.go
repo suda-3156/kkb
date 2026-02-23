@@ -45,6 +45,8 @@ func main() {
 		}
 	}()
 
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
 	err := run(ctx)
 	stop()
 
@@ -63,7 +65,7 @@ func run(ctx context.Context) error {
 	}
 	defer env.Close()
 
-	srv, err := api.New(&cfg, env)
+	srv, err := api.New(ctx, &cfg, env)
 	if err != nil {
 		return fmt.Errorf("api.New: %w", err)
 	}

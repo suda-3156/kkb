@@ -17,26 +17,15 @@ func (m *LedgerAccountManager) Get(
 	publicID *pulid.ID,
 	ID *int,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
 		"Ledger Account Service - Get: started",
-		slog.String("public_id", func() string {
-			if publicID != nil {
-				return publicID.String()
-			}
-			return "nil"
-		}()),
-		slog.Int("id", func() int {
-			if ID != nil {
-				return *ID
-			}
-			return 0
-		}()),
+		slog.String("public_id", publicID.String()),
 	)
 
 	if publicID == nil && ID == nil {
 		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("either publicID or ID is required"),
+			fmt.Errorf("ID is required"),
 		)
 	}
 

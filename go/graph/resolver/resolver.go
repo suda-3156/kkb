@@ -1,8 +1,8 @@
 package resolver
 
 import (
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
-	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 )
 
@@ -15,8 +15,8 @@ type Resolver struct {
 	lac *ledgeraccount.LedgerAccountManager
 }
 
-func New(db *database.DB, km keys.KeyManager) *Resolver {
+func New(db *database.DB, em *encryption.EncryptionManager) *Resolver {
 	return &Resolver{
-		lac: ledgeraccount.New(db, km),
+		lac: ledgeraccount.New(db, em),
 	}
 }

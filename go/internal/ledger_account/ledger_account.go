@@ -1,15 +1,15 @@
 package ledgeraccount
 
 import (
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
-	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 )
 
 type LedgerAccountManager struct {
 	db *database.DB
-	km keys.KeyManager
+	em *encryption.EncryptionManager
 }
 
-func New(db *database.DB, km keys.KeyManager) *LedgerAccountManager {
-	return &LedgerAccountManager{db: db, km: km}
+func New(db *database.DB, em *encryption.EncryptionManager) *LedgerAccountManager {
+	return &LedgerAccountManager{db: db, em: em}
 }
