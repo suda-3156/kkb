@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -34,6 +35,8 @@ func main() {
 
 	// TODO: Make log level configurable via environment variable
 	slog.SetLogLoggerLevel(slog.LevelDebug)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
 	err := run(ctx)
 	stop()
