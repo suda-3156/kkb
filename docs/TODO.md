@@ -2,8 +2,10 @@
 
 ## go
 
-- slog -> zap
-- env/config load strategy
+- slog -> zap (json tag)
+- error, log strategy
+- refactor `WithTx` func to get `tx client` by itself.
+- use int64 explicitly
 
 ### future
 

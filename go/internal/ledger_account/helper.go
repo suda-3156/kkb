@@ -2,7 +2,6 @@ package ledgeraccount
 
 import (
 	"context"
-	"time"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/schema"
@@ -10,7 +9,7 @@ import (
 	apperr "github.com/suda-3156/kkb/go/internal/error"
 )
 
-func convertKindToEnt(kind graph.LedgerAccountKind) schema.LedgerAccountKind {
+func (m *LedgerAccountManager) convertKindToEnt(kind graph.LedgerAccountKind) schema.LedgerAccountKind {
 	switch kind {
 	case graph.LedgerAccountKindAsset:
 		return schema.Asset
@@ -27,7 +26,7 @@ func convertKindToEnt(kind graph.LedgerAccountKind) schema.LedgerAccountKind {
 	}
 }
 
-func convertKindToGraph(kind schema.LedgerAccountKind) graph.LedgerAccountKind {
+func (m *LedgerAccountManager) convertKindToGraph(kind schema.LedgerAccountKind) graph.LedgerAccountKind {
 	switch kind {
 	case schema.Asset:
 		return graph.LedgerAccountKindAsset
@@ -44,33 +43,13 @@ func convertKindToGraph(kind schema.LedgerAccountKind) graph.LedgerAccountKind {
 	}
 }
 
-func (s *Service) decryptArchivedAt(ctx context.Context, archivedAt []byte) (*time.Time, error) {
-	var decrypted time.Time
-
-	if archivedAt != nil {
-		str, err := s.kms.Decrypt(ctx, archivedAt)
-		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
-		}
-		decrypted, err = time.Parse(time.RFC3339, str)
-		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
-		}
+func (m *LedgerAccountManager) convertToGraph(ctx context.Context, lac *ent.LedgerAccount) (*graph.LedgerAccount, error) {
+	keyID := lac.Edges.EncryptionKey.ID
+	if keyID == 0 {
+		panic("encryption key not loaded for ledger account")
 	}
 
-	return &decrypted, nil
-}
-
-func (s *Service) convertToGraph(
-	ctx context.Context,
-	lac *ent.LedgerAccount,
-) (*graph.LedgerAccount, error) {
-	decryptedName, err := s.kms.Decrypt(ctx, lac.AccountName)
-	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
-	}
-
-	decryptedArchivedAt, err := s.decryptArchivedAt(ctx, lac.ArchivedAt)
+	name, err := m.em.Decrypt(ctx, lac.AccountName, keyID)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
@@ -80,23 +59,21 @@ func (s *Service) convertToGraph(
 		parent = &graph.LedgerAccount{
 			IntID: lac.Edges.Parent.ID,
 		}
-	} else {
-		parent = nil
 	}
 
 	return &graph.LedgerAccount{
 		ID:         lac.PublicID,
 		Parent:     parent,
-		Name:       decryptedName,
-		Kind:       convertKindToGraph(lac.Kind),
+		Name:       name,
+		Kind:       m.convertKindToGraph(lac.Kind),
 		IsGroup:    lac.IsGroup,
-		ArchivedAt: decryptedArchivedAt,
+		ArchivedAt: lac.ArchivedAt,
 		CreatedAt:  lac.CreatedAt,
 		UpdatedAt:  lac.UpdatedAt,
 	}, nil
 }
 
-func (s *Service) convertToGraphConnection(
+func (m *LedgerAccountManager) convertToGraphConnection(
 	ctx context.Context,
 	lacs []*ent.LedgerAccount,
 	hasPrevPage bool,
@@ -105,7 +82,7 @@ func (s *Service) convertToGraphConnection(
 	result := &graph.LedgerAccountConnection{}
 
 	for _, lac := range lacs {
-		converted, err := s.convertToGraph(ctx, lac)
+		converted, err := m.convertToGraph(ctx, lac)
 		if err != nil {
 			return nil, err
 		}

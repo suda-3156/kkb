@@ -7,20 +7,14 @@ import (
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	graph "github.com/suda-3156/kkb/go/graph/model"
+	apperr "github.com/suda-3156/kkb/go/internal/error"
 )
 
-func (s *Service) Update(
+func (m *LedgerAccountManager) Update(
 	ctx context.Context,
 	input graph.UpdateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Update: started",
-		slog.String("public_id", input.ID.String()),
-	)
-
 	// Check if the input is valid.
 	if input.ParentID != nil && *input.ParentID == input.ID {
 		return nil, apperr.NewBadRequestError(
@@ -42,18 +36,18 @@ func (s *Service) Update(
 
 	// Encrypt
 	var encryptedName []byte
-	var err error
+	// var err error
 	if input.Name != nil {
-		encryptedName, err = s.kms.Encrypt(ctx, *input.Name)
-		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
-		}
+		encryptedName = []byte(*input.Name) // TODO: implement encryption
+		// if err != nil {
+		// 	return nil, apperr.NewInternalServerError(err)
+		// }
 	}
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = s.updateTx(ctx, input, encryptedName)
+	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = m.updateTx(ctx, input, encryptedName)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -68,14 +62,14 @@ func (s *Service) Update(
 	return account, nil
 }
 
-func (s *Service) updateTx(
+func (m *LedgerAccountManager) updateTx(
 	ctx context.Context,
 	input graph.UpdateLedgerAccountInput,
 	encryptedName []byte,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := s.db
-	tx := s.db.TxFromCtx(ctx)
+	client := m.db.Client
+	tx := client.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -83,6 +77,8 @@ func (s *Service) updateTx(
 	// Get the existing ledger account
 	existing, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(input.ID)).
+		WithEncryptionKey().
+		WithParent().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -103,7 +99,7 @@ func (s *Service) updateTx(
 
 	// Check parent account if parent ID is provided
 	var parent *ent.LedgerAccount = nil
-	if input.ParentID != nil && input.ParentID != &existing.Edges.Parent.PublicID {
+	if input.ParentID != nil {
 		parent, err = client.LedgerAccount.Query().
 			Where(ledgeraccount.PublicID(*input.ParentID)).
 			Only(ctx)
@@ -172,5 +168,14 @@ func (s *Service) updateTx(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return s.convertToGraph(ctx, updated)
+	// Reload with EncryptionKey edge (Save does not populate edges)
+	updated, err = client.LedgerAccount.Query().
+		Where(ledgeraccount.ID(updated.ID)).
+		WithEncryptionKey().
+		Only(ctx)
+	if err != nil {
+		return nil, apperr.NewInternalServerError(err)
+	}
+
+	return m.convertToGraph(ctx, updated)
 }

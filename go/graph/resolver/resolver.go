@@ -1,6 +1,10 @@
 package resolver
 
-import ledgeraccount "github.com/suda-3156/kkb/go/internal/service/ledger_account"
+import (
+	"github.com/suda-3156/kkb/go/internal/encryption"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
+	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -8,5 +12,11 @@ import ledgeraccount "github.com/suda-3156/kkb/go/internal/service/ledger_accoun
 // here.
 
 type Resolver struct {
-	Lac *ledgeraccount.Service
+	lac *ledgeraccount.LedgerAccountManager
+}
+
+func New(db *database.DB, em *encryption.EncryptionManager) *Resolver {
+	return &Resolver{
+		lac: ledgeraccount.New(db, em),
+	}
 }

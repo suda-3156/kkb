@@ -14,41 +14,35 @@ import (
 )
 
 // Archive archives a ledger account and all its descendant accounts.
-func (s *Service) Archive(
+func (m *LedgerAccountManager) Archive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Archive: started",
+		"ledger account - archive called",
 		slog.String("public_id", id.String()),
 	)
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = s.archiveTx(ctx, id)
+	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = m.archiveTx(ctx, id)
 		return errTx
 	}); err != nil {
 		return nil, err
 	}
 
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Archive: completed",
-		slog.String("public_id", id.String()),
-	)
-
 	return account, nil
 }
 
-func (s *Service) archiveTx(
+func (m *LedgerAccountManager) archiveTx(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := s.db
-	tx := s.db.TxFromCtx(ctx)
+	client := m.db.Client
+	tx := client.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -56,6 +50,7 @@ func (s *Service) archiveTx(
 	// Get the account to archive.
 	account, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(id)).
+		WithEncryptionKey().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -68,17 +63,13 @@ func (s *Service) archiveTx(
 
 	// Check if the account is already archived.
 	if account.ArchivedAt != nil {
-		return s.convertToGraph(ctx, account)
+		return m.convertToGraph(ctx, account)
 	}
 
 	// Archive the account and its descendants.
 	now := time.Now()
-	encryptedNow, err := s.kms.Encrypt(ctx, now.Format(time.RFC3339))
-	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
-	}
 
-	descendantIDs, err := s.collectDescendantIDs(ctx, client, account.ID)
+	descendantIDs, err := m.collectDescendantIDs(ctx, client, account.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -87,23 +78,26 @@ func (s *Service) archiveTx(
 
 	_, err = client.LedgerAccount.Update().
 		Where(ledgeraccount.IDIn(allIDs...)).
-		SetArchivedAt(encryptedNow).
+		SetArchivedAt(now).
 		Save(ctx)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	// Reload the account to get updated data
-	account, err = client.LedgerAccount.Get(ctx, account.ID)
+	// Reload the account to get updated data (with EncryptionKey edge for convertToGraph)
+	account, err = client.LedgerAccount.Query().
+		Where(ledgeraccount.ID(account.ID)).
+		WithEncryptionKey().
+		Only(ctx)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return s.convertToGraph(ctx, account)
+	return m.convertToGraph(ctx, account)
 }
 
 // collectDescendantIDs collects all descendant account IDs using BFS (Breadth-First Search).
-func (s *Service) collectDescendantIDs(
+func (m *LedgerAccountManager) collectDescendantIDs(
 	ctx context.Context,
 	client *ent.Client,
 	parentID int,

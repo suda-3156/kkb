@@ -8,17 +8,18 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
-func (s *Service) Create(
+func (m *LedgerAccountManager) Create(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Create: started",
+		"ledger account - create called",
 		slog.String("name", input.Name),
 		slog.String("kind", string(input.Kind)),
 	)
@@ -37,38 +38,32 @@ func (s *Service) Create(
 	}
 
 	// Encrypt
-	encryptedName, err := s.kms.Encrypt(ctx, input.Name)
+	encrypted, err := m.em.Encrypt(ctx, input.Name)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
+	// Create the account in a transaction.
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = s.createTx(ctx, input, encryptedName)
+	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = m.createTx(ctx, input, encrypted)
 		return errTx
 	}); err != nil {
 		return nil, err
 	}
 
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Create: completed",
-		slog.String("name", input.Name),
-		slog.String("kind", string(input.Kind)),
-	)
-
 	return account, nil
 }
 
-func (s *Service) createTx(
+func (m *LedgerAccountManager) createTx(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
-	encryptedName []byte,
+	encrypted *encryption.EncryptionPayload,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := s.db
-	tx := s.db.TxFromCtx(ctx)
+	client := m.db.Client
+	tx := client.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -97,7 +92,7 @@ func (s *Service) createTx(
 			)
 		}
 
-		if parent.Kind != convertKindToEnt(input.Kind) {
+		if parent.Kind != m.convertKindToEnt(input.Kind) {
 			return nil, apperr.NewBadRequestError(
 				fmt.Errorf("parent ledger account kind must match the new account kind"),
 			)
@@ -111,11 +106,12 @@ func (s *Service) createTx(
 
 	publicID := pulid.MustNew("lac_")
 
-	kind := convertKindToEnt(input.Kind)
+	kind := m.convertKindToEnt(input.Kind)
 
 	created, err := client.LedgerAccount.Create().
 		SetPublicID(publicID).
-		SetAccountName(encryptedName).
+		SetAccountName(encrypted.Ciphertext).
+		SetEncryptionKeyID(encrypted.KeyID).
 		SetIsGroup(input.IsGroup).
 		SetKind(kind).
 		SetNillableParentID(parentID).
@@ -125,6 +121,7 @@ func (s *Service) createTx(
 	}
 
 	created.Edges.Parent = parent
+	created.Edges.EncryptionKey = &ent.LedgerEncryptionKey{ID: encrypted.KeyID}
 
-	return s.convertToGraph(ctx, created)
+	return m.convertToGraph(ctx, created)
 }

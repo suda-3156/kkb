@@ -8,7 +8,7 @@ GRANT CREATE,
     SELECT,
     UPDATE,
     DELETE,
-    REFERENCES ON kkb_db.* TO 'username' @'%';
+    REFERENCES ON kkb_db.* TO 'user' @'%';
 -- If required:
--- GRANT CREATE ON *.* TO 'username'@'%';
+-- GRANT CREATE ON *.* TO 'user'@'%';
 FLUSH PRIVILEGES;

@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// LedgerAccount is the client for interacting with the LedgerAccount builders.
 	LedgerAccount *LedgerAccountClient
+	// LedgerEncryptionKey is the client for interacting with the LedgerEncryptionKey builders.
+	LedgerEncryptionKey *LedgerEncryptionKeyClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.LedgerAccount = NewLedgerAccountClient(tx.config)
+	tx.LedgerEncryptionKey = NewLedgerEncryptionKeyClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

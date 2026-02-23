@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -47,8 +48,16 @@ func (_c *LedgerAccountCreate) SetIsGroup(v bool) *LedgerAccountCreate {
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (_c *LedgerAccountCreate) SetArchivedAt(v []byte) *LedgerAccountCreate {
+func (_c *LedgerAccountCreate) SetArchivedAt(v time.Time) *LedgerAccountCreate {
 	_c.mutation.SetArchivedAt(v)
+	return _c
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_c *LedgerAccountCreate) SetNillableArchivedAt(v *time.Time) *LedgerAccountCreate {
+	if v != nil {
+		_c.SetArchivedAt(*v)
+	}
 	return _c
 }
 
@@ -112,6 +121,25 @@ func (_c *LedgerAccountCreate) AddChildren(v ...*LedgerAccount) *LedgerAccountCr
 		ids[i] = v[i].ID
 	}
 	return _c.AddChildIDs(ids...)
+}
+
+// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
+func (_c *LedgerAccountCreate) SetEncryptionKeyID(id int) *LedgerAccountCreate {
+	_c.mutation.SetEncryptionKeyID(id)
+	return _c
+}
+
+// SetNillableEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID if the given value is not nil.
+func (_c *LedgerAccountCreate) SetNillableEncryptionKeyID(id *int) *LedgerAccountCreate {
+	if id != nil {
+		_c = _c.SetEncryptionKeyID(*id)
+	}
+	return _c
+}
+
+// SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (_c *LedgerAccountCreate) SetEncryptionKey(v *LedgerEncryptionKey) *LedgerAccountCreate {
+	return _c.SetEncryptionKeyID(v.ID)
 }
 
 // Mutation returns the LedgerAccountMutation object of the builder.
@@ -188,11 +216,6 @@ func (_c *LedgerAccountCreate) check() error {
 	if _, ok := _c.mutation.IsGroup(); !ok {
 		return &ValidationError{Name: "is_group", err: errors.New(`ent: missing required field "LedgerAccount.is_group"`)}
 	}
-	if v, ok := _c.mutation.ArchivedAt(); ok {
-		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
-			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "LedgerAccount.created_at"`)}
 	}
@@ -242,8 +265,8 @@ func (_c *LedgerAccountCreate) createSpec() (*LedgerAccount, *sqlgraph.CreateSpe
 		_node.IsGroup = value
 	}
 	if value, ok := _c.mutation.ArchivedAt(); ok {
-		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeBytes, value)
-		_node.ArchivedAt = value
+		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeTime, value)
+		_node.ArchivedAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ledgeraccount.FieldCreatedAt, field.TypeTime, value)
@@ -284,6 +307,23 @@ func (_c *LedgerAccountCreate) createSpec() (*LedgerAccount, *sqlgraph.CreateSpe
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.EncryptionKeyIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ledgeraccount.EncryptionKeyTable,
+			Columns: []string{ledgeraccount.EncryptionKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ledger_encryption_key_ledger_accounts = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

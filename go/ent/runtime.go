@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
 )
 
@@ -52,10 +53,6 @@ func init() {
 			return nil
 		}
 	}()
-	// ledgeraccountDescArchivedAt is the schema descriptor for archived_at field.
-	ledgeraccountDescArchivedAt := ledgeraccountFields[4].Descriptor()
-	// ledgeraccount.ArchivedAtValidator is a validator for the "archived_at" field. It is called by the builders before save.
-	ledgeraccount.ArchivedAtValidator = ledgeraccountDescArchivedAt.Validators[0].(func([]byte) error)
 	// ledgeraccountDescCreatedAt is the schema descriptor for created_at field.
 	ledgeraccountDescCreatedAt := ledgeraccountFields[5].Descriptor()
 	// ledgeraccount.DefaultCreatedAt holds the default value on creation for the created_at field.
@@ -66,4 +63,28 @@ func init() {
 	ledgeraccount.DefaultUpdatedAt = ledgeraccountDescUpdatedAt.Default.(func() time.Time)
 	// ledgeraccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ledgeraccount.UpdateDefaultUpdatedAt = ledgeraccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ledgerencryptionkeyFields := schema.LedgerEncryptionKey{}.Fields()
+	_ = ledgerencryptionkeyFields
+	// ledgerencryptionkeyDescAad is the schema descriptor for aad field.
+	ledgerencryptionkeyDescAad := ledgerencryptionkeyFields[0].Descriptor()
+	// ledgerencryptionkey.AadValidator is a validator for the "aad" field. It is called by the builders before save.
+	ledgerencryptionkey.AadValidator = ledgerencryptionkeyDescAad.Validators[0].(func([]byte) error)
+	// ledgerencryptionkeyDescWrappedCipher is the schema descriptor for wrapped_cipher field.
+	ledgerencryptionkeyDescWrappedCipher := ledgerencryptionkeyFields[1].Descriptor()
+	// ledgerencryptionkey.WrappedCipherValidator is a validator for the "wrapped_cipher" field. It is called by the builders before save.
+	ledgerencryptionkey.WrappedCipherValidator = ledgerencryptionkeyDescWrappedCipher.Validators[0].(func([]byte) error)
+	// ledgerencryptionkeyDescAllowed is the schema descriptor for allowed field.
+	ledgerencryptionkeyDescAllowed := ledgerencryptionkeyFields[2].Descriptor()
+	// ledgerencryptionkey.DefaultAllowed holds the default value on creation for the allowed field.
+	ledgerencryptionkey.DefaultAllowed = ledgerencryptionkeyDescAllowed.Default.(bool)
+	// ledgerencryptionkeyDescCreatedAt is the schema descriptor for created_at field.
+	ledgerencryptionkeyDescCreatedAt := ledgerencryptionkeyFields[3].Descriptor()
+	// ledgerencryptionkey.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ledgerencryptionkey.DefaultCreatedAt = ledgerencryptionkeyDescCreatedAt.Default.(func() time.Time)
+	// ledgerencryptionkeyDescUpdatedAt is the schema descriptor for updated_at field.
+	ledgerencryptionkeyDescUpdatedAt := ledgerencryptionkeyFields[4].Descriptor()
+	// ledgerencryptionkey.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ledgerencryptionkey.DefaultUpdatedAt = ledgerencryptionkeyDescUpdatedAt.Default.(func() time.Time)
+	// ledgerencryptionkey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ledgerencryptionkey.UpdateDefaultUpdatedAt = ledgerencryptionkeyDescUpdatedAt.UpdateDefault.(func() time.Time)
 }

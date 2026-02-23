@@ -2,7 +2,7 @@
 
 ## Phase 1: Backend server
 
-### Queries: Ledger account
+### [DONE] Queries: Ledger account
 
 - create
 - update
@@ -23,6 +23,8 @@
 ### Queries: Transaction
 
 - journal entry
+
+### go tests, github actions, etc.
 
 ### Analysis queries
 

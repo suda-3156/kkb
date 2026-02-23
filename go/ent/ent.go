@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -73,7 +74,8 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			ledgeraccount.Table: ledgeraccount.ValidColumn,
+			ledgeraccount.Table:       ledgeraccount.ValidColumn,
+			ledgerencryptionkey.Table: ledgerencryptionkey.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

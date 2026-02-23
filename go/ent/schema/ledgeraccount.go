@@ -55,17 +55,21 @@ func (LedgerAccount) Fields() []ent.Field {
 			Immutable(),
 		field.Bytes("account_name").
 			// Encrypted field
-			MaxLen(500). // 100 chars in UTF8mb4 (~ 400 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
+			MaxLen(512). // 100 chars in UTF8mb4 (~ 400 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			NotEmpty(),
 		field.Enum("kind").
 			GoType(LedgerAccountKind("")).
 			Immutable(),
 		field.Bool("is_group"),
-		field.Bytes("archived_at").
-			// Encrypted field
-			// Null or datetime string in 2006-01-02T15:04:05+09:00 format
-			MaxLen(125). // datetime 25 bytes + overhead for encryption (e.g. 28 bytes for AES-GCM)
-			Optional(),
+		field.Time("archived_at").
+			SchemaType(map[string]string{
+				"mysql": "datetime(6)",
+			}).
+			// Optional enables use of `ArchivedAtIsNil()` and `ArchivedAtNotNil()` predicates.
+			Optional().
+			// Nillable makes this field type of *time.Time in Go.
+			// When marshaled to JSON, it will be null, not the zero time (e.g. "0001-01-01T00:00:00Z").
+			Nillable(),
 		field.Time("created_at").
 			SchemaType(map[string]string{
 				"mysql": "datetime(6)",
@@ -93,5 +97,9 @@ func (LedgerAccount) Edges() []ent.Edge {
 			Unique(),
 		// Journal entries using this account
 		// edge.To("journal_entries", JournalEntry.Type),
+		// Ledger encryption key used for encrypting this account's data
+		edge.From("encryption_key", LedgerEncryptionKey.Type).
+			Ref("ledger_accounts").
+			Unique(),
 	}
 }

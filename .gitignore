@@ -9,11 +9,7 @@ dist/
 !.envrc
 
 # work
-memo
-logs/
-tmp/
-temp/
-*.local.md
+local/
 .vscode/
 .jj/
 

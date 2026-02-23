@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/internal/pulid"
@@ -26,31 +27,34 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeLedgerAccount = "LedgerAccount"
+	TypeLedgerAccount       = "LedgerAccount"
+	TypeLedgerEncryptionKey = "LedgerEncryptionKey"
 )
 
 // LedgerAccountMutation represents an operation that mutates the LedgerAccount nodes in the graph.
 type LedgerAccountMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	public_id       *pulid.ID
-	account_name    *[]byte
-	kind            *schema.LedgerAccountKind
-	is_group        *bool
-	archived_at     *[]byte
-	created_at      *time.Time
-	updated_at      *time.Time
-	clearedFields   map[string]struct{}
-	parent          *int
-	clearedparent   bool
-	children        map[int]struct{}
-	removedchildren map[int]struct{}
-	clearedchildren bool
-	done            bool
-	oldValue        func(context.Context) (*LedgerAccount, error)
-	predicates      []predicate.LedgerAccount
+	op                    Op
+	typ                   string
+	id                    *int
+	public_id             *pulid.ID
+	account_name          *[]byte
+	kind                  *schema.LedgerAccountKind
+	is_group              *bool
+	archived_at           *time.Time
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	parent                *int
+	clearedparent         bool
+	children              map[int]struct{}
+	removedchildren       map[int]struct{}
+	clearedchildren       bool
+	encryption_key        *int
+	clearedencryption_key bool
+	done                  bool
+	oldValue              func(context.Context) (*LedgerAccount, error)
+	predicates            []predicate.LedgerAccount
 }
 
 var _ ent.Mutation = (*LedgerAccountMutation)(nil)
@@ -296,12 +300,12 @@ func (m *LedgerAccountMutation) ResetIsGroup() {
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (m *LedgerAccountMutation) SetArchivedAt(b []byte) {
-	m.archived_at = &b
+func (m *LedgerAccountMutation) SetArchivedAt(t time.Time) {
+	m.archived_at = &t
 }
 
 // ArchivedAt returns the value of the "archived_at" field in the mutation.
-func (m *LedgerAccountMutation) ArchivedAt() (r []byte, exists bool) {
+func (m *LedgerAccountMutation) ArchivedAt() (r time.Time, exists bool) {
 	v := m.archived_at
 	if v == nil {
 		return
@@ -312,7 +316,7 @@ func (m *LedgerAccountMutation) ArchivedAt() (r []byte, exists bool) {
 // OldArchivedAt returns the old "archived_at" field's value of the LedgerAccount entity.
 // If the LedgerAccount object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LedgerAccountMutation) OldArchivedAt(ctx context.Context) (v []byte, err error) {
+func (m *LedgerAccountMutation) OldArchivedAt(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldArchivedAt is only allowed on UpdateOne operations")
 	}
@@ -509,6 +513,45 @@ func (m *LedgerAccountMutation) ResetChildren() {
 	m.removedchildren = nil
 }
 
+// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by id.
+func (m *LedgerAccountMutation) SetEncryptionKeyID(id int) {
+	m.encryption_key = &id
+}
+
+// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (m *LedgerAccountMutation) ClearEncryptionKey() {
+	m.clearedencryption_key = true
+}
+
+// EncryptionKeyCleared reports if the "encryption_key" edge to the LedgerEncryptionKey entity was cleared.
+func (m *LedgerAccountMutation) EncryptionKeyCleared() bool {
+	return m.clearedencryption_key
+}
+
+// EncryptionKeyID returns the "encryption_key" edge ID in the mutation.
+func (m *LedgerAccountMutation) EncryptionKeyID() (id int, exists bool) {
+	if m.encryption_key != nil {
+		return *m.encryption_key, true
+	}
+	return
+}
+
+// EncryptionKeyIDs returns the "encryption_key" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EncryptionKeyID instead. It exists only for internal usage by the builders.
+func (m *LedgerAccountMutation) EncryptionKeyIDs() (ids []int) {
+	if id := m.encryption_key; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEncryptionKey resets all changes to the "encryption_key" edge.
+func (m *LedgerAccountMutation) ResetEncryptionKey() {
+	m.encryption_key = nil
+	m.clearedencryption_key = false
+}
+
 // Where appends a list predicates to the LedgerAccountMutation builder.
 func (m *LedgerAccountMutation) Where(ps ...predicate.LedgerAccount) {
 	m.predicates = append(m.predicates, ps...)
@@ -648,7 +691,7 @@ func (m *LedgerAccountMutation) SetField(name string, value ent.Value) error {
 		m.SetIsGroup(v)
 		return nil
 	case ledgeraccount.FieldArchivedAt:
-		v, ok := value.([]byte)
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -753,12 +796,15 @@ func (m *LedgerAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LedgerAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.parent != nil {
 		edges = append(edges, ledgeraccount.EdgeParent)
 	}
 	if m.children != nil {
 		edges = append(edges, ledgeraccount.EdgeChildren)
+	}
+	if m.encryption_key != nil {
+		edges = append(edges, ledgeraccount.EdgeEncryptionKey)
 	}
 	return edges
 }
@@ -777,13 +823,17 @@ func (m *LedgerAccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgeraccount.EdgeEncryptionKey:
+		if id := m.encryption_key; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LedgerAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedchildren != nil {
 		edges = append(edges, ledgeraccount.EdgeChildren)
 	}
@@ -806,12 +856,15 @@ func (m *LedgerAccountMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LedgerAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedparent {
 		edges = append(edges, ledgeraccount.EdgeParent)
 	}
 	if m.clearedchildren {
 		edges = append(edges, ledgeraccount.EdgeChildren)
+	}
+	if m.clearedencryption_key {
+		edges = append(edges, ledgeraccount.EdgeEncryptionKey)
 	}
 	return edges
 }
@@ -824,6 +877,8 @@ func (m *LedgerAccountMutation) EdgeCleared(name string) bool {
 		return m.clearedparent
 	case ledgeraccount.EdgeChildren:
 		return m.clearedchildren
+	case ledgeraccount.EdgeEncryptionKey:
+		return m.clearedencryption_key
 	}
 	return false
 }
@@ -834,6 +889,9 @@ func (m *LedgerAccountMutation) ClearEdge(name string) error {
 	switch name {
 	case ledgeraccount.EdgeParent:
 		m.ClearParent()
+		return nil
+	case ledgeraccount.EdgeEncryptionKey:
+		m.ClearEncryptionKey()
 		return nil
 	}
 	return fmt.Errorf("unknown LedgerAccount unique edge %s", name)
@@ -849,6 +907,644 @@ func (m *LedgerAccountMutation) ResetEdge(name string) error {
 	case ledgeraccount.EdgeChildren:
 		m.ResetChildren()
 		return nil
+	case ledgeraccount.EdgeEncryptionKey:
+		m.ResetEncryptionKey()
+		return nil
 	}
 	return fmt.Errorf("unknown LedgerAccount edge %s", name)
+}
+
+// LedgerEncryptionKeyMutation represents an operation that mutates the LedgerEncryptionKey nodes in the graph.
+type LedgerEncryptionKeyMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int
+	aad                    *[]byte
+	wrapped_cipher         *[]byte
+	allowed                *bool
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	ledger_accounts        map[int]struct{}
+	removedledger_accounts map[int]struct{}
+	clearedledger_accounts bool
+	done                   bool
+	oldValue               func(context.Context) (*LedgerEncryptionKey, error)
+	predicates             []predicate.LedgerEncryptionKey
+}
+
+var _ ent.Mutation = (*LedgerEncryptionKeyMutation)(nil)
+
+// ledgerencryptionkeyOption allows management of the mutation configuration using functional options.
+type ledgerencryptionkeyOption func(*LedgerEncryptionKeyMutation)
+
+// newLedgerEncryptionKeyMutation creates new mutation for the LedgerEncryptionKey entity.
+func newLedgerEncryptionKeyMutation(c config, op Op, opts ...ledgerencryptionkeyOption) *LedgerEncryptionKeyMutation {
+	m := &LedgerEncryptionKeyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLedgerEncryptionKey,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLedgerEncryptionKeyID sets the ID field of the mutation.
+func withLedgerEncryptionKeyID(id int) ledgerencryptionkeyOption {
+	return func(m *LedgerEncryptionKeyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *LedgerEncryptionKey
+		)
+		m.oldValue = func(ctx context.Context) (*LedgerEncryptionKey, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().LedgerEncryptionKey.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLedgerEncryptionKey sets the old LedgerEncryptionKey of the mutation.
+func withLedgerEncryptionKey(node *LedgerEncryptionKey) ledgerencryptionkeyOption {
+	return func(m *LedgerEncryptionKeyMutation) {
+		m.oldValue = func(context.Context) (*LedgerEncryptionKey, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LedgerEncryptionKeyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LedgerEncryptionKeyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LedgerEncryptionKeyMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LedgerEncryptionKeyMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().LedgerEncryptionKey.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetAad sets the "aad" field.
+func (m *LedgerEncryptionKeyMutation) SetAad(b []byte) {
+	m.aad = &b
+}
+
+// Aad returns the value of the "aad" field in the mutation.
+func (m *LedgerEncryptionKeyMutation) Aad() (r []byte, exists bool) {
+	v := m.aad
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAad returns the old "aad" field's value of the LedgerEncryptionKey entity.
+// If the LedgerEncryptionKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LedgerEncryptionKeyMutation) OldAad(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAad is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAad requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAad: %w", err)
+	}
+	return oldValue.Aad, nil
+}
+
+// ResetAad resets all changes to the "aad" field.
+func (m *LedgerEncryptionKeyMutation) ResetAad() {
+	m.aad = nil
+}
+
+// SetWrappedCipher sets the "wrapped_cipher" field.
+func (m *LedgerEncryptionKeyMutation) SetWrappedCipher(b []byte) {
+	m.wrapped_cipher = &b
+}
+
+// WrappedCipher returns the value of the "wrapped_cipher" field in the mutation.
+func (m *LedgerEncryptionKeyMutation) WrappedCipher() (r []byte, exists bool) {
+	v := m.wrapped_cipher
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWrappedCipher returns the old "wrapped_cipher" field's value of the LedgerEncryptionKey entity.
+// If the LedgerEncryptionKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LedgerEncryptionKeyMutation) OldWrappedCipher(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWrappedCipher is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWrappedCipher requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWrappedCipher: %w", err)
+	}
+	return oldValue.WrappedCipher, nil
+}
+
+// ResetWrappedCipher resets all changes to the "wrapped_cipher" field.
+func (m *LedgerEncryptionKeyMutation) ResetWrappedCipher() {
+	m.wrapped_cipher = nil
+}
+
+// SetAllowed sets the "allowed" field.
+func (m *LedgerEncryptionKeyMutation) SetAllowed(b bool) {
+	m.allowed = &b
+}
+
+// Allowed returns the value of the "allowed" field in the mutation.
+func (m *LedgerEncryptionKeyMutation) Allowed() (r bool, exists bool) {
+	v := m.allowed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowed returns the old "allowed" field's value of the LedgerEncryptionKey entity.
+// If the LedgerEncryptionKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LedgerEncryptionKeyMutation) OldAllowed(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowed: %w", err)
+	}
+	return oldValue.Allowed, nil
+}
+
+// ResetAllowed resets all changes to the "allowed" field.
+func (m *LedgerEncryptionKeyMutation) ResetAllowed() {
+	m.allowed = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *LedgerEncryptionKeyMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *LedgerEncryptionKeyMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the LedgerEncryptionKey entity.
+// If the LedgerEncryptionKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LedgerEncryptionKeyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *LedgerEncryptionKeyMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *LedgerEncryptionKeyMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *LedgerEncryptionKeyMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the LedgerEncryptionKey entity.
+// If the LedgerEncryptionKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LedgerEncryptionKeyMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *LedgerEncryptionKeyMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddLedgerAccountIDs adds the "ledger_accounts" edge to the LedgerAccount entity by ids.
+func (m *LedgerEncryptionKeyMutation) AddLedgerAccountIDs(ids ...int) {
+	if m.ledger_accounts == nil {
+		m.ledger_accounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.ledger_accounts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLedgerAccounts clears the "ledger_accounts" edge to the LedgerAccount entity.
+func (m *LedgerEncryptionKeyMutation) ClearLedgerAccounts() {
+	m.clearedledger_accounts = true
+}
+
+// LedgerAccountsCleared reports if the "ledger_accounts" edge to the LedgerAccount entity was cleared.
+func (m *LedgerEncryptionKeyMutation) LedgerAccountsCleared() bool {
+	return m.clearedledger_accounts
+}
+
+// RemoveLedgerAccountIDs removes the "ledger_accounts" edge to the LedgerAccount entity by IDs.
+func (m *LedgerEncryptionKeyMutation) RemoveLedgerAccountIDs(ids ...int) {
+	if m.removedledger_accounts == nil {
+		m.removedledger_accounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.ledger_accounts, ids[i])
+		m.removedledger_accounts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLedgerAccounts returns the removed IDs of the "ledger_accounts" edge to the LedgerAccount entity.
+func (m *LedgerEncryptionKeyMutation) RemovedLedgerAccountsIDs() (ids []int) {
+	for id := range m.removedledger_accounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LedgerAccountsIDs returns the "ledger_accounts" edge IDs in the mutation.
+func (m *LedgerEncryptionKeyMutation) LedgerAccountsIDs() (ids []int) {
+	for id := range m.ledger_accounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLedgerAccounts resets all changes to the "ledger_accounts" edge.
+func (m *LedgerEncryptionKeyMutation) ResetLedgerAccounts() {
+	m.ledger_accounts = nil
+	m.clearedledger_accounts = false
+	m.removedledger_accounts = nil
+}
+
+// Where appends a list predicates to the LedgerEncryptionKeyMutation builder.
+func (m *LedgerEncryptionKeyMutation) Where(ps ...predicate.LedgerEncryptionKey) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LedgerEncryptionKeyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LedgerEncryptionKeyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.LedgerEncryptionKey, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LedgerEncryptionKeyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LedgerEncryptionKeyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (LedgerEncryptionKey).
+func (m *LedgerEncryptionKeyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LedgerEncryptionKeyMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.aad != nil {
+		fields = append(fields, ledgerencryptionkey.FieldAad)
+	}
+	if m.wrapped_cipher != nil {
+		fields = append(fields, ledgerencryptionkey.FieldWrappedCipher)
+	}
+	if m.allowed != nil {
+		fields = append(fields, ledgerencryptionkey.FieldAllowed)
+	}
+	if m.created_at != nil {
+		fields = append(fields, ledgerencryptionkey.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, ledgerencryptionkey.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LedgerEncryptionKeyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case ledgerencryptionkey.FieldAad:
+		return m.Aad()
+	case ledgerencryptionkey.FieldWrappedCipher:
+		return m.WrappedCipher()
+	case ledgerencryptionkey.FieldAllowed:
+		return m.Allowed()
+	case ledgerencryptionkey.FieldCreatedAt:
+		return m.CreatedAt()
+	case ledgerencryptionkey.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LedgerEncryptionKeyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case ledgerencryptionkey.FieldAad:
+		return m.OldAad(ctx)
+	case ledgerencryptionkey.FieldWrappedCipher:
+		return m.OldWrappedCipher(ctx)
+	case ledgerencryptionkey.FieldAllowed:
+		return m.OldAllowed(ctx)
+	case ledgerencryptionkey.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case ledgerencryptionkey.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown LedgerEncryptionKey field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LedgerEncryptionKeyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case ledgerencryptionkey.FieldAad:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAad(v)
+		return nil
+	case ledgerencryptionkey.FieldWrappedCipher:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWrappedCipher(v)
+		return nil
+	case ledgerencryptionkey.FieldAllowed:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowed(v)
+		return nil
+	case ledgerencryptionkey.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case ledgerencryptionkey.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown LedgerEncryptionKey field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LedgerEncryptionKeyMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LedgerEncryptionKeyMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LedgerEncryptionKeyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown LedgerEncryptionKey numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LedgerEncryptionKeyMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LedgerEncryptionKeyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LedgerEncryptionKeyMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown LedgerEncryptionKey nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LedgerEncryptionKeyMutation) ResetField(name string) error {
+	switch name {
+	case ledgerencryptionkey.FieldAad:
+		m.ResetAad()
+		return nil
+	case ledgerencryptionkey.FieldWrappedCipher:
+		m.ResetWrappedCipher()
+		return nil
+	case ledgerencryptionkey.FieldAllowed:
+		m.ResetAllowed()
+		return nil
+	case ledgerencryptionkey.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case ledgerencryptionkey.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown LedgerEncryptionKey field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LedgerEncryptionKeyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.ledger_accounts != nil {
+		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LedgerEncryptionKeyMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case ledgerencryptionkey.EdgeLedgerAccounts:
+		ids := make([]ent.Value, 0, len(m.ledger_accounts))
+		for id := range m.ledger_accounts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LedgerEncryptionKeyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedledger_accounts != nil {
+		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LedgerEncryptionKeyMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case ledgerencryptionkey.EdgeLedgerAccounts:
+		ids := make([]ent.Value, 0, len(m.removedledger_accounts))
+		for id := range m.removedledger_accounts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LedgerEncryptionKeyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedledger_accounts {
+		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LedgerEncryptionKeyMutation) EdgeCleared(name string) bool {
+	switch name {
+	case ledgerencryptionkey.EdgeLedgerAccounts:
+		return m.clearedledger_accounts
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LedgerEncryptionKeyMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown LedgerEncryptionKey unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LedgerEncryptionKeyMutation) ResetEdge(name string) error {
+	switch name {
+	case ledgerencryptionkey.EdgeLedgerAccounts:
+		m.ResetLedgerAccounts()
+		return nil
+	}
+	return fmt.Errorf("unknown LedgerEncryptionKey edge %s", name)
 }

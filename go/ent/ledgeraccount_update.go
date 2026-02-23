@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 )
 
@@ -49,8 +50,16 @@ func (_u *LedgerAccountUpdate) SetNillableIsGroup(v *bool) *LedgerAccountUpdate 
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (_u *LedgerAccountUpdate) SetArchivedAt(v []byte) *LedgerAccountUpdate {
+func (_u *LedgerAccountUpdate) SetArchivedAt(v time.Time) *LedgerAccountUpdate {
 	_u.mutation.SetArchivedAt(v)
+	return _u
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_u *LedgerAccountUpdate) SetNillableArchivedAt(v *time.Time) *LedgerAccountUpdate {
+	if v != nil {
+		_u.SetArchivedAt(*v)
+	}
 	return _u
 }
 
@@ -100,6 +109,25 @@ func (_u *LedgerAccountUpdate) AddChildren(v ...*LedgerAccount) *LedgerAccountUp
 	return _u.AddChildIDs(ids...)
 }
 
+// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
+func (_u *LedgerAccountUpdate) SetEncryptionKeyID(id int) *LedgerAccountUpdate {
+	_u.mutation.SetEncryptionKeyID(id)
+	return _u
+}
+
+// SetNillableEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID if the given value is not nil.
+func (_u *LedgerAccountUpdate) SetNillableEncryptionKeyID(id *int) *LedgerAccountUpdate {
+	if id != nil {
+		_u = _u.SetEncryptionKeyID(*id)
+	}
+	return _u
+}
+
+// SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (_u *LedgerAccountUpdate) SetEncryptionKey(v *LedgerEncryptionKey) *LedgerAccountUpdate {
+	return _u.SetEncryptionKeyID(v.ID)
+}
+
 // Mutation returns the LedgerAccountMutation object of the builder.
 func (_u *LedgerAccountUpdate) Mutation() *LedgerAccountMutation {
 	return _u.mutation
@@ -130,6 +158,12 @@ func (_u *LedgerAccountUpdate) RemoveChildren(v ...*LedgerAccount) *LedgerAccoun
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChildIDs(ids...)
+}
+
+// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (_u *LedgerAccountUpdate) ClearEncryptionKey() *LedgerAccountUpdate {
+	_u.mutation.ClearEncryptionKey()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -175,11 +209,6 @@ func (_u *LedgerAccountUpdate) check() error {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.ArchivedAt(); ok {
-		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
-			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -202,10 +231,10 @@ func (_u *LedgerAccountUpdate) sqlSave(ctx context.Context) (_node int, err erro
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.ArchivedAt(); ok {
-		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeBytes, value)
+		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeTime, value)
 	}
 	if _u.mutation.ArchivedAtCleared() {
-		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeBytes)
+		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ledgeraccount.FieldUpdatedAt, field.TypeTime, value)
@@ -284,6 +313,35 @@ func (_u *LedgerAccountUpdate) sqlSave(ctx context.Context) (_node int, err erro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.EncryptionKeyCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ledgeraccount.EncryptionKeyTable,
+			Columns: []string{ledgeraccount.EncryptionKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.EncryptionKeyIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ledgeraccount.EncryptionKeyTable,
+			Columns: []string{ledgeraccount.EncryptionKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ledgeraccount.Label}
@@ -325,8 +383,16 @@ func (_u *LedgerAccountUpdateOne) SetNillableIsGroup(v *bool) *LedgerAccountUpda
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (_u *LedgerAccountUpdateOne) SetArchivedAt(v []byte) *LedgerAccountUpdateOne {
+func (_u *LedgerAccountUpdateOne) SetArchivedAt(v time.Time) *LedgerAccountUpdateOne {
 	_u.mutation.SetArchivedAt(v)
+	return _u
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_u *LedgerAccountUpdateOne) SetNillableArchivedAt(v *time.Time) *LedgerAccountUpdateOne {
+	if v != nil {
+		_u.SetArchivedAt(*v)
+	}
 	return _u
 }
 
@@ -376,6 +442,25 @@ func (_u *LedgerAccountUpdateOne) AddChildren(v ...*LedgerAccount) *LedgerAccoun
 	return _u.AddChildIDs(ids...)
 }
 
+// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
+func (_u *LedgerAccountUpdateOne) SetEncryptionKeyID(id int) *LedgerAccountUpdateOne {
+	_u.mutation.SetEncryptionKeyID(id)
+	return _u
+}
+
+// SetNillableEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID if the given value is not nil.
+func (_u *LedgerAccountUpdateOne) SetNillableEncryptionKeyID(id *int) *LedgerAccountUpdateOne {
+	if id != nil {
+		_u = _u.SetEncryptionKeyID(*id)
+	}
+	return _u
+}
+
+// SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (_u *LedgerAccountUpdateOne) SetEncryptionKey(v *LedgerEncryptionKey) *LedgerAccountUpdateOne {
+	return _u.SetEncryptionKeyID(v.ID)
+}
+
 // Mutation returns the LedgerAccountMutation object of the builder.
 func (_u *LedgerAccountUpdateOne) Mutation() *LedgerAccountMutation {
 	return _u.mutation
@@ -406,6 +491,12 @@ func (_u *LedgerAccountUpdateOne) RemoveChildren(v ...*LedgerAccount) *LedgerAcc
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChildIDs(ids...)
+}
+
+// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (_u *LedgerAccountUpdateOne) ClearEncryptionKey() *LedgerAccountUpdateOne {
+	_u.mutation.ClearEncryptionKey()
+	return _u
 }
 
 // Where appends a list predicates to the LedgerAccountUpdate builder.
@@ -464,11 +555,6 @@ func (_u *LedgerAccountUpdateOne) check() error {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.ArchivedAt(); ok {
-		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
-			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -508,10 +594,10 @@ func (_u *LedgerAccountUpdateOne) sqlSave(ctx context.Context) (_node *LedgerAcc
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.ArchivedAt(); ok {
-		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeBytes, value)
+		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeTime, value)
 	}
 	if _u.mutation.ArchivedAtCleared() {
-		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeBytes)
+		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ledgeraccount.FieldUpdatedAt, field.TypeTime, value)
@@ -583,6 +669,35 @@ func (_u *LedgerAccountUpdateOne) sqlSave(ctx context.Context) (_node *LedgerAcc
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgeraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.EncryptionKeyCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ledgeraccount.EncryptionKeyTable,
+			Columns: []string{ledgeraccount.EncryptionKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.EncryptionKeyIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ledgeraccount.EncryptionKeyTable,
+			Columns: []string{ledgeraccount.EncryptionKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

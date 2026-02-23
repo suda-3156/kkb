@@ -10,7 +10,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
-	pulid1 "github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // Parent is the resolver for the parent field.
@@ -18,37 +18,37 @@ func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAcc
 	if obj.Parent == nil {
 		return nil, nil
 	}
-	return r.Lac.Get(ctx, nil, &obj.Parent.IntID)
+	return r.lac.GetByInternalID(ctx, obj.Parent.IntID)
 }
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.
 func (r *mutationResolver) CreateLedgerAccount(ctx context.Context, input model.CreateLedgerAccountInput) (*model.LedgerAccount, error) {
-	return r.Lac.Create(ctx, input)
+	return r.lac.Create(ctx, input)
 }
 
 // UpdateLedgerAccount is the resolver for the updateLedgerAccount field.
 func (r *mutationResolver) UpdateLedgerAccount(ctx context.Context, input model.UpdateLedgerAccountInput) (*model.LedgerAccount, error) {
-	return r.Lac.Update(ctx, input)
+	return r.lac.Update(ctx, input)
 }
 
 // ArchiveLedgerAccount is the resolver for the archiveLedgerAccount field.
-func (r *mutationResolver) ArchiveLedgerAccount(ctx context.Context, id pulid1.ID) (*model.LedgerAccount, error) {
-	return r.Lac.Archive(ctx, id)
+func (r *mutationResolver) ArchiveLedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error) {
+	return r.lac.Archive(ctx, id)
 }
 
 // UnarchiveLedgerAccount is the resolver for the unarchiveLedgerAccount field.
-func (r *mutationResolver) UnarchiveLedgerAccount(ctx context.Context, id pulid1.ID) (*model.LedgerAccount, error) {
-	return r.Lac.Unarchive(ctx, id)
+func (r *mutationResolver) UnarchiveLedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error) {
+	return r.lac.Unarchive(ctx, id)
 }
 
 // LedgerAccount is the resolver for the ledgerAccount field.
-func (r *queryResolver) LedgerAccount(ctx context.Context, id pulid1.ID) (*model.LedgerAccount, error) {
-	return r.Lac.Get(ctx, &id, nil)
+func (r *queryResolver) LedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error) {
+	return r.lac.GetByPublicID(ctx, id)
 }
 
 // LedgerAccounts is the resolver for the ledgerAccounts field.
-func (r *queryResolver) LedgerAccounts(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error) {
-	return r.Lac.List(ctx, first, nil, nil, after, last, before, kind, includeArchived)
+func (r *queryResolver) LedgerAccounts(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error) {
+	return r.lac.List(ctx, first, nil, nil, after, last, before, kind, includeArchived)
 }
 
 // LedgerAccount returns graph.LedgerAccountResolver implementation.

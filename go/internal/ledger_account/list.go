@@ -11,7 +11,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
-func (s *Service) List(
+func (m *LedgerAccountManager) List(
 	ctx context.Context,
 	first *int32,
 	publicIDs []pulid.ID,
@@ -22,15 +22,15 @@ func (s *Service) List(
 	kind *graph.LedgerAccountKind,
 	includeArchived *bool,
 ) (*graph.LedgerAccountConnection, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - List: started",
+		"ledger account - list called",
 	)
 
 	var scanDesc bool = false
-	query := s.db.LedgerAccount.Query()
+	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey()
 
-	query, scanDesc = applyConditions(
+	query, scanDesc = m.applyFilter(
 		first,
 		publicIDs,
 		IDs,
@@ -47,21 +47,15 @@ func (s *Service) List(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	hasPrevPage, hasNextPage, err := s.getPageInfo(ctx, lacs, scanDesc)
+	hasPrevPage, hasNextPage, err := m.getPageInfo(ctx, lacs, scanDesc)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - List: completed",
-		slog.Int("count", len(lacs)),
-	)
-
-	return s.convertToGraphConnection(ctx, lacs, hasPrevPage, hasNextPage)
+	return m.convertToGraphConnection(ctx, lacs, hasPrevPage, hasNextPage)
 }
 
-func applyConditions(
+func (m *LedgerAccountManager) applyFilter(
 	first *int32,
 	publicIDs []pulid.ID,
 	IDs []int,
@@ -107,7 +101,7 @@ func applyConditions(
 	}
 
 	if kind != nil {
-		query = query.Where(ledgeraccount.KindEQ(convertKindToEnt(*kind)))
+		query = query.Where(ledgeraccount.KindEQ(m.convertKindToEnt(*kind)))
 	}
 
 	if includeArchived == nil || !*includeArchived {
@@ -117,7 +111,7 @@ func applyConditions(
 	return query, scanDesc
 }
 
-func (s *Service) getPageInfo(
+func (m *LedgerAccountManager) getPageInfo(
 	ctx context.Context,
 	lacs []*ent.LedgerAccount,
 	scanDesc bool,
@@ -133,7 +127,7 @@ func (s *Service) getPageInfo(
 		endCursor := lacs[len(lacs)-1].PublicID
 
 		var err error
-		hasPrevPage, err = s.db.LedgerAccount.Query().
+		hasPrevPage, err = m.db.Client.LedgerAccount.Query().
 			Where(
 				ledgeraccount.PublicIDLT(startCursor),
 			).Exist(ctx)
@@ -141,7 +135,7 @@ func (s *Service) getPageInfo(
 			return false, false, apperr.NewInternalServerError(err)
 		}
 
-		hasNextPage, err = s.db.LedgerAccount.Query().
+		hasNextPage, err = m.db.Client.LedgerAccount.Query().
 			Where(
 				ledgeraccount.PublicIDGT(endCursor),
 			).Exist(ctx)

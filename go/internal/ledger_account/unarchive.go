@@ -14,41 +14,35 @@ import (
 
 // Unarchive unarchives a ledger account only if its parent account is not archived.
 // It does not unarchive descendant accounts.
-func (s *Service) Unarchive(
+func (m *LedgerAccountManager) Unarchive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Unarchive: started",
+		"ledger account - unarchive called",
 		slog.String("public_id", id.String()),
 	)
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := s.db.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = s.unarchiveTx(ctx, id)
+	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
+		account, errTx = m.unarchiveTx(ctx, id)
 		return errTx
 	}); err != nil {
 		return nil, err
 	}
 
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Unarchive: completed",
-		slog.String("public_id", id.String()),
-	)
-
 	return account, nil
 }
 
-func (s *Service) unarchiveTx(
+func (m *LedgerAccountManager) unarchiveTx(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	// Get client from transaction context
-	client := s.db
-	tx := s.db.TxFromCtx(ctx)
+	client := m.db.Client
+	tx := client.TxFromCtx(ctx)
 	if tx != nil {
 		client = tx.Client()
 	}
@@ -56,6 +50,7 @@ func (s *Service) unarchiveTx(
 	// Get the account to unarchive.
 	account, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(id)).
+		WithEncryptionKey().
 		WithParent().
 		Only(ctx)
 	if err != nil {
@@ -80,10 +75,10 @@ func (s *Service) unarchiveTx(
 	// Unarchive the account by setting ArchivedAt to null.
 	if err := client.LedgerAccount.Update().
 		Where(ledgeraccount.ID(account.ID)).
-		SetArchivedAt(nil).
+		SetNillableArchivedAt(nil).
 		Exec(ctx); err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	return s.convertToGraph(ctx, account)
+	return m.convertToGraph(ctx, account)
 }
