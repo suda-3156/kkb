@@ -50,8 +50,16 @@ func (_u *LedgerAccountUpdate) SetNillableIsGroup(v *bool) *LedgerAccountUpdate 
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (_u *LedgerAccountUpdate) SetArchivedAt(v []byte) *LedgerAccountUpdate {
+func (_u *LedgerAccountUpdate) SetArchivedAt(v time.Time) *LedgerAccountUpdate {
 	_u.mutation.SetArchivedAt(v)
+	return _u
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_u *LedgerAccountUpdate) SetNillableArchivedAt(v *time.Time) *LedgerAccountUpdate {
+	if v != nil {
+		_u.SetArchivedAt(*v)
+	}
 	return _u
 }
 
@@ -201,11 +209,6 @@ func (_u *LedgerAccountUpdate) check() error {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.ArchivedAt(); ok {
-		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
-			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -228,10 +231,10 @@ func (_u *LedgerAccountUpdate) sqlSave(ctx context.Context) (_node int, err erro
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.ArchivedAt(); ok {
-		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeBytes, value)
+		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeTime, value)
 	}
 	if _u.mutation.ArchivedAtCleared() {
-		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeBytes)
+		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ledgeraccount.FieldUpdatedAt, field.TypeTime, value)
@@ -380,8 +383,16 @@ func (_u *LedgerAccountUpdateOne) SetNillableIsGroup(v *bool) *LedgerAccountUpda
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (_u *LedgerAccountUpdateOne) SetArchivedAt(v []byte) *LedgerAccountUpdateOne {
+func (_u *LedgerAccountUpdateOne) SetArchivedAt(v time.Time) *LedgerAccountUpdateOne {
 	_u.mutation.SetArchivedAt(v)
+	return _u
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_u *LedgerAccountUpdateOne) SetNillableArchivedAt(v *time.Time) *LedgerAccountUpdateOne {
+	if v != nil {
+		_u.SetArchivedAt(*v)
+	}
 	return _u
 }
 
@@ -544,11 +555,6 @@ func (_u *LedgerAccountUpdateOne) check() error {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.ArchivedAt(); ok {
-		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
-			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -588,10 +594,10 @@ func (_u *LedgerAccountUpdateOne) sqlSave(ctx context.Context) (_node *LedgerAcc
 		_spec.SetField(ledgeraccount.FieldIsGroup, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.ArchivedAt(); ok {
-		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeBytes, value)
+		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeTime, value)
 	}
 	if _u.mutation.ArchivedAtCleared() {
-		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeBytes)
+		_spec.ClearField(ledgeraccount.FieldArchivedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ledgeraccount.FieldUpdatedAt, field.TypeTime, value)

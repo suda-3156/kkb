@@ -53,10 +53,6 @@ func init() {
 			return nil
 		}
 	}()
-	// ledgeraccountDescArchivedAt is the schema descriptor for archived_at field.
-	ledgeraccountDescArchivedAt := ledgeraccountFields[4].Descriptor()
-	// ledgeraccount.ArchivedAtValidator is a validator for the "archived_at" field. It is called by the builders before save.
-	ledgeraccount.ArchivedAtValidator = ledgeraccountDescArchivedAt.Validators[0].(func([]byte) error)
 	// ledgeraccountDescCreatedAt is the schema descriptor for created_at field.
 	ledgeraccountDescCreatedAt := ledgeraccountFields[5].Descriptor()
 	// ledgeraccount.DefaultCreatedAt holds the default value on creation for the created_at field.

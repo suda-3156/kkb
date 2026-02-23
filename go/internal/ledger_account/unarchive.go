@@ -18,9 +18,9 @@ func (m *LedgerAccountManager) Unarchive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Unarchive: started",
+		"ledger account - unarchive called",
 		slog.String("public_id", id.String()),
 	)
 
@@ -32,12 +32,6 @@ func (m *LedgerAccountManager) Unarchive(
 	}); err != nil {
 		return nil, err
 	}
-
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Unarchive: completed",
-		slog.String("public_id", id.String()),
-	)
 
 	return account, nil
 }
@@ -56,6 +50,7 @@ func (m *LedgerAccountManager) unarchiveTx(
 	// Get the account to unarchive.
 	account, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(id)).
+		WithEncryptionKey().
 		WithParent().
 		Only(ctx)
 	if err != nil {
@@ -80,7 +75,7 @@ func (m *LedgerAccountManager) unarchiveTx(
 	// Unarchive the account by setting ArchivedAt to null.
 	if err := client.LedgerAccount.Update().
 		Where(ledgeraccount.ID(account.ID)).
-		SetArchivedAt(nil).
+		SetNillableArchivedAt(nil).
 		Exec(ctx); err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}

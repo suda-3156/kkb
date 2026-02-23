@@ -15,7 +15,7 @@ var (
 		{Name: "account_name", Type: field.TypeBytes, Size: 512},
 		{Name: "kind", Type: field.TypeEnum, Enums: []string{"ASSET", "LIABILITY", "EXPENSE", "REVENUE", "EQUITY"}},
 		{Name: "is_group", Type: field.TypeBool},
-		{Name: "archived_at", Type: field.TypeBytes, Nullable: true, Size: 128},
+		{Name: "archived_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "ledger_account_children", Type: field.TypeInt, Nullable: true},

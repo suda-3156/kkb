@@ -48,8 +48,16 @@ func (_c *LedgerAccountCreate) SetIsGroup(v bool) *LedgerAccountCreate {
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (_c *LedgerAccountCreate) SetArchivedAt(v []byte) *LedgerAccountCreate {
+func (_c *LedgerAccountCreate) SetArchivedAt(v time.Time) *LedgerAccountCreate {
 	_c.mutation.SetArchivedAt(v)
+	return _c
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_c *LedgerAccountCreate) SetNillableArchivedAt(v *time.Time) *LedgerAccountCreate {
+	if v != nil {
+		_c.SetArchivedAt(*v)
+	}
 	return _c
 }
 
@@ -208,11 +216,6 @@ func (_c *LedgerAccountCreate) check() error {
 	if _, ok := _c.mutation.IsGroup(); !ok {
 		return &ValidationError{Name: "is_group", err: errors.New(`ent: missing required field "LedgerAccount.is_group"`)}
 	}
-	if v, ok := _c.mutation.ArchivedAt(); ok {
-		if err := ledgeraccount.ArchivedAtValidator(v); err != nil {
-			return &ValidationError{Name: "archived_at", err: fmt.Errorf(`ent: validator failed for field "LedgerAccount.archived_at": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "LedgerAccount.created_at"`)}
 	}
@@ -262,8 +265,8 @@ func (_c *LedgerAccountCreate) createSpec() (*LedgerAccount, *sqlgraph.CreateSpe
 		_node.IsGroup = value
 	}
 	if value, ok := _c.mutation.ArchivedAt(); ok {
-		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeBytes, value)
-		_node.ArchivedAt = value
+		_spec.SetField(ledgeraccount.FieldArchivedAt, field.TypeTime, value)
+		_node.ArchivedAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ledgeraccount.FieldCreatedAt, field.TypeTime, value)

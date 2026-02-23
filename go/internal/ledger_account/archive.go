@@ -18,9 +18,9 @@ func (m *LedgerAccountManager) Archive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Archive: started",
+		"ledger account - archive called",
 		slog.String("public_id", id.String()),
 	)
 
@@ -32,12 +32,6 @@ func (m *LedgerAccountManager) Archive(
 	}); err != nil {
 		return nil, err
 	}
-
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Archive: completed",
-		slog.String("public_id", id.String()),
-	)
 
 	return account, nil
 }
@@ -56,6 +50,7 @@ func (m *LedgerAccountManager) archiveTx(
 	// Get the account to archive.
 	account, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(id)).
+		WithEncryptionKey().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -73,11 +68,6 @@ func (m *LedgerAccountManager) archiveTx(
 
 	// Archive the account and its descendants.
 	now := time.Now()
-	// encryptedNow, err := m.kms.Encrypt(ctx, now.Format(time.RFC3339))
-	encryptedNow := []byte(now.Format(time.RFC3339)) // TODO: implement encryption
-	// if err != nil {
-	// 	return nil, apperr.NewInternalServerError(err)
-	// }
 
 	descendantIDs, err := m.collectDescendantIDs(ctx, client, account.ID)
 	if err != nil {
@@ -88,14 +78,17 @@ func (m *LedgerAccountManager) archiveTx(
 
 	_, err = client.LedgerAccount.Update().
 		Where(ledgeraccount.IDIn(allIDs...)).
-		SetArchivedAt(encryptedNow).
+		SetArchivedAt(now).
 		Save(ctx)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	// Reload the account to get updated data
-	account, err = client.LedgerAccount.Get(ctx, account.ID)
+	// Reload the account to get updated data (with EncryptionKey edge for convertToGraph)
+	account, err = client.LedgerAccount.Query().
+		Where(ledgeraccount.ID(account.ID)).
+		WithEncryptionKey().
+		Only(ctx)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}

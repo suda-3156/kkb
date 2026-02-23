@@ -12,34 +12,21 @@ import (
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
-func (m *LedgerAccountManager) Get(
+func (m *LedgerAccountManager) GetByPublicID(
 	ctx context.Context,
-	publicID *pulid.ID,
-	ID *int,
+	publicID pulid.ID,
 ) (*graph.LedgerAccount, error) {
 	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Get: started",
+		"ledger account - get by public ID called",
 		slog.String("public_id", publicID.String()),
 	)
 
-	if publicID == nil && ID == nil {
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("ID is required"),
-		)
-	}
-
 	// Get the account from the database.
-	query := m.db.Client.LedgerAccount.Query()
-	if publicID != nil {
-		query = query.Where(ledgeraccount.PublicID(*publicID))
-	}
-
-	if ID != nil {
-		query = query.Where(ledgeraccount.ID(*ID))
-	}
-
-	account, err := query.Only(ctx)
+	account, err := m.db.Client.LedgerAccount.Query().
+		Where(ledgeraccount.PublicID(publicID)).
+		WithEncryptionKey().
+		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, apperr.NewNotFoundError(
@@ -50,22 +37,32 @@ func (m *LedgerAccountManager) Get(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	slog.InfoContext(
+	return m.convertToGraph(ctx, account)
+}
+
+func (m *LedgerAccountManager) GetByInternalID(
+	ctx context.Context,
+	ID int,
+) (*graph.LedgerAccount, error) {
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - Get: completed",
-		slog.String("public_id", func() string {
-			if publicID != nil {
-				return publicID.String()
-			}
-			return "nil"
-		}()),
-		slog.Int("id", func() int {
-			if ID != nil {
-				return *ID
-			}
-			return 0
-		}()),
+		"ledger account - get by internal ID called",
+		slog.Int("internal_id", ID),
 	)
+
+	account, err := m.db.Client.LedgerAccount.Query().
+		Where(ledgeraccount.ID(ID)).
+		WithEncryptionKey().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, apperr.NewNotFoundError(
+				fmt.Errorf("ledger account not found: %w", err),
+			)
+		}
+
+		return nil, apperr.NewInternalServerError(err)
+	}
 
 	return m.convertToGraph(ctx, account)
 }

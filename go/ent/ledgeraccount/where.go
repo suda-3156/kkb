@@ -73,7 +73,7 @@ func IsGroup(v bool) predicate.LedgerAccount {
 }
 
 // ArchivedAt applies equality check predicate on the "archived_at" field. It's identical to ArchivedAtEQ.
-func ArchivedAt(v []byte) predicate.LedgerAccount {
+func ArchivedAt(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldEQ(FieldArchivedAt, v))
 }
 
@@ -238,42 +238,42 @@ func IsGroupNEQ(v bool) predicate.LedgerAccount {
 }
 
 // ArchivedAtEQ applies the EQ predicate on the "archived_at" field.
-func ArchivedAtEQ(v []byte) predicate.LedgerAccount {
+func ArchivedAtEQ(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldEQ(FieldArchivedAt, v))
 }
 
 // ArchivedAtNEQ applies the NEQ predicate on the "archived_at" field.
-func ArchivedAtNEQ(v []byte) predicate.LedgerAccount {
+func ArchivedAtNEQ(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldNEQ(FieldArchivedAt, v))
 }
 
 // ArchivedAtIn applies the In predicate on the "archived_at" field.
-func ArchivedAtIn(vs ...[]byte) predicate.LedgerAccount {
+func ArchivedAtIn(vs ...time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldIn(FieldArchivedAt, vs...))
 }
 
 // ArchivedAtNotIn applies the NotIn predicate on the "archived_at" field.
-func ArchivedAtNotIn(vs ...[]byte) predicate.LedgerAccount {
+func ArchivedAtNotIn(vs ...time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldNotIn(FieldArchivedAt, vs...))
 }
 
 // ArchivedAtGT applies the GT predicate on the "archived_at" field.
-func ArchivedAtGT(v []byte) predicate.LedgerAccount {
+func ArchivedAtGT(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldGT(FieldArchivedAt, v))
 }
 
 // ArchivedAtGTE applies the GTE predicate on the "archived_at" field.
-func ArchivedAtGTE(v []byte) predicate.LedgerAccount {
+func ArchivedAtGTE(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldGTE(FieldArchivedAt, v))
 }
 
 // ArchivedAtLT applies the LT predicate on the "archived_at" field.
-func ArchivedAtLT(v []byte) predicate.LedgerAccount {
+func ArchivedAtLT(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldLT(FieldArchivedAt, v))
 }
 
 // ArchivedAtLTE applies the LTE predicate on the "archived_at" field.
-func ArchivedAtLTE(v []byte) predicate.LedgerAccount {
+func ArchivedAtLTE(v time.Time) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldLTE(FieldArchivedAt, v))
 }
 

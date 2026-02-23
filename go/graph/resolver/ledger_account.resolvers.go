@@ -18,7 +18,7 @@ func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAcc
 	if obj.Parent == nil {
 		return nil, nil
 	}
-	return r.lac.Get(ctx, nil, &obj.Parent.IntID)
+	return r.lac.GetByInternalID(ctx, obj.Parent.IntID)
 }
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.
@@ -43,7 +43,7 @@ func (r *mutationResolver) UnarchiveLedgerAccount(ctx context.Context, id pulid.
 
 // LedgerAccount is the resolver for the ledgerAccount field.
 func (r *queryResolver) LedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error) {
-	return r.lac.Get(ctx, &id, nil)
+	return r.lac.GetByPublicID(ctx, id)
 }
 
 // LedgerAccounts is the resolver for the ledgerAccounts field.

@@ -29,7 +29,7 @@ type LedgerAccount struct {
 	// IsGroup holds the value of the "is_group" field.
 	IsGroup bool `json:"is_group,omitempty"`
 	// ArchivedAt holds the value of the "archived_at" field.
-	ArchivedAt []byte `json:"archived_at,omitempty"`
+	ArchivedAt *time.Time `json:"archived_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -91,7 +91,7 @@ func (*LedgerAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ledgeraccount.FieldAccountName, ledgeraccount.FieldArchivedAt:
+		case ledgeraccount.FieldAccountName:
 			values[i] = new([]byte)
 		case ledgeraccount.FieldPublicID:
 			values[i] = new(pulid.ID)
@@ -101,7 +101,7 @@ func (*LedgerAccount) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case ledgeraccount.FieldKind:
 			values[i] = new(sql.NullString)
-		case ledgeraccount.FieldCreatedAt, ledgeraccount.FieldUpdatedAt:
+		case ledgeraccount.FieldArchivedAt, ledgeraccount.FieldCreatedAt, ledgeraccount.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case ledgeraccount.ForeignKeys[0]: // ledger_account_children
 			values[i] = new(sql.NullInt64)
@@ -153,10 +153,11 @@ func (_m *LedgerAccount) assignValues(columns []string, values []any) error {
 				_m.IsGroup = value.Bool
 			}
 		case ledgeraccount.FieldArchivedAt:
-			if value, ok := values[i].(*[]byte); !ok {
+			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field archived_at", values[i])
-			} else if value != nil {
-				_m.ArchivedAt = *value
+			} else if value.Valid {
+				_m.ArchivedAt = new(time.Time)
+				*_m.ArchivedAt = value.Time
 			}
 		case ledgeraccount.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -247,8 +248,10 @@ func (_m *LedgerAccount) String() string {
 	builder.WriteString("is_group=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsGroup))
 	builder.WriteString(", ")
-	builder.WriteString("archived_at=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ArchivedAt))
+	if v := _m.ArchivedAt; v != nil {
+		builder.WriteString("archived_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

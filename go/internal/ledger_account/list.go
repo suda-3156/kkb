@@ -22,15 +22,15 @@ func (m *LedgerAccountManager) List(
 	kind *graph.LedgerAccountKind,
 	includeArchived *bool,
 ) (*graph.LedgerAccountConnection, error) {
-	slog.InfoContext(
+	slog.DebugContext(
 		ctx,
-		"Ledger Account Service - List: started",
+		"ledger account - list called",
 	)
 
 	var scanDesc bool = false
-	query := m.db.Client.LedgerAccount.Query()
+	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey()
 
-	query, scanDesc = applyConditions(
+	query, scanDesc = m.applyFilter(
 		first,
 		publicIDs,
 		IDs,
@@ -52,16 +52,10 @@ func (m *LedgerAccountManager) List(
 		return nil, apperr.NewInternalServerError(err)
 	}
 
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - List: completed",
-		slog.Int("count", len(lacs)),
-	)
-
 	return m.convertToGraphConnection(ctx, lacs, hasPrevPage, hasNextPage)
 }
 
-func applyConditions(
+func (m *LedgerAccountManager) applyFilter(
 	first *int32,
 	publicIDs []pulid.ID,
 	IDs []int,
@@ -107,7 +101,7 @@ func applyConditions(
 	}
 
 	if kind != nil {
-		query = query.Where(ledgeraccount.KindEQ(convertKindToEnt(*kind)))
+		query = query.Where(ledgeraccount.KindEQ(m.convertKindToEnt(*kind)))
 	}
 
 	if includeArchived == nil || !*includeArchived {

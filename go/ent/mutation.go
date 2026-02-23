@@ -41,7 +41,7 @@ type LedgerAccountMutation struct {
 	account_name          *[]byte
 	kind                  *schema.LedgerAccountKind
 	is_group              *bool
-	archived_at           *[]byte
+	archived_at           *time.Time
 	created_at            *time.Time
 	updated_at            *time.Time
 	clearedFields         map[string]struct{}
@@ -300,12 +300,12 @@ func (m *LedgerAccountMutation) ResetIsGroup() {
 }
 
 // SetArchivedAt sets the "archived_at" field.
-func (m *LedgerAccountMutation) SetArchivedAt(b []byte) {
-	m.archived_at = &b
+func (m *LedgerAccountMutation) SetArchivedAt(t time.Time) {
+	m.archived_at = &t
 }
 
 // ArchivedAt returns the value of the "archived_at" field in the mutation.
-func (m *LedgerAccountMutation) ArchivedAt() (r []byte, exists bool) {
+func (m *LedgerAccountMutation) ArchivedAt() (r time.Time, exists bool) {
 	v := m.archived_at
 	if v == nil {
 		return
@@ -316,7 +316,7 @@ func (m *LedgerAccountMutation) ArchivedAt() (r []byte, exists bool) {
 // OldArchivedAt returns the old "archived_at" field's value of the LedgerAccount entity.
 // If the LedgerAccount object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LedgerAccountMutation) OldArchivedAt(ctx context.Context) (v []byte, err error) {
+func (m *LedgerAccountMutation) OldArchivedAt(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldArchivedAt is only allowed on UpdateOne operations")
 	}
@@ -691,7 +691,7 @@ func (m *LedgerAccountMutation) SetField(name string, value ent.Value) error {
 		m.SetIsGroup(v)
 		return nil
 	case ledgeraccount.FieldArchivedAt:
-		v, ok := value.([]byte)
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

@@ -15,12 +15,6 @@ func (m *LedgerAccountManager) Update(
 	ctx context.Context,
 	input graph.UpdateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
-	slog.InfoContext(
-		ctx,
-		"Ledger Account Service - Update: started",
-		slog.String("public_id", input.ID.String()),
-	)
-
 	// Check if the input is valid.
 	if input.ParentID != nil && *input.ParentID == input.ID {
 		return nil, apperr.NewBadRequestError(
@@ -83,6 +77,8 @@ func (m *LedgerAccountManager) updateTx(
 	// Get the existing ledger account
 	existing, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(input.ID)).
+		WithEncryptionKey().
+		WithParent().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -103,7 +99,7 @@ func (m *LedgerAccountManager) updateTx(
 
 	// Check parent account if parent ID is provided
 	var parent *ent.LedgerAccount = nil
-	if input.ParentID != nil && input.ParentID != &existing.Edges.Parent.PublicID {
+	if input.ParentID != nil {
 		parent, err = client.LedgerAccount.Query().
 			Where(ledgeraccount.PublicID(*input.ParentID)).
 			Only(ctx)
@@ -168,6 +164,15 @@ func (m *LedgerAccountManager) updateTx(
 	}
 
 	updated, err := query.Save(ctx)
+	if err != nil {
+		return nil, apperr.NewInternalServerError(err)
+	}
+
+	// Reload with EncryptionKey edge (Save does not populate edges)
+	updated, err = client.LedgerAccount.Query().
+		Where(ledgeraccount.ID(updated.ID)).
+		WithEncryptionKey().
+		Only(ctx)
 	if err != nil {
 		return nil, apperr.NewInternalServerError(err)
 	}

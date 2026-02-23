@@ -61,11 +61,15 @@ func (LedgerAccount) Fields() []ent.Field {
 			GoType(LedgerAccountKind("")).
 			Immutable(),
 		field.Bool("is_group"),
-		field.Bytes("archived_at").
-			// Encrypted field
-			// Null or datetime string in 2006-01-02T15:04:05+09:00 format
-			MaxLen(128). // datetime 25 bytes + overhead for encryption (e.g. 28 bytes for AES-GCM)
-			Optional(),
+		field.Time("archived_at").
+			SchemaType(map[string]string{
+				"mysql": "datetime(6)",
+			}).
+			// Optional enables use of `ArchivedAtIsNil()` and `ArchivedAtNotNil()` predicates.
+			Optional().
+			// Nillable makes this field type of *time.Time in Go.
+			// When marshaled to JSON, it will be null, not the zero time (e.g. "0001-01-01T00:00:00Z").
+			Nillable(),
 		field.Time("created_at").
 			SchemaType(map[string]string{
 				"mysql": "datetime(6)",

@@ -8,25 +8,12 @@ import (
 	"syscall"
 
 	"github.com/suda-3156/kkb/go/ent"
-	entmigrate "github.com/suda-3156/kkb/go/ent/migrate"
 	"github.com/suda-3156/kkb/go/internal/api"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/server"
 	"github.com/suda-3156/kkb/go/internal/setup"
 )
 
 // TODO: Temporal implement:
-func migrate(client *ent.Client) {
-	slog.Warn("Auto-migrating database schema in local environment...")
-	err := client.Debug().Schema.Create(
-		context.Background(),
-		entmigrate.WithDropIndex(true),
-		entmigrate.WithDropColumn(true),
-	)
-	if err != nil {
-		slog.Error("Failed to migrate schema", slog.String("reason", err.Error()))
-	}
-	slog.Info("Database schema migrated successfully.")
-}
 
 func entDebugLog(client *ent.Client) {
 	slog.Warn("Enabling Ent debug logging in local environment...")
@@ -45,6 +32,7 @@ func main() {
 		}
 	}()
 
+	// TODO: Make log level configurable via environment variable
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	err := run(ctx)
@@ -71,7 +59,6 @@ func run(ctx context.Context) error {
 	}
 
 	// TODO: Temporal implement
-	migrate(env.Database().Client)
 	entDebugLog(env.Database().Client)
 
 	server := server.New(cfg.Port)

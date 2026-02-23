@@ -21,5 +21,5 @@ func (c *Config) ConnectionURL() string {
 		addr = fmt.Sprintf("%s:%s", c.Host, c.Port)
 	}
 
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s", c.User, c.Password, addr, c.Name)
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", c.User, c.Password, addr, c.Name)
 }

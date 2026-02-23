@@ -58,7 +58,7 @@ func (em *EncryptionManager) Encrypt(
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
-	ciphertext := aesgcm.Seal(nil, nonce, []byte(plaintext), nil)
+	ciphertext := aesgcm.Seal(nonce, nonce, []byte(plaintext), nil)
 
 	return &EncryptionPayload{
 		Ciphertext: ciphertext,
