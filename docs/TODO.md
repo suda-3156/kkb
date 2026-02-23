@@ -3,8 +3,6 @@
 ## go
 
 - slog -> zap (json tag)
-- env/config load strategy
-- dek, key management
 - error, log strategy
 - refactor `WithTx` func to get `tx client` by itself.
 - use int64 explicitly
