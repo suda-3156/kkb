@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
@@ -46,8 +47,8 @@ func (m *LedgerAccountManager) Create(
 	// Create the account in a transaction.
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = m.createTx(ctx, input, encrypted)
+	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
+		account, errTx = m.createTx(ctx, client, input, encrypted)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -58,23 +59,25 @@ func (m *LedgerAccountManager) Create(
 
 func (m *LedgerAccountManager) createTx(
 	ctx context.Context,
+	client *ent.Client,
 	input graph.CreateLedgerAccountInput,
 	encrypted *encryption.EncryptionPayload,
 ) (*graph.LedgerAccount, error) {
-	// Get client from transaction context
-	client := m.db.Client
-	tx := client.TxFromCtx(ctx)
-	if tx != nil {
-		client = tx.Client()
-	}
-
+	// Fetch parent account if ParentID is provided and validate it.
 	var parent *ent.LedgerAccount
 	var err error
 	if input.ParentID != nil {
+		// Lock the parent row to prevent concurrent archive/modification.
 		parent, err = client.LedgerAccount.Query().
 			Where(ledgeraccount.PublicID(*input.ParentID)).
+			ForUpdate(entsql.WithLockAction(entsql.NoWait)).
 			Only(ctx)
 		if err != nil {
+			if ent.IsLockNoWaitError(err) {
+				return nil, apperr.NewConflictError(
+					fmt.Errorf("parent ledger account is currently being modified, please try again"),
+				)
+			}
 			return nil, apperr.NewNotFoundError(
 				fmt.Errorf("parent ledger account not found"),
 			)
