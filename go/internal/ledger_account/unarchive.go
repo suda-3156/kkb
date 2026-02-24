@@ -26,8 +26,8 @@ func (m *LedgerAccountManager) Unarchive(
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = m.unarchiveTx(ctx, id)
+	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
+		account, errTx = m.unarchiveTx(ctx, client, id)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -38,15 +38,9 @@ func (m *LedgerAccountManager) Unarchive(
 
 func (m *LedgerAccountManager) unarchiveTx(
 	ctx context.Context,
+	client *ent.Client,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	// Get client from transaction context
-	client := m.db.Client
-	tx := client.TxFromCtx(ctx)
-	if tx != nil {
-		client = tx.Client()
-	}
-
 	// Get the account to unarchive.
 	account, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(id)).

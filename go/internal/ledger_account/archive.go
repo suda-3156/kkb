@@ -26,8 +26,8 @@ func (m *LedgerAccountManager) Archive(
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = m.archiveTx(ctx, id)
+	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
+		account, errTx = m.archiveTx(ctx, client, id)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -38,15 +38,9 @@ func (m *LedgerAccountManager) Archive(
 
 func (m *LedgerAccountManager) archiveTx(
 	ctx context.Context,
+	client *ent.Client,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	// Get client from transaction context
-	client := m.db.Client
-	tx := client.TxFromCtx(ctx)
-	if tx != nil {
-		client = tx.Client()
-	}
-
 	// Get the account to archive.
 	account, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(id)).

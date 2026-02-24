@@ -46,8 +46,8 @@ func (m *LedgerAccountManager) Create(
 	// Create the account in a transaction.
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = m.createTx(ctx, input, encrypted)
+	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
+		account, errTx = m.createTx(ctx, client, input, encrypted)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -58,16 +58,11 @@ func (m *LedgerAccountManager) Create(
 
 func (m *LedgerAccountManager) createTx(
 	ctx context.Context,
+	client *ent.Client,
 	input graph.CreateLedgerAccountInput,
 	encrypted *encryption.EncryptionPayload,
 ) (*graph.LedgerAccount, error) {
-	// Get client from transaction context
-	client := m.db.Client
-	tx := client.TxFromCtx(ctx)
-	if tx != nil {
-		client = tx.Client()
-	}
-
+	// Get the parent account if parent ID is provided.
 	var parent *ent.LedgerAccount
 	var err error
 	if input.ParentID != nil {
