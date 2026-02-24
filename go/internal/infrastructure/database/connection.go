@@ -33,6 +33,11 @@ func New(ctx context.Context, cfg *Config) (*DB, error) {
 
 	logging.Info(ctx, "database connection established successfully")
 
+	if cfg.DebugLog {
+		logging.Notice(ctx, "enable ent debug logging for database operations")
+		client = client.Debug()
+	}
+
 	return &DB{
 		Client: client,
 	}, nil

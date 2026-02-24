@@ -8,6 +8,8 @@ type Config struct {
 	Password string `env:"DB_PASSWORD" json:"-"`
 	Host     string `env:"DB_HOST" json:",omitempty"`
 	Port     string `env:"DB_PORT" json:",omitempty"`
+
+	DebugLog bool `env:"DB_DEBUG_LOG" json:",omitempty"`
 }
 
 func (c *Config) DatabaseConfig() *Config {
