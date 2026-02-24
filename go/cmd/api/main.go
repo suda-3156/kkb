@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/internal/api"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/server"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/setup"
 )
 
@@ -33,10 +33,7 @@ func main() {
 		}
 	}()
 
-	// TODO: Make log level configurable via environment variable
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	slog.SetDefault(logging.NewFromEnv())
 
 	err := run(ctx)
 	stop()
