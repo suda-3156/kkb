@@ -10,6 +10,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -18,7 +19,7 @@ func (m *LedgerAccountManager) Archive(
 	ctx context.Context,
 	id pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	slog.DebugContext(
+	logging.Debug(
 		ctx,
 		"ledger account - archive called",
 		slog.String("public_id", id.String()),

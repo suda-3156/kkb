@@ -9,6 +9,7 @@ import (
 	"github.com/sethvargo/go-envconfig"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/serverenv"
 )
 
@@ -45,7 +46,7 @@ func SetupWith(
 	}); err != nil {
 		return nil, fmt.Errorf("failed to process environment variables: %w", err)
 	}
-	slog.InfoContext(
+	logging.Info(
 		ctx,
 		"environment variables processed",
 		slog.Any("config", config),
@@ -53,7 +54,7 @@ func SetupWith(
 
 	// Database configuration
 	if provider, ok := config.(DatabaseConfigProvider); ok {
-		slog.InfoContext(
+		logging.Info(
 			ctx,
 			"configuring database",
 		)
@@ -66,7 +67,7 @@ func SetupWith(
 
 		serverEnvOpts = append(serverEnvOpts, serverenv.WithDatabase(db))
 
-		slog.InfoContext(
+		logging.Info(
 			ctx,
 			"database configured",
 			slog.Any("config", dbConfig),
@@ -75,7 +76,7 @@ func SetupWith(
 
 	// Key manager configuration
 	if provider, ok := config.(KeyManagerConfigProvider); ok {
-		slog.InfoContext(
+		logging.Info(
 			ctx,
 			"configuring key manager",
 		)
@@ -96,7 +97,7 @@ func SetupWith(
 
 		serverEnvOpts = append(serverEnvOpts, serverenv.WithKeyManager(km))
 
-		slog.InfoContext(
+		logging.Info(
 			ctx,
 			"key manager configured",
 			slog.Any("config", kmConfig),

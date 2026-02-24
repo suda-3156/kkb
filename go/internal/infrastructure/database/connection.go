@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/suda-3156/kkb/go/ent"
+	"github.com/suda-3156/kkb/go/internal/logging"
 )
 
 type DB struct {
@@ -17,7 +17,7 @@ type DB struct {
 }
 
 func New(ctx context.Context, cfg *Config) (*DB, error) {
-	slog.InfoContext(ctx, "initializing database connection")
+	logging.Info(ctx, "initializing database connection")
 
 	pool, err := sql.Open("mysql", cfg.ConnectionURL())
 	if err != nil {
@@ -31,14 +31,14 @@ func New(ctx context.Context, cfg *Config) (*DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	slog.InfoContext(ctx, "database connection established successfully")
+	logging.Info(ctx, "database connection established successfully")
 
 	return &DB{
 		Client: client,
 	}, nil
 }
 
-func (db *DB) Close() error {
-	slog.Info("closing database connection")
+func (db *DB) Close(ctx context.Context) error {
+	logging.Info(ctx, "closing database connection")
 	return db.Client.Close()
 }
