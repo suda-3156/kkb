@@ -1,162 +1,124 @@
 package logging
 
 import (
+	"context"
 	"log/slog"
-	"os"
-	"time"
 )
 
-// New creates a new logger with the specified log level and mode.
-// level: "debug", "info", "warn", "error" (default: "info")
-// mode: "dev", "prod" (default: "prod")
-func New(level string, mode string) *slog.Logger {
-	var config Config
-	switch mode {
-	case "dev":
-		config = devConfig
-	case "prod":
-		config = prodConfig
-	default:
-		config = prodConfig
-	}
-
-	return config.newLogger(toSlogLevel(level))
+// Logger wraps *slog.Logger and adds custom severity levels:
+// Notice, Critical, Alert, Emergency.
+//
+// With and WithGroup are overridden so they return *Logger,
+// keeping method chaining with the custom levels intact.
+type Logger struct {
+	*slog.Logger
 }
 
-// NewFromEnv creates a new logger using environment variables.
-// LOG_LEVEL: "debug", "info", "warn", "error" (default: "info")
-// LOG_MODE: "dev", "prod" (default: "prod")
-func NewFromEnv() *slog.Logger {
-	level := os.Getenv("LOG_LEVEL")
-	if level == "" {
-		level = "info"
-	}
-
-	mode := os.Getenv("LOG_MODE")
-	if mode == "" {
-		mode = "prod"
-	}
-
-	return New(level, mode)
+// With returns a new Logger with the given attributes pre-stored.
+func (l *Logger) With(args ...any) *Logger {
+	return &Logger{l.Logger.With(args...)}
 }
 
-const (
-	levelKey   = "severity"
-	messageKey = "message"
-	timeKey    = "timestamp"
-
-	apiPrefix = "logging.googleapis.com/"
-	sourceKey = apiPrefix + "sourceLocation"
-	// traceKey  = apiPrefix + "trace"
-)
-
-type Format string
-
-const (
-	FormatJSON   Format = "json"
-	FormatTEXT   Format = "text"
-	FormatPretty Format = "pretty"
-)
-
-type Config struct {
-	format Format
-
-	levelKey   string
-	messageKey string
-	timeKey    string
-	sourceKey  string
-
-	addSource bool
-
-	timeFmt string
+// WithGroup returns a new Logger with subsequent attributes nested under name.
+func (l *Logger) WithGroup(name string) *Logger {
+	return &Logger{l.Logger.WithGroup(name)}
 }
 
-var devConfig = Config{
-	format: FormatPretty,
-
-	levelKey:   "L",
-	messageKey: "M",
-	timeKey:    "T",
-	sourceKey:  "S",
-
-	addSource: true,
-
-	timeFmt: "15:04:05.000",
+// log is a helper method to log at a specific level.
+func (l *Logger) log(ctx context.Context, level slog.Level, msg string, args ...any) {
+	l.Logger.Log(ctx, level, msg, args...)
 }
 
-var prodConfig = Config{
-	format: FormatJSON,
-
-	levelKey:   levelKey,
-	messageKey: messageKey,
-	timeKey:    timeKey,
-	sourceKey:  sourceKey,
-
-	addSource: true,
-
-	timeFmt: time.RFC3339Nano,
+// Log logs at LevelDefault.
+func (l *Logger) Log(ctx context.Context, msg string, args ...any) {
+	l.Logger.Log(ctx, LevelDefault, msg, args...)
 }
 
-func (c *Config) replaceAttr(_ []string, a slog.Attr) slog.Attr {
-	switch a.Key {
-	case slog.LevelKey:
-		a.Key = c.levelKey
-	case slog.MessageKey:
-		a.Key = c.messageKey
-	case slog.TimeKey:
-		a.Key = c.timeKey
-		if t, ok := a.Value.Any().(time.Time); ok {
-			a.Value = slog.StringValue(t.Format(c.timeFmt))
-		}
-	case slog.SourceKey:
-		a.Key = c.sourceKey
-	}
-
-	return a
+// Debug logs at LevelDebug.
+func (l *Logger) Debug(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelDebug, msg, args...)
 }
 
-func (c *Config) newLogger(level slog.Level) *slog.Logger {
-	var handler slog.Handler
-	switch c.format {
-	case FormatPretty:
-		handler = newPrettyHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource: c.addSource,
-			Level:     level,
-		}, c.timeFmt)
-	case FormatJSON:
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource:   c.addSource,
-			Level:       level,
-			ReplaceAttr: c.replaceAttr,
-		})
-	case FormatTEXT:
-		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource:   c.addSource,
-			Level:       level,
-			ReplaceAttr: c.replaceAttr,
-		})
-	default:
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource:   c.addSource,
-			Level:       level,
-			ReplaceAttr: c.replaceAttr,
-		})
-	}
-
-	return slog.New(handler)
+// Info logs at LevelInfo.
+func (l *Logger) Info(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelInfo, msg, args...)
 }
 
-func toSlogLevel(level string) slog.Level {
-	switch level {
-	case "debug":
-		return slog.LevelDebug
-	case "info":
-		return slog.LevelInfo
-	case "warn":
-		return slog.LevelWarn
-	case "error":
-		return slog.LevelError
-	default:
-		return slog.LevelInfo
-	}
+// Notice logs at LevelNotice.
+func (l *Logger) Notice(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelNotice, msg, args...)
+}
+
+// Warning logs at LevelWarning.
+func (l *Logger) Warning(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelWarning, msg, args...)
+}
+
+// Error logs at LevelError.
+func (l *Logger) Error(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelError, msg, args...)
+}
+
+// Critical logs at LevelCritical.
+func (l *Logger) Critical(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelCritical, msg, args...)
+}
+
+// Alert logs at LevelAlert.
+func (l *Logger) Alert(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelAlert, msg, args...)
+}
+
+// Emergency logs at LevelEmergency.
+func (l *Logger) Emergency(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, LevelEmergency, msg, args...)
+}
+
+// Package-level default logger
+var defaultLogger = &Logger{slog.Default()}
+
+// SetDefault sets the package-level default logger and also calls
+// slog.SetDefault so that bare slog.* calls use the same handler.
+func SetDefault(l *Logger) {
+	defaultLogger = l
+	slog.SetDefault(l.Logger)
+}
+
+// Default returns the current package-level logger.
+func Default() *Logger {
+	return defaultLogger
+}
+
+// Package-level logging functions (all accept context as first argument)
+
+func Debug(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Debug(ctx, msg, args...)
+}
+
+func Info(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Info(ctx, msg, args...)
+}
+
+func Notice(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Notice(ctx, msg, args...)
+}
+
+func Warning(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Warning(ctx, msg, args...)
+}
+
+func Error(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Error(ctx, msg, args...)
+}
+
+func Critical(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Critical(ctx, msg, args...)
+}
+
+func Alert(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Alert(ctx, msg, args...)
+}
+
+func Emergency(ctx context.Context, msg string, args ...any) {
+	defaultLogger.Emergency(ctx, msg, args...)
 }

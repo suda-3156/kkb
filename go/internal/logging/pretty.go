@@ -144,20 +144,34 @@ func (h *prettyHandler) WithGroup(name string) slog.Handler {
 
 // prettyLevel returns the level string padded to 5 characters.
 //
-//	DEBUG → "DEBUG"
-//	INFO  → "INFO "
-//	WARN  → "WARN "
-//	ERROR → "ERROR"
+//	DEBUG      → "DEBUG"
+//	INFO       → "INFO "
+//	NOTICE     → "NOTIC"
+//	WARN       → "WARN "
+//	ERROR      → "ERROR"
+//	CRITICAL   → "CRIT "
+//	ALERT      → "ALERT"
+//	EMERGENCY  → "EMERG"
 func prettyLevel(level slog.Level) string {
 	switch level {
-	case slog.LevelDebug:
+	case LevelDefault:
+		return ""
+	case LevelDebug:
 		return "DEBUG"
-	case slog.LevelInfo:
+	case LevelInfo:
 		return "INFO "
-	case slog.LevelWarn:
+	case LevelNotice:
+		return "NOTIC"
+	case LevelWarning:
 		return "WARN "
-	case slog.LevelError:
+	case LevelError:
 		return "ERROR"
+	case LevelCritical:
+		return "CRIT "
+	case LevelAlert:
+		return "ALERT"
+	case LevelEmergency:
+		return "EMERG"
 	default:
 		s := level.String()
 		if len(s) >= 5 {
