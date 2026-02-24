@@ -213,14 +213,7 @@ func (em *EncryptionManager) createKey(ctx context.Context) (*EncryptionKey, err
 	// Store the wrapped key in the database
 	var key *ent.LedgerEncryptionKey
 	var errTx error
-	if err := em.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
-		// Get client from transaction context
-		client := em.db.Client
-		tx := client.TxFromCtx(ctx)
-		if tx != nil {
-			client = tx.Client()
-		}
-
+	if err := em.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
 		key, errTx = client.LedgerEncryptionKey.Create().
 			SetWrappedCipher(wrapped).
 			SetAad(aad).

@@ -8,6 +8,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
 )
 
@@ -35,19 +36,19 @@ func (m *LedgerAccountManager) Update(
 	}
 
 	// Encrypt
-	var encryptedName []byte
-	// var err error
+	var encrypted *encryption.EncryptionPayload
+	var err error
 	if input.Name != nil {
-		encryptedName = []byte(*input.Name) // TODO: implement encryption
-		// if err != nil {
-		// 	return nil, apperr.NewInternalServerError(err)
-		// }
+		encrypted, err = m.em.Encrypt(ctx, *input.Name)
+		if err != nil {
+			return nil, apperr.NewInternalServerError(err)
+		}
 	}
 
 	var account *graph.LedgerAccount
 	var errTx error
-	if err := m.db.Client.WithTxRetry(ctx, func(ctx context.Context) error {
-		account, errTx = m.updateTx(ctx, input, encryptedName)
+	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
+		account, errTx = m.updateTx(ctx, client, input, encrypted)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -64,16 +65,10 @@ func (m *LedgerAccountManager) Update(
 
 func (m *LedgerAccountManager) updateTx(
 	ctx context.Context,
+	client *ent.Client,
 	input graph.UpdateLedgerAccountInput,
-	encryptedName []byte,
+	encrypted *encryption.EncryptionPayload,
 ) (*graph.LedgerAccount, error) {
-	// Get client from transaction context
-	client := m.db.Client
-	tx := client.TxFromCtx(ctx)
-	if tx != nil {
-		client = tx.Client()
-	}
-
 	// Get the existing ledger account
 	existing, err := client.LedgerAccount.Query().
 		Where(ledgeraccount.PublicID(input.ID)).
@@ -160,7 +155,8 @@ func (m *LedgerAccountManager) updateTx(
 	}
 
 	if input.Name != nil {
-		query = query.SetAccountName(encryptedName)
+		query = query.SetAccountName(encrypted.Ciphertext).
+			SetEncryptionKeyID(encrypted.KeyID)
 	}
 
 	updated, err := query.Save(ctx)
