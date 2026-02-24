@@ -10,6 +10,7 @@ import (
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
+	"github.com/suda-3156/kkb/go/internal/logging"
 )
 
 func (m *LedgerAccountManager) Update(
@@ -54,7 +55,7 @@ func (m *LedgerAccountManager) Update(
 		return nil, err
 	}
 
-	slog.InfoContext(
+	logging.Info(
 		ctx,
 		"Ledger Account Service - Update: completed",
 		slog.String("public_id", input.ID.String()),

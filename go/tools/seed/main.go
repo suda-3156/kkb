@@ -57,7 +57,7 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup environment: %w", err)
 	}
-	defer env.Close()
+	defer env.Close(ctx)
 
 	if env.Database() == nil {
 		return fmt.Errorf("missing database connection in env variables")

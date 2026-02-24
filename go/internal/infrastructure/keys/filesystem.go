@@ -16,6 +16,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/suda-3156/kkb/go/internal/logging"
 )
 
 func init() {
@@ -35,7 +37,7 @@ type Filesystem struct {
 }
 
 func NewFilesystem(ctx context.Context, cfg *Config) (KeyManager, error) {
-	slog.DebugContext(ctx, "initializing FILESYSTEM key manager", slog.String("root", cfg.FilesystemRoot))
+	logging.Debug(ctx, "initializing FILESYSTEM key manager", slog.String("root", cfg.FilesystemRoot))
 
 	root := cfg.FilesystemRoot
 	if root == "" {
@@ -48,7 +50,7 @@ func NewFilesystem(ctx context.Context, cfg *Config) (KeyManager, error) {
 		}
 	}
 
-	slog.DebugContext(ctx, "FILESYSTEM key manager initialized successfully")
+	logging.Debug(ctx, "FILESYSTEM key manager initialized successfully")
 
 	return &Filesystem{
 		root: root,

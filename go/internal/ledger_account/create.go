@@ -10,6 +10,7 @@ import (
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -17,7 +18,7 @@ func (m *LedgerAccountManager) Create(
 	ctx context.Context,
 	input graph.CreateLedgerAccountInput,
 ) (*graph.LedgerAccount, error) {
-	slog.DebugContext(
+	logging.Debug(
 		ctx,
 		"ledger account - create called",
 		slog.String("name", input.Name),

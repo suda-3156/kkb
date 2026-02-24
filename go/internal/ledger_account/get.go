@@ -9,6 +9,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -16,7 +17,7 @@ func (m *LedgerAccountManager) GetByPublicID(
 	ctx context.Context,
 	publicID pulid.ID,
 ) (*graph.LedgerAccount, error) {
-	slog.DebugContext(
+	logging.Debug(
 		ctx,
 		"ledger account - get by public ID called",
 		slog.String("public_id", publicID.String()),
@@ -44,7 +45,7 @@ func (m *LedgerAccountManager) GetByInternalID(
 	ctx context.Context,
 	ID int,
 ) (*graph.LedgerAccount, error) {
-	slog.DebugContext(
+	logging.Debug(
 		ctx,
 		"ledger account - get by internal ID called",
 		slog.Int("internal_id", ID),

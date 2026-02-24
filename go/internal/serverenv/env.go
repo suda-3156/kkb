@@ -56,9 +56,9 @@ func (env *ServerEnv) KeyManager() keys.KeyManager {
 }
 
 // Close closes any resources held by the ServerEnv.
-func (env *ServerEnv) Close() error {
+func (env *ServerEnv) Close(ctx context.Context) error {
 	if env.database != nil {
-		return env.database.Close()
+		return env.database.Close(ctx)
 	}
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/resolver"
 	"github.com/suda-3156/kkb/go/internal/encryption"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/serverenv"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -26,7 +27,7 @@ type Server struct {
 }
 
 func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, error) {
-	slog.InfoContext(ctx, "initializing GraphQL server")
+	logging.Info(ctx, "initializing GraphQL server")
 
 	if env.Database() == nil {
 		return nil, fmt.Errorf("missing database connection in server environment")
@@ -36,7 +37,7 @@ func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, e
 	}
 
 	// Initialize the encryption manager.
-	slog.DebugContext(ctx, "initializing encryption manager")
+	logging.Debug(ctx, "initializing encryption manager")
 
 	if len(cfg.EncryptionManger.AAD) == 0 {
 		return nil, fmt.Errorf("encryption AAD must be provided via ENCRYPTION_AAD environment variable")
@@ -50,9 +51,9 @@ func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, e
 	}
 	em := encryption.New(emConfig)
 
-	slog.DebugContext(ctx, "encryption manager initialized successfully")
+	logging.Debug(ctx, "encryption manager initialized successfully")
 
-	slog.InfoContext(ctx, "GraphQL server initialized successfully")
+	logging.Info(ctx, "api server initialized successfully")
 
 	return &Server{
 		cfg: cfg,
@@ -85,9 +86,9 @@ func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", srv)
 
-	slog.InfoContext(
+	logging.Info(
 		ctx,
-		"GraphQL server initialized",
+		"serving GraphQL playground and query endpoint",
 		slog.String("playground", "/"),
 		slog.String("queryEndpoint", "/query"),
 	)

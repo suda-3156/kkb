@@ -2,12 +2,12 @@ package ledgeraccount
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	apperr "github.com/suda-3156/kkb/go/internal/error"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -22,7 +22,7 @@ func (m *LedgerAccountManager) List(
 	kind *graph.LedgerAccountKind,
 	includeArchived *bool,
 ) (*graph.LedgerAccountConnection, error) {
-	slog.DebugContext(
+	logging.Debug(
 		ctx,
 		"ledger account - list called",
 	)

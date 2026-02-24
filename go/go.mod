@@ -5,7 +5,6 @@ go 1.25.0
 require (
 	entgo.io/ent v0.14.5
 	github.com/99designs/gqlgen v0.17.86
-	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/sethvargo/go-envconfig v1.3.0

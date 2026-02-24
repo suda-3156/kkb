@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/suda-3156/kkb/go/internal/logging"
 )
 
 type Server struct {
@@ -33,7 +35,7 @@ func (s *Server) ServeHTTP(ctx context.Context, handler http.Handler) error {
 	go func() {
 		<-ctx.Done() // Wait for the context to be cancelled
 
-		slog.InfoContext(ctx, "received shutdown signal, shutting down server...", slog.String("port", s.port))
+		logging.Info(ctx, "received shutdown signal, shutting down server...", slog.String("port", s.port))
 
 		// Create a context with timeout for the shutdown process
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -43,7 +45,7 @@ func (s *Server) ServeHTTP(ctx context.Context, handler http.Handler) error {
 		errCh <- srv.Shutdown(shutdownCtx)
 	}()
 
-	slog.InfoContext(ctx, "server is running", slog.String("port", s.port))
+	logging.Info(ctx, "server is running", slog.String("port", s.port))
 
 	// Start the server and listen for incoming requests
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -55,6 +57,6 @@ func (s *Server) ServeHTTP(ctx context.Context, handler http.Handler) error {
 		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
 
-	slog.InfoContext(ctx, "server stopped gracefully")
+	logging.Info(ctx, "server stopped gracefully")
 	return nil
 }
