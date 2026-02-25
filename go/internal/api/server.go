@@ -82,6 +82,9 @@ func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 		Cache: lru.New[string](100),
 	})
 
+	srv.SetErrorPresenter(ErrorPresenter)
+	srv.SetRecoverFunc(Recover)
+
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", srv)
