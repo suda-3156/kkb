@@ -51,8 +51,6 @@ type JournalEntryMutation struct {
 	clearedtransaction    bool
 	ledger_account        *int
 	clearedledger_account bool
-	encryption_key        *int
-	clearedencryption_key bool
 	done                  bool
 	oldValue              func(context.Context) (*JournalEntry, error)
 	predicates            []predicate.JournalEntry
@@ -414,45 +412,6 @@ func (m *JournalEntryMutation) ResetLedgerAccount() {
 	m.clearedledger_account = false
 }
 
-// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by id.
-func (m *JournalEntryMutation) SetEncryptionKeyID(id int) {
-	m.encryption_key = &id
-}
-
-// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
-func (m *JournalEntryMutation) ClearEncryptionKey() {
-	m.clearedencryption_key = true
-}
-
-// EncryptionKeyCleared reports if the "encryption_key" edge to the LedgerEncryptionKey entity was cleared.
-func (m *JournalEntryMutation) EncryptionKeyCleared() bool {
-	return m.clearedencryption_key
-}
-
-// EncryptionKeyID returns the "encryption_key" edge ID in the mutation.
-func (m *JournalEntryMutation) EncryptionKeyID() (id int, exists bool) {
-	if m.encryption_key != nil {
-		return *m.encryption_key, true
-	}
-	return
-}
-
-// EncryptionKeyIDs returns the "encryption_key" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// EncryptionKeyID instead. It exists only for internal usage by the builders.
-func (m *JournalEntryMutation) EncryptionKeyIDs() (ids []int) {
-	if id := m.encryption_key; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetEncryptionKey resets all changes to the "encryption_key" edge.
-func (m *JournalEntryMutation) ResetEncryptionKey() {
-	m.encryption_key = nil
-	m.clearedencryption_key = false
-}
-
 // Where appends a list predicates to the JournalEntryMutation builder.
 func (m *JournalEntryMutation) Where(ps ...predicate.JournalEntry) {
 	m.predicates = append(m.predicates, ps...)
@@ -654,15 +613,12 @@ func (m *JournalEntryMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *JournalEntryMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.transaction != nil {
 		edges = append(edges, journalentry.EdgeTransaction)
 	}
 	if m.ledger_account != nil {
 		edges = append(edges, journalentry.EdgeLedgerAccount)
-	}
-	if m.encryption_key != nil {
-		edges = append(edges, journalentry.EdgeEncryptionKey)
 	}
 	return edges
 }
@@ -679,17 +635,13 @@ func (m *JournalEntryMutation) AddedIDs(name string) []ent.Value {
 		if id := m.ledger_account; id != nil {
 			return []ent.Value{*id}
 		}
-	case journalentry.EdgeEncryptionKey:
-		if id := m.encryption_key; id != nil {
-			return []ent.Value{*id}
-		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *JournalEntryMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -701,15 +653,12 @@ func (m *JournalEntryMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *JournalEntryMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.clearedtransaction {
 		edges = append(edges, journalentry.EdgeTransaction)
 	}
 	if m.clearedledger_account {
 		edges = append(edges, journalentry.EdgeLedgerAccount)
-	}
-	if m.clearedencryption_key {
-		edges = append(edges, journalentry.EdgeEncryptionKey)
 	}
 	return edges
 }
@@ -722,8 +671,6 @@ func (m *JournalEntryMutation) EdgeCleared(name string) bool {
 		return m.clearedtransaction
 	case journalentry.EdgeLedgerAccount:
 		return m.clearedledger_account
-	case journalentry.EdgeEncryptionKey:
-		return m.clearedencryption_key
 	}
 	return false
 }
@@ -738,9 +685,6 @@ func (m *JournalEntryMutation) ClearEdge(name string) error {
 	case journalentry.EdgeLedgerAccount:
 		m.ClearLedgerAccount()
 		return nil
-	case journalentry.EdgeEncryptionKey:
-		m.ClearEncryptionKey()
-		return nil
 	}
 	return fmt.Errorf("unknown JournalEntry unique edge %s", name)
 }
@@ -754,9 +698,6 @@ func (m *JournalEntryMutation) ResetEdge(name string) error {
 		return nil
 	case journalentry.EdgeLedgerAccount:
 		m.ResetLedgerAccount()
-		return nil
-	case journalentry.EdgeEncryptionKey:
-		m.ResetEncryptionKey()
 		return nil
 	}
 	return fmt.Errorf("unknown JournalEntry edge %s", name)
@@ -1746,9 +1687,6 @@ type LedgerEncryptionKeyMutation struct {
 	transactions           map[int]struct{}
 	removedtransactions    map[int]struct{}
 	clearedtransactions    bool
-	journal_entries        map[int]struct{}
-	removedjournal_entries map[int]struct{}
-	clearedjournal_entries bool
 	done                   bool
 	oldValue               func(context.Context) (*LedgerEncryptionKey, error)
 	predicates             []predicate.LedgerEncryptionKey
@@ -2140,60 +2078,6 @@ func (m *LedgerEncryptionKeyMutation) ResetTransactions() {
 	m.removedtransactions = nil
 }
 
-// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by ids.
-func (m *LedgerEncryptionKeyMutation) AddJournalEntryIDs(ids ...int) {
-	if m.journal_entries == nil {
-		m.journal_entries = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.journal_entries[ids[i]] = struct{}{}
-	}
-}
-
-// ClearJournalEntries clears the "journal_entries" edge to the JournalEntry entity.
-func (m *LedgerEncryptionKeyMutation) ClearJournalEntries() {
-	m.clearedjournal_entries = true
-}
-
-// JournalEntriesCleared reports if the "journal_entries" edge to the JournalEntry entity was cleared.
-func (m *LedgerEncryptionKeyMutation) JournalEntriesCleared() bool {
-	return m.clearedjournal_entries
-}
-
-// RemoveJournalEntryIDs removes the "journal_entries" edge to the JournalEntry entity by IDs.
-func (m *LedgerEncryptionKeyMutation) RemoveJournalEntryIDs(ids ...int) {
-	if m.removedjournal_entries == nil {
-		m.removedjournal_entries = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.journal_entries, ids[i])
-		m.removedjournal_entries[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedJournalEntries returns the removed IDs of the "journal_entries" edge to the JournalEntry entity.
-func (m *LedgerEncryptionKeyMutation) RemovedJournalEntriesIDs() (ids []int) {
-	for id := range m.removedjournal_entries {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// JournalEntriesIDs returns the "journal_entries" edge IDs in the mutation.
-func (m *LedgerEncryptionKeyMutation) JournalEntriesIDs() (ids []int) {
-	for id := range m.journal_entries {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetJournalEntries resets all changes to the "journal_entries" edge.
-func (m *LedgerEncryptionKeyMutation) ResetJournalEntries() {
-	m.journal_entries = nil
-	m.clearedjournal_entries = false
-	m.removedjournal_entries = nil
-}
-
 // Where appends a list predicates to the LedgerEncryptionKeyMutation builder.
 func (m *LedgerEncryptionKeyMutation) Where(ps ...predicate.LedgerEncryptionKey) {
 	m.predicates = append(m.predicates, ps...)
@@ -2395,15 +2279,12 @@ func (m *LedgerEncryptionKeyMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LedgerEncryptionKeyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.ledger_accounts != nil {
 		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
 	}
 	if m.transactions != nil {
 		edges = append(edges, ledgerencryptionkey.EdgeTransactions)
-	}
-	if m.journal_entries != nil {
-		edges = append(edges, ledgerencryptionkey.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -2424,27 +2305,18 @@ func (m *LedgerEncryptionKeyMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case ledgerencryptionkey.EdgeJournalEntries:
-		ids := make([]ent.Value, 0, len(m.journal_entries))
-		for id := range m.journal_entries {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LedgerEncryptionKeyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.removedledger_accounts != nil {
 		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
 	}
 	if m.removedtransactions != nil {
 		edges = append(edges, ledgerencryptionkey.EdgeTransactions)
-	}
-	if m.removedjournal_entries != nil {
-		edges = append(edges, ledgerencryptionkey.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -2465,27 +2337,18 @@ func (m *LedgerEncryptionKeyMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case ledgerencryptionkey.EdgeJournalEntries:
-		ids := make([]ent.Value, 0, len(m.removedjournal_entries))
-		for id := range m.removedjournal_entries {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LedgerEncryptionKeyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.clearedledger_accounts {
 		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
 	}
 	if m.clearedtransactions {
 		edges = append(edges, ledgerencryptionkey.EdgeTransactions)
-	}
-	if m.clearedjournal_entries {
-		edges = append(edges, ledgerencryptionkey.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -2498,8 +2361,6 @@ func (m *LedgerEncryptionKeyMutation) EdgeCleared(name string) bool {
 		return m.clearedledger_accounts
 	case ledgerencryptionkey.EdgeTransactions:
 		return m.clearedtransactions
-	case ledgerencryptionkey.EdgeJournalEntries:
-		return m.clearedjournal_entries
 	}
 	return false
 }
@@ -2521,9 +2382,6 @@ func (m *LedgerEncryptionKeyMutation) ResetEdge(name string) error {
 		return nil
 	case ledgerencryptionkey.EdgeTransactions:
 		m.ResetTransactions()
-		return nil
-	case ledgerencryptionkey.EdgeJournalEntries:
-		m.ResetJournalEntries()
 		return nil
 	}
 	return fmt.Errorf("unknown LedgerEncryptionKey edge %s", name)

@@ -296,29 +296,6 @@ func HasTransactionsWith(preds ...predicate.Transaction) predicate.LedgerEncrypt
 	})
 }
 
-// HasJournalEntries applies the HasEdge predicate on the "journal_entries" edge.
-func HasJournalEntries() predicate.LedgerEncryptionKey {
-	return predicate.LedgerEncryptionKey(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, JournalEntriesTable, JournalEntriesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasJournalEntriesWith applies the HasEdge predicate on the "journal_entries" edge with a given conditions (other predicates).
-func HasJournalEntriesWith(preds ...predicate.JournalEntry) predicate.LedgerEncryptionKey {
-	return predicate.LedgerEncryptionKey(func(s *sql.Selector) {
-		step := newJournalEntriesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.LedgerEncryptionKey) predicate.LedgerEncryptionKey {
 	return predicate.LedgerEncryptionKey(sql.AndPredicates(predicates...))

@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
-	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
@@ -28,7 +27,6 @@ type JournalEntryQuery struct {
 	predicates        []predicate.JournalEntry
 	withTransaction   *TransactionQuery
 	withLedgerAccount *LedgerAccountQuery
-	withEncryptionKey *LedgerEncryptionKeyQuery
 	withFKs           bool
 	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -104,28 +102,6 @@ func (_q *JournalEntryQuery) QueryLedgerAccount() *LedgerAccountQuery {
 			sqlgraph.From(journalentry.Table, journalentry.FieldID, selector),
 			sqlgraph.To(ledgeraccount.Table, ledgeraccount.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, journalentry.LedgerAccountTable, journalentry.LedgerAccountColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryEncryptionKey chains the current query on the "encryption_key" edge.
-func (_q *JournalEntryQuery) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
-	query := (&LedgerEncryptionKeyClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(journalentry.Table, journalentry.FieldID, selector),
-			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, journalentry.EncryptionKeyTable, journalentry.EncryptionKeyColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -327,7 +303,6 @@ func (_q *JournalEntryQuery) Clone() *JournalEntryQuery {
 		predicates:        append([]predicate.JournalEntry{}, _q.predicates...),
 		withTransaction:   _q.withTransaction.Clone(),
 		withLedgerAccount: _q.withLedgerAccount.Clone(),
-		withEncryptionKey: _q.withEncryptionKey.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -353,17 +328,6 @@ func (_q *JournalEntryQuery) WithLedgerAccount(opts ...func(*LedgerAccountQuery)
 		opt(query)
 	}
 	_q.withLedgerAccount = query
-	return _q
-}
-
-// WithEncryptionKey tells the query-builder to eager-load the nodes that are connected to
-// the "encryption_key" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *JournalEntryQuery) WithEncryptionKey(opts ...func(*LedgerEncryptionKeyQuery)) *JournalEntryQuery {
-	query := (&LedgerEncryptionKeyClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withEncryptionKey = query
 	return _q
 }
 
@@ -446,13 +410,12 @@ func (_q *JournalEntryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		nodes       = []*JournalEntry{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [2]bool{
 			_q.withTransaction != nil,
 			_q.withLedgerAccount != nil,
-			_q.withEncryptionKey != nil,
 		}
 	)
-	if _q.withTransaction != nil || _q.withLedgerAccount != nil || _q.withEncryptionKey != nil {
+	if _q.withTransaction != nil || _q.withLedgerAccount != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -488,12 +451,6 @@ func (_q *JournalEntryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if query := _q.withLedgerAccount; query != nil {
 		if err := _q.loadLedgerAccount(ctx, query, nodes, nil,
 			func(n *JournalEntry, e *LedgerAccount) { n.Edges.LedgerAccount = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withEncryptionKey; query != nil {
-		if err := _q.loadEncryptionKey(ctx, query, nodes, nil,
-			func(n *JournalEntry, e *LedgerEncryptionKey) { n.Edges.EncryptionKey = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -557,38 +514,6 @@ func (_q *JournalEntryQuery) loadLedgerAccount(ctx context.Context, query *Ledge
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "ledger_account_journal_entries" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *JournalEntryQuery) loadEncryptionKey(ctx context.Context, query *LedgerEncryptionKeyQuery, nodes []*JournalEntry, init func(*JournalEntry), assign func(*JournalEntry, *LedgerEncryptionKey)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*JournalEntry)
-	for i := range nodes {
-		if nodes[i].ledger_encryption_key_journal_entries == nil {
-			continue
-		}
-		fk := *nodes[i].ledger_encryption_key_journal_entries
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(ledgerencryptionkey.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "ledger_encryption_key_journal_entries" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

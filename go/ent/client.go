@@ -367,22 +367,6 @@ func (c *JournalEntryClient) QueryLedgerAccount(_m *JournalEntry) *LedgerAccount
 	return query
 }
 
-// QueryEncryptionKey queries the encryption_key edge of a JournalEntry.
-func (c *JournalEntryClient) QueryEncryptionKey(_m *JournalEntry) *LedgerEncryptionKeyQuery {
-	query := (&LedgerEncryptionKeyClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(journalentry.Table, journalentry.FieldID, id),
-			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, journalentry.EncryptionKeyTable, journalentry.EncryptionKeyColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *JournalEntryClient) Hooks() []Hook {
 	return c.hooks.JournalEntry
@@ -738,22 +722,6 @@ func (c *LedgerEncryptionKeyClient) QueryTransactions(_m *LedgerEncryptionKey) *
 			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, id),
 			sqlgraph.To(transaction.Table, transaction.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.TransactionsTable, ledgerencryptionkey.TransactionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryJournalEntries queries the journal_entries edge of a LedgerEncryptionKey.
-func (c *LedgerEncryptionKeyClient) QueryJournalEntries(_m *LedgerEncryptionKey) *JournalEntryQuery {
-	query := (&JournalEntryClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, id),
-			sqlgraph.To(journalentry.Table, journalentry.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.JournalEntriesTable, ledgerencryptionkey.JournalEntriesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

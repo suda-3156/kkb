@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
-	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
@@ -80,25 +79,6 @@ func (_u *JournalEntryUpdate) SetLedgerAccount(v *LedgerAccount) *JournalEntryUp
 	return _u.SetLedgerAccountID(v.ID)
 }
 
-// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
-func (_u *JournalEntryUpdate) SetEncryptionKeyID(id int) *JournalEntryUpdate {
-	_u.mutation.SetEncryptionKeyID(id)
-	return _u
-}
-
-// SetNillableEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID if the given value is not nil.
-func (_u *JournalEntryUpdate) SetNillableEncryptionKeyID(id *int) *JournalEntryUpdate {
-	if id != nil {
-		_u = _u.SetEncryptionKeyID(*id)
-	}
-	return _u
-}
-
-// SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
-func (_u *JournalEntryUpdate) SetEncryptionKey(v *LedgerEncryptionKey) *JournalEntryUpdate {
-	return _u.SetEncryptionKeyID(v.ID)
-}
-
 // Mutation returns the JournalEntryMutation object of the builder.
 func (_u *JournalEntryUpdate) Mutation() *JournalEntryMutation {
 	return _u.mutation
@@ -113,12 +93,6 @@ func (_u *JournalEntryUpdate) ClearTransaction() *JournalEntryUpdate {
 // ClearLedgerAccount clears the "ledger_account" edge to the LedgerAccount entity.
 func (_u *JournalEntryUpdate) ClearLedgerAccount() *JournalEntryUpdate {
 	_u.mutation.ClearLedgerAccount()
-	return _u
-}
-
-// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
-func (_u *JournalEntryUpdate) ClearEncryptionKey() *JournalEntryUpdate {
-	_u.mutation.ClearEncryptionKey()
 	return _u
 }
 
@@ -258,35 +232,6 @@ func (_u *JournalEntryUpdate) sqlSave(ctx context.Context) (_node int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.EncryptionKeyCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   journalentry.EncryptionKeyTable,
-			Columns: []string{journalentry.EncryptionKeyColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.EncryptionKeyIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   journalentry.EncryptionKeyTable,
-			Columns: []string{journalentry.EncryptionKeyColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{journalentry.Label}
@@ -355,25 +300,6 @@ func (_u *JournalEntryUpdateOne) SetLedgerAccount(v *LedgerAccount) *JournalEntr
 	return _u.SetLedgerAccountID(v.ID)
 }
 
-// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
-func (_u *JournalEntryUpdateOne) SetEncryptionKeyID(id int) *JournalEntryUpdateOne {
-	_u.mutation.SetEncryptionKeyID(id)
-	return _u
-}
-
-// SetNillableEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID if the given value is not nil.
-func (_u *JournalEntryUpdateOne) SetNillableEncryptionKeyID(id *int) *JournalEntryUpdateOne {
-	if id != nil {
-		_u = _u.SetEncryptionKeyID(*id)
-	}
-	return _u
-}
-
-// SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
-func (_u *JournalEntryUpdateOne) SetEncryptionKey(v *LedgerEncryptionKey) *JournalEntryUpdateOne {
-	return _u.SetEncryptionKeyID(v.ID)
-}
-
 // Mutation returns the JournalEntryMutation object of the builder.
 func (_u *JournalEntryUpdateOne) Mutation() *JournalEntryMutation {
 	return _u.mutation
@@ -388,12 +314,6 @@ func (_u *JournalEntryUpdateOne) ClearTransaction() *JournalEntryUpdateOne {
 // ClearLedgerAccount clears the "ledger_account" edge to the LedgerAccount entity.
 func (_u *JournalEntryUpdateOne) ClearLedgerAccount() *JournalEntryUpdateOne {
 	_u.mutation.ClearLedgerAccount()
-	return _u
-}
-
-// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
-func (_u *JournalEntryUpdateOne) ClearEncryptionKey() *JournalEntryUpdateOne {
-	_u.mutation.ClearEncryptionKey()
 	return _u
 }
 
@@ -556,35 +476,6 @@ func (_u *JournalEntryUpdateOne) sqlSave(ctx context.Context) (_node *JournalEnt
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgeraccount.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.EncryptionKeyCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   journalentry.EncryptionKeyTable,
-			Columns: []string{journalentry.EncryptionKeyColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.EncryptionKeyIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   journalentry.EncryptionKeyTable,
-			Columns: []string{journalentry.EncryptionKeyColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

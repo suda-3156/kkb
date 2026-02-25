@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
@@ -93,21 +92,6 @@ func (_u *LedgerEncryptionKeyUpdate) AddTransactions(v ...*Transaction) *LedgerE
 	return _u.AddTransactionIDs(ids...)
 }
 
-// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by IDs.
-func (_u *LedgerEncryptionKeyUpdate) AddJournalEntryIDs(ids ...int) *LedgerEncryptionKeyUpdate {
-	_u.mutation.AddJournalEntryIDs(ids...)
-	return _u
-}
-
-// AddJournalEntries adds the "journal_entries" edges to the JournalEntry entity.
-func (_u *LedgerEncryptionKeyUpdate) AddJournalEntries(v ...*JournalEntry) *LedgerEncryptionKeyUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddJournalEntryIDs(ids...)
-}
-
 // Mutation returns the LedgerEncryptionKeyMutation object of the builder.
 func (_u *LedgerEncryptionKeyUpdate) Mutation() *LedgerEncryptionKeyMutation {
 	return _u.mutation
@@ -153,27 +137,6 @@ func (_u *LedgerEncryptionKeyUpdate) RemoveTransactions(v ...*Transaction) *Ledg
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTransactionIDs(ids...)
-}
-
-// ClearJournalEntries clears all "journal_entries" edges to the JournalEntry entity.
-func (_u *LedgerEncryptionKeyUpdate) ClearJournalEntries() *LedgerEncryptionKeyUpdate {
-	_u.mutation.ClearJournalEntries()
-	return _u
-}
-
-// RemoveJournalEntryIDs removes the "journal_entries" edge to JournalEntry entities by IDs.
-func (_u *LedgerEncryptionKeyUpdate) RemoveJournalEntryIDs(ids ...int) *LedgerEncryptionKeyUpdate {
-	_u.mutation.RemoveJournalEntryIDs(ids...)
-	return _u
-}
-
-// RemoveJournalEntries removes "journal_entries" edges to JournalEntry entities.
-func (_u *LedgerEncryptionKeyUpdate) RemoveJournalEntries(v ...*JournalEntry) *LedgerEncryptionKeyUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveJournalEntryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -341,51 +304,6 @@ func (_u *LedgerEncryptionKeyUpdate) sqlSave(ctx context.Context) (_node int, er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.JournalEntriesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ledgerencryptionkey.JournalEntriesTable,
-			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedJournalEntriesIDs(); len(nodes) > 0 && !_u.mutation.JournalEntriesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ledgerencryptionkey.JournalEntriesTable,
-			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.JournalEntriesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ledgerencryptionkey.JournalEntriesTable,
-			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ledgerencryptionkey.Label}
@@ -468,21 +386,6 @@ func (_u *LedgerEncryptionKeyUpdateOne) AddTransactions(v ...*Transaction) *Ledg
 	return _u.AddTransactionIDs(ids...)
 }
 
-// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by IDs.
-func (_u *LedgerEncryptionKeyUpdateOne) AddJournalEntryIDs(ids ...int) *LedgerEncryptionKeyUpdateOne {
-	_u.mutation.AddJournalEntryIDs(ids...)
-	return _u
-}
-
-// AddJournalEntries adds the "journal_entries" edges to the JournalEntry entity.
-func (_u *LedgerEncryptionKeyUpdateOne) AddJournalEntries(v ...*JournalEntry) *LedgerEncryptionKeyUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddJournalEntryIDs(ids...)
-}
-
 // Mutation returns the LedgerEncryptionKeyMutation object of the builder.
 func (_u *LedgerEncryptionKeyUpdateOne) Mutation() *LedgerEncryptionKeyMutation {
 	return _u.mutation
@@ -528,27 +431,6 @@ func (_u *LedgerEncryptionKeyUpdateOne) RemoveTransactions(v ...*Transaction) *L
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTransactionIDs(ids...)
-}
-
-// ClearJournalEntries clears all "journal_entries" edges to the JournalEntry entity.
-func (_u *LedgerEncryptionKeyUpdateOne) ClearJournalEntries() *LedgerEncryptionKeyUpdateOne {
-	_u.mutation.ClearJournalEntries()
-	return _u
-}
-
-// RemoveJournalEntryIDs removes the "journal_entries" edge to JournalEntry entities by IDs.
-func (_u *LedgerEncryptionKeyUpdateOne) RemoveJournalEntryIDs(ids ...int) *LedgerEncryptionKeyUpdateOne {
-	_u.mutation.RemoveJournalEntryIDs(ids...)
-	return _u
-}
-
-// RemoveJournalEntries removes "journal_entries" edges to JournalEntry entities.
-func (_u *LedgerEncryptionKeyUpdateOne) RemoveJournalEntries(v ...*JournalEntry) *LedgerEncryptionKeyUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveJournalEntryIDs(ids...)
 }
 
 // Where appends a list predicates to the LedgerEncryptionKeyUpdate builder.
@@ -739,51 +621,6 @@ func (_u *LedgerEncryptionKeyUpdateOne) sqlSave(ctx context.Context) (_node *Led
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(transaction.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.JournalEntriesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ledgerencryptionkey.JournalEntriesTable,
-			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedJournalEntriesIDs(); len(nodes) > 0 && !_u.mutation.JournalEntriesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ledgerencryptionkey.JournalEntriesTable,
-			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.JournalEntriesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ledgerencryptionkey.JournalEntriesTable,
-			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

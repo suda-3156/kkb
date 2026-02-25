@@ -80,9 +80,7 @@ func (JournalEntry) Edges() []ent.Edge {
 			Ref("journal_entries").
 			Unique().
 			Required(),
-		// Ledger encryption key used for encrypting this entry's data
-		edge.From("encryption_key", LedgerEncryptionKey.Type).
-			Ref("journal_entries").
-			Unique(),
+		// Journal entry doesn't have its own encryption key.
+		// It uses the transaction's encryption key.
 	}
 }

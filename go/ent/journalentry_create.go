@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
-	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/pulid"
@@ -91,25 +90,6 @@ func (_c *JournalEntryCreate) SetLedgerAccountID(id int) *JournalEntryCreate {
 // SetLedgerAccount sets the "ledger_account" edge to the LedgerAccount entity.
 func (_c *JournalEntryCreate) SetLedgerAccount(v *LedgerAccount) *JournalEntryCreate {
 	return _c.SetLedgerAccountID(v.ID)
-}
-
-// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
-func (_c *JournalEntryCreate) SetEncryptionKeyID(id int) *JournalEntryCreate {
-	_c.mutation.SetEncryptionKeyID(id)
-	return _c
-}
-
-// SetNillableEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID if the given value is not nil.
-func (_c *JournalEntryCreate) SetNillableEncryptionKeyID(id *int) *JournalEntryCreate {
-	if id != nil {
-		_c = _c.SetEncryptionKeyID(*id)
-	}
-	return _c
-}
-
-// SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
-func (_c *JournalEntryCreate) SetEncryptionKey(v *LedgerEncryptionKey) *JournalEntryCreate {
-	return _c.SetEncryptionKeyID(v.ID)
 }
 
 // Mutation returns the JournalEntryMutation object of the builder.
@@ -273,23 +253,6 @@ func (_c *JournalEntryCreate) createSpec() (*JournalEntry, *sqlgraph.CreateSpec)
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ledger_account_journal_entries = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.EncryptionKeyIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   journalentry.EncryptionKeyTable,
-			Columns: []string{journalentry.EncryptionKeyColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.ledger_encryption_key_journal_entries = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

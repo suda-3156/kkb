@@ -30,8 +30,6 @@ const (
 	EdgeTransaction = "transaction"
 	// EdgeLedgerAccount holds the string denoting the ledger_account edge name in mutations.
 	EdgeLedgerAccount = "ledger_account"
-	// EdgeEncryptionKey holds the string denoting the encryption_key edge name in mutations.
-	EdgeEncryptionKey = "encryption_key"
 	// Table holds the table name of the journalentry in the database.
 	Table = "journal_entries"
 	// TransactionTable is the table that holds the transaction relation/edge.
@@ -48,13 +46,6 @@ const (
 	LedgerAccountInverseTable = "ledger_accounts"
 	// LedgerAccountColumn is the table column denoting the ledger_account relation/edge.
 	LedgerAccountColumn = "ledger_account_journal_entries"
-	// EncryptionKeyTable is the table that holds the encryption_key relation/edge.
-	EncryptionKeyTable = "journal_entries"
-	// EncryptionKeyInverseTable is the table name for the LedgerEncryptionKey entity.
-	// It exists in this package in order to avoid circular dependency with the "ledgerencryptionkey" package.
-	EncryptionKeyInverseTable = "ledger_encryption_keys"
-	// EncryptionKeyColumn is the table column denoting the encryption_key relation/edge.
-	EncryptionKeyColumn = "ledger_encryption_key_journal_entries"
 )
 
 // Columns holds all SQL columns for journalentry fields.
@@ -71,7 +62,6 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"ledger_account_journal_entries",
-	"ledger_encryption_key_journal_entries",
 	"transaction_entries",
 }
 
@@ -154,13 +144,6 @@ func ByLedgerAccountField(field string, opts ...sql.OrderTermOption) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newLedgerAccountStep(), sql.OrderByField(field, opts...))
 	}
 }
-
-// ByEncryptionKeyField orders the results by encryption_key field.
-func ByEncryptionKeyField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newEncryptionKeyStep(), sql.OrderByField(field, opts...))
-	}
-}
 func newTransactionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -173,12 +156,5 @@ func newLedgerAccountStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LedgerAccountInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, LedgerAccountTable, LedgerAccountColumn),
-	)
-}
-func newEncryptionKeyStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(EncryptionKeyInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, EncryptionKeyTable, EncryptionKeyColumn),
 	)
 }

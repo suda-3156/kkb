@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
-	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/pulid"
@@ -34,11 +33,10 @@ type JournalEntry struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JournalEntryQuery when eager-loading is set.
-	Edges                                 JournalEntryEdges `json:"edges"`
-	ledger_account_journal_entries        *int
-	ledger_encryption_key_journal_entries *int
-	transaction_entries                   *int
-	selectValues                          sql.SelectValues
+	Edges                          JournalEntryEdges `json:"edges"`
+	ledger_account_journal_entries *int
+	transaction_entries            *int
+	selectValues                   sql.SelectValues
 }
 
 // JournalEntryEdges holds the relations/edges for other nodes in the graph.
@@ -47,11 +45,9 @@ type JournalEntryEdges struct {
 	Transaction *Transaction `json:"transaction,omitempty"`
 	// LedgerAccount holds the value of the ledger_account edge.
 	LedgerAccount *LedgerAccount `json:"ledger_account,omitempty"`
-	// EncryptionKey holds the value of the encryption_key edge.
-	EncryptionKey *LedgerEncryptionKey `json:"encryption_key,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
 // TransactionOrErr returns the Transaction value or an error if the edge
@@ -76,17 +72,6 @@ func (e JournalEntryEdges) LedgerAccountOrErr() (*LedgerAccount, error) {
 	return nil, &NotLoadedError{edge: "ledger_account"}
 }
 
-// EncryptionKeyOrErr returns the EncryptionKey value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e JournalEntryEdges) EncryptionKeyOrErr() (*LedgerEncryptionKey, error) {
-	if e.EncryptionKey != nil {
-		return e.EncryptionKey, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: ledgerencryptionkey.Label}
-	}
-	return nil, &NotLoadedError{edge: "encryption_key"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*JournalEntry) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -104,9 +89,7 @@ func (*JournalEntry) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case journalentry.ForeignKeys[0]: // ledger_account_journal_entries
 			values[i] = new(sql.NullInt64)
-		case journalentry.ForeignKeys[1]: // ledger_encryption_key_journal_entries
-			values[i] = new(sql.NullInt64)
-		case journalentry.ForeignKeys[2]: // transaction_entries
+		case journalentry.ForeignKeys[1]: // transaction_entries
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -168,13 +151,6 @@ func (_m *JournalEntry) assignValues(columns []string, values []any) error {
 			}
 		case journalentry.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field ledger_encryption_key_journal_entries", value)
-			} else if value.Valid {
-				_m.ledger_encryption_key_journal_entries = new(int)
-				*_m.ledger_encryption_key_journal_entries = int(value.Int64)
-			}
-		case journalentry.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field transaction_entries", value)
 			} else if value.Valid {
 				_m.transaction_entries = new(int)
@@ -201,11 +177,6 @@ func (_m *JournalEntry) QueryTransaction() *TransactionQuery {
 // QueryLedgerAccount queries the "ledger_account" edge of the JournalEntry entity.
 func (_m *JournalEntry) QueryLedgerAccount() *LedgerAccountQuery {
 	return NewJournalEntryClient(_m.config).QueryLedgerAccount(_m)
-}
-
-// QueryEncryptionKey queries the "encryption_key" edge of the JournalEntry entity.
-func (_m *JournalEntry) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
-	return NewJournalEntryClient(_m.config).QueryEncryptionKey(_m)
 }
 
 // Update returns a builder for updating this JournalEntry.

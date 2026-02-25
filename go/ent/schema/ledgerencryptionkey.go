@@ -45,7 +45,5 @@ func (LedgerEncryptionKey) Edges() []ent.Edge {
 		edge.To("ledger_accounts", LedgerAccount.Type),
 		// Transactions using this key for encrypting their data
 		edge.To("transactions", Transaction.Type),
-		// Journal entries using this key for encrypting their data
-		edge.To("journal_entries", JournalEntry.Type),
 	}
 }

@@ -17,7 +17,6 @@ var (
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "ledger_account_journal_entries", Type: field.TypeInt},
-		{Name: "ledger_encryption_key_journal_entries", Type: field.TypeInt, Nullable: true},
 		{Name: "transaction_entries", Type: field.TypeInt},
 	}
 	// JournalEntriesTable holds the schema information for the "journal_entries" table.
@@ -33,14 +32,8 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "journal_entries_ledger_encryption_keys_journal_entries",
-				Columns:    []*schema.Column{JournalEntriesColumns[7]},
-				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "journal_entries_transactions_entries",
-				Columns:    []*schema.Column{JournalEntriesColumns[8]},
+				Columns:    []*schema.Column{JournalEntriesColumns[7]},
 				RefColumns: []*schema.Column{TransactionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -129,8 +122,7 @@ var (
 
 func init() {
 	JournalEntriesTable.ForeignKeys[0].RefTable = LedgerAccountsTable
-	JournalEntriesTable.ForeignKeys[1].RefTable = LedgerEncryptionKeysTable
-	JournalEntriesTable.ForeignKeys[2].RefTable = TransactionsTable
+	JournalEntriesTable.ForeignKeys[1].RefTable = TransactionsTable
 	LedgerAccountsTable.ForeignKeys[0].RefTable = LedgerAccountsTable
 	LedgerAccountsTable.ForeignKeys[1].RefTable = LedgerEncryptionKeysTable
 	TransactionsTable.ForeignKeys[0].RefTable = LedgerEncryptionKeysTable

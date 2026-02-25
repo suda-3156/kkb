@@ -7,7 +7,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
@@ -17,32 +16,35 @@ import (
 
 // LedgerAccount is the resolver for the ledgerAccount field.
 func (r *journalEntryResolver) LedgerAccount(ctx context.Context, obj *model.JournalEntry) (*model.LedgerAccount, error) {
-	panic(fmt.Errorf("not implemented: LedgerAccount - ledgerAccount"))
+	if obj.LedgerAccount == nil {
+		return nil, nil
+	}
+	return r.lac.GetByInternalID(ctx, obj.LedgerAccount.IntID)
 }
 
 // CreateTransaction is the resolver for the createTransaction field.
 func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.CreateTransactionInput) (*model.Transaction, error) {
-	panic(fmt.Errorf("not implemented: CreateTransaction - createTransaction"))
+	return r.tnx.Create(ctx, input)
 }
 
 // UpdateTransaction is the resolver for the updateTransaction field.
 func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransactionInput) (*model.Transaction, error) {
-	panic(fmt.Errorf("not implemented: UpdateTransaction - updateTransaction"))
+	return r.tnx.Update(ctx, input)
 }
 
 // DeleteTransaction is the resolver for the deleteTransaction field.
 func (r *mutationResolver) DeleteTransaction(ctx context.Context, id pulid1.ID) (*model.DeleteTransactionPayload, error) {
-	panic(fmt.Errorf("not implemented: DeleteTransaction - deleteTransaction"))
+	return r.tnx.Delete(ctx, id)
 }
 
 // Transaction is the resolver for the transaction field.
 func (r *queryResolver) Transaction(ctx context.Context, id pulid1.ID) (*model.Transaction, error) {
-	panic(fmt.Errorf("not implemented: Transaction - transaction"))
+	return r.tnx.GetByPublicID(ctx, id)
 }
 
 // Transactions is the resolver for the transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error) {
-	panic(fmt.Errorf("not implemented: Transactions - transactions"))
+	return r.tnx.List(ctx, first, nil, nil, after, last, before, startDate, endDate)
 }
 
 // JournalEntry returns graph.JournalEntryResolver implementation.
