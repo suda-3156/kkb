@@ -2,11 +2,11 @@ package ledgeraccount
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -44,12 +44,12 @@ func (m *LedgerAccountManager) List(
 
 	lacs, err := query.All(ctx)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("list: query: %w", err)
 	}
 
 	hasPrevPage, hasNextPage, err := m.getPageInfo(ctx, lacs, scanDesc)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("list: page info: %w", err)
 	}
 
 	return m.convertToGraphConnection(ctx, lacs, hasPrevPage, hasNextPage)
@@ -132,7 +132,7 @@ func (m *LedgerAccountManager) getPageInfo(
 				ledgeraccount.PublicIDLT(startCursor),
 			).Exist(ctx)
 		if err != nil {
-			return false, false, apperr.NewInternalServerError(err)
+			return false, false, fmt.Errorf("list: check hasPreviousPage: %w", err)
 		}
 
 		hasNextPage, err = m.db.Client.LedgerAccount.Query().
@@ -140,7 +140,7 @@ func (m *LedgerAccountManager) getPageInfo(
 				ledgeraccount.PublicIDGT(endCursor),
 			).Exist(ctx)
 		if err != nil {
-			return false, false, apperr.NewInternalServerError(err)
+			return false, false, fmt.Errorf("list: check hasNextPage: %w", err)
 		}
 	}
 

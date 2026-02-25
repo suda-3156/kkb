@@ -9,7 +9,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -31,7 +30,7 @@ func (m *LedgerAccountManager) Archive(
 		account, errTx = m.archiveTx(ctx, client, id)
 		return errTx
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("archive: %w", err)
 	}
 
 	return account, nil
@@ -49,11 +48,9 @@ func (m *LedgerAccountManager) archiveTx(
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("ledger account not found"),
-			)
+			return nil, ErrAccountNotFound
 		}
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("archive: query account: %w", err)
 	}
 
 	// Check if the account is already archived.
@@ -76,7 +73,7 @@ func (m *LedgerAccountManager) archiveTx(
 		SetArchivedAt(now).
 		Save(ctx)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("archive: bulk update: %w", err)
 	}
 
 	// Reload the account to get updated data (with EncryptionKey edge for convertToGraph)
@@ -85,7 +82,7 @@ func (m *LedgerAccountManager) archiveTx(
 		WithEncryptionKey().
 		Only(ctx)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("archive: reload after update: %w", err)
 	}
 
 	return m.convertToGraph(ctx, account)
@@ -115,7 +112,7 @@ func (m *LedgerAccountManager) collectDescendantIDs(
 			Where(ledgeraccount.HasParentWith(ledgeraccount.ID(currentID))).
 			All(ctx)
 		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
+			return nil, fmt.Errorf("archive: query children of id=%d: %w", currentID, err)
 		}
 
 		for _, child := range children {

@@ -8,7 +8,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -30,12 +29,10 @@ func (m *LedgerAccountManager) GetByPublicID(
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("ledger account not found: %w", err),
-			)
+			return nil, ErrAccountNotFound
 		}
 
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("get by public id: %w", err)
 	}
 
 	return m.convertToGraph(ctx, account)
@@ -57,12 +54,10 @@ func (m *LedgerAccountManager) GetByInternalID(
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("ledger account not found: %w", err),
-			)
+			return nil, ErrAccountNotFound
 		}
 
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("get by internal id: %w", err)
 	}
 
 	return m.convertToGraph(ctx, account)

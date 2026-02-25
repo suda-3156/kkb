@@ -9,7 +9,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/logging"
 )
 
@@ -19,21 +18,15 @@ func (m *LedgerAccountManager) Update(
 ) (*graph.LedgerAccount, error) {
 	// Check if the input is valid.
 	if input.ParentID != nil && *input.ParentID == input.ID {
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("cannot set itself as parent"),
-		)
+		return nil, ErrCannotSetSelfAsParent
 	}
 
 	if input.ParentID != nil && input.UnsetParent == true {
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("cannot set and unset parent at the same time"),
-		)
+		return nil, ErrConflictingParentOps
 	}
 
 	if input.Name != nil && len(*input.Name) > 100 {
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("name must be at most 100 characters"),
-		)
+		return nil, ErrNameTooLong
 	}
 
 	// Encrypt
@@ -42,7 +35,7 @@ func (m *LedgerAccountManager) Update(
 	if input.Name != nil {
 		encrypted, err = m.em.Encrypt(ctx, *input.Name)
 		if err != nil {
-			return nil, apperr.NewInternalServerError(err)
+			return nil, fmt.Errorf("update: encrypt name: %w", err)
 		}
 	}
 
@@ -78,19 +71,15 @@ func (m *LedgerAccountManager) updateTx(
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("ledger account not found"),
-			)
+			return nil, ErrAccountNotFound
 		}
 
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("update: query account: %w", err)
 	}
 
 	// Check for optimistic locking
 	if !existing.UpdatedAt.Equal(input.UpdatedAt) {
-		return nil, apperr.NewConflictError(
-			fmt.Errorf("ledger account has been modified by another process"),
-		)
+		return nil, ErrAccountModified
 	}
 
 	// Check parent account if parent ID is provided
@@ -100,27 +89,19 @@ func (m *LedgerAccountManager) updateTx(
 			Where(ledgeraccount.PublicID(*input.ParentID)).
 			Only(ctx)
 		if err != nil {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("parent ledger account not found"),
-			)
+			return nil, fmt.Errorf("update: query parent: %w", err)
 		}
 
 		if parent.ArchivedAt != nil {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("cannot set archived ledger account as parent"),
-			)
+			return nil, ErrParentArchived
 		}
 
 		if !parent.IsGroup {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("cannot set non-group ledger account as parent"),
-			)
+			return nil, ErrParentNotGroup
 		}
 
 		if parent.Kind != existing.Kind {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("parent ledger account must be of the same kind"),
-			)
+			return nil, ErrParentKindMismatch
 		}
 	}
 
@@ -133,12 +114,10 @@ func (m *LedgerAccountManager) updateTx(
 			// If changing from group to non-group, ensure it has no child accounts
 			count, err := existing.QueryChildren().Count(ctx)
 			if err != nil {
-				return nil, apperr.NewInternalServerError(err)
+				return nil, fmt.Errorf("update: count children: %w", err)
 			}
 			if count > 0 {
-				return nil, apperr.NewBadRequestError(
-					fmt.Errorf("cannot change to group account while it has child accounts"),
-				)
+				return nil, ErrCannotChangeToNonGroupWithChildren
 			}
 		}
 	}
@@ -162,7 +141,7 @@ func (m *LedgerAccountManager) updateTx(
 
 	updated, err := query.Save(ctx)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("update: save: %w", err)
 	}
 
 	// Reload with EncryptionKey edge (Save does not populate edges)
@@ -171,7 +150,7 @@ func (m *LedgerAccountManager) updateTx(
 		WithEncryptionKey().
 		Only(ctx)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("update: reload after save: %w", err)
 	}
 
 	return m.convertToGraph(ctx, updated)

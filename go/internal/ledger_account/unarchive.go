@@ -8,7 +8,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -31,7 +30,7 @@ func (m *LedgerAccountManager) Unarchive(
 		account, errTx = m.unarchiveTx(ctx, client, id)
 		return errTx
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unarchive: %w", err)
 	}
 
 	return account, nil
@@ -50,20 +49,16 @@ func (m *LedgerAccountManager) unarchiveTx(
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("ledger account not found"),
-			)
+			return nil, ErrAccountNotFound
 		}
 
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("unarchive: query account: %w", err)
 	}
 
 	// If the account has a parent, check if the parent is archived.
 	if account.Edges.Parent != nil {
 		if account.Edges.Parent.ArchivedAt != nil {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("cannot unarchive an account whose parent is archived"),
-			)
+			return nil, ErrParentIsArchivedOnUnarchive
 		}
 	}
 
@@ -72,7 +67,7 @@ func (m *LedgerAccountManager) unarchiveTx(
 		Where(ledgeraccount.ID(account.ID)).
 		SetNillableArchivedAt(nil).
 		Exec(ctx); err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("unarchive: clear archived_at: %w", err)
 	}
 
 	return m.convertToGraph(ctx, account)

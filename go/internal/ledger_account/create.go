@@ -9,7 +9,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
@@ -27,21 +26,17 @@ func (m *LedgerAccountManager) Create(
 
 	// Check if the input is valid.
 	if input.Name == "" {
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("name is required"),
-		)
+		return nil, ErrNameRequired
 	}
 
 	if len(input.Name) > 100 {
-		return nil, apperr.NewBadRequestError(
-			fmt.Errorf("name must be at most 100 characters"),
-		)
+		return nil, ErrNameTooLong
 	}
 
 	// Encrypt
 	encrypted, err := m.em.Encrypt(ctx, input.Name)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("create: encrypt name: %w", err)
 	}
 
 	// Create the account in a transaction.
@@ -51,7 +46,7 @@ func (m *LedgerAccountManager) Create(
 		account, errTx = m.createTx(ctx, client, input, encrypted)
 		return errTx
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create: %w", err)
 	}
 
 	return account, nil
@@ -71,27 +66,22 @@ func (m *LedgerAccountManager) createTx(
 			Where(ledgeraccount.PublicID(*input.ParentID)).
 			Only(ctx)
 		if err != nil {
-			return nil, apperr.NewNotFoundError(
-				fmt.Errorf("parent ledger account not found"),
-			)
+			if ent.IsNotFound(err) {
+				return nil, ErrParentNotFound
+			}
+			return nil, fmt.Errorf("create: query parent: %w", err)
 		}
 
 		if parent.ArchivedAt != nil {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("cannot create ledger account under archived parent"),
-			)
+			return nil, ErrParentIsArchivedOnUnarchive
 		}
 
 		if !parent.IsGroup {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("cannot create ledger account under non-group parent"),
-			)
+			return nil, ErrParentNotGroup
 		}
 
 		if parent.Kind != m.convertKindToEnt(input.Kind) {
-			return nil, apperr.NewBadRequestError(
-				fmt.Errorf("parent ledger account kind must match the new account kind"),
-			)
+			return nil, ErrParentKindMismatch
 		}
 	}
 
@@ -113,7 +103,7 @@ func (m *LedgerAccountManager) createTx(
 		SetNillableParentID(parentID).
 		Save(ctx)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("create: save: %w", err)
 	}
 
 	created.Edges.Parent = parent

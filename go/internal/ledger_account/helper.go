@@ -2,11 +2,11 @@ package ledgeraccount
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	apperr "github.com/suda-3156/kkb/go/internal/error"
 )
 
 func (m *LedgerAccountManager) convertKindToEnt(kind graph.LedgerAccountKind) schema.LedgerAccountKind {
@@ -51,7 +51,7 @@ func (m *LedgerAccountManager) convertToGraph(ctx context.Context, lac *ent.Ledg
 
 	name, err := m.em.Decrypt(ctx, lac.AccountName, keyID)
 	if err != nil {
-		return nil, apperr.NewInternalServerError(err)
+		return nil, fmt.Errorf("convertToGraph: decrypt name: %w", err)
 	}
 
 	var parent *graph.LedgerAccount
