@@ -15,6 +15,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/transaction"
+	"github.com/suda-3156/kkb/go/internal/date"
 )
 
 // TransactionUpdate is the builder for updating Transaction entities.
@@ -31,8 +32,16 @@ func (_u *TransactionUpdate) Where(ps ...predicate.Transaction) *TransactionUpda
 }
 
 // SetDate sets the "date" field.
-func (_u *TransactionUpdate) SetDate(v []byte) *TransactionUpdate {
+func (_u *TransactionUpdate) SetDate(v date.Date) *TransactionUpdate {
 	_u.mutation.SetDate(v)
+	return _u
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (_u *TransactionUpdate) SetNillableDate(v *date.Date) *TransactionUpdate {
+	if v != nil {
+		_u.SetDate(*v)
+	}
 	return _u
 }
 
@@ -153,7 +162,7 @@ func (_u *TransactionUpdate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (_u *TransactionUpdate) check() error {
 	if v, ok := _u.mutation.Date(); ok {
-		if err := transaction.DateValidator(v); err != nil {
+		if err := transaction.DateValidator(string(v)); err != nil {
 			return &ValidationError{Name: "date", err: fmt.Errorf(`ent: validator failed for field "Transaction.date": %w`, err)}
 		}
 	}
@@ -178,7 +187,7 @@ func (_u *TransactionUpdate) sqlSave(ctx context.Context) (_node int, err error)
 		}
 	}
 	if value, ok := _u.mutation.Date(); ok {
-		_spec.SetField(transaction.FieldDate, field.TypeBytes, value)
+		_spec.SetField(transaction.FieldDate, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(transaction.FieldDescription, field.TypeBytes, value)
@@ -281,8 +290,16 @@ type TransactionUpdateOne struct {
 }
 
 // SetDate sets the "date" field.
-func (_u *TransactionUpdateOne) SetDate(v []byte) *TransactionUpdateOne {
+func (_u *TransactionUpdateOne) SetDate(v date.Date) *TransactionUpdateOne {
 	_u.mutation.SetDate(v)
+	return _u
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (_u *TransactionUpdateOne) SetNillableDate(v *date.Date) *TransactionUpdateOne {
+	if v != nil {
+		_u.SetDate(*v)
+	}
 	return _u
 }
 
@@ -416,7 +433,7 @@ func (_u *TransactionUpdateOne) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (_u *TransactionUpdateOne) check() error {
 	if v, ok := _u.mutation.Date(); ok {
-		if err := transaction.DateValidator(v); err != nil {
+		if err := transaction.DateValidator(string(v)); err != nil {
 			return &ValidationError{Name: "date", err: fmt.Errorf(`ent: validator failed for field "Transaction.date": %w`, err)}
 		}
 	}
@@ -458,7 +475,7 @@ func (_u *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transaction
 		}
 	}
 	if value, ok := _u.mutation.Date(); ok {
-		_spec.SetField(transaction.FieldDate, field.TypeBytes, value)
+		_spec.SetField(transaction.FieldDate, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(transaction.FieldDescription, field.TypeBytes, value)

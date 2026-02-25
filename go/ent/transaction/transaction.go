@@ -81,7 +81,7 @@ var (
 	// PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
 	PublicIDValidator func(string) error
 	// DateValidator is a validator for the "date" field. It is called by the builders before save.
-	DateValidator func([]byte) error
+	DateValidator func(string) error
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func([]byte) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -103,6 +103,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByPublicID orders the results by the public_id field.
 func ByPublicID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPublicID, opts...).ToFunc()
+}
+
+// ByDate orders the results by the date field.
+func ByDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDate, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -35,11 +35,6 @@ func (m *TransactionManager) List(
 			q.WithLedgerAccount()
 		})
 
-	// NOTE: Date field is encrypted and cannot be filtered in SQL.
-	// Cursor-based pagination is applied only when no date filter is specified.
-	// When date filters are present, all records are fetched and filtered in memory.
-	applyCursor := startDate == nil && endDate == nil
-
 	if len(publicIDs) > 0 {
 		query = query.Where(transaction.PublicIDIn(publicIDs...))
 	}
@@ -48,24 +43,30 @@ func (m *TransactionManager) List(
 		query = query.Where(transaction.IDIn(IDs...))
 	}
 
-	if applyCursor {
-		if after != nil {
-			query = query.Where(transaction.PublicIDGT(*after))
-		}
+	if startDate != nil {
+		query = query.Where(transaction.DateGTE(*startDate))
+	}
 
-		if before != nil {
-			query = query.Where(transaction.PublicIDLT(*before))
-			scanDesc = true
-		}
+	if endDate != nil {
+		query = query.Where(transaction.DateLTE(*endDate))
+	}
 
-		if first != nil {
-			query = query.Limit(int(*first))
-		}
+	if after != nil {
+		query = query.Where(transaction.PublicIDGT(*after))
+	}
 
-		if last != nil {
-			query = query.Limit(int(*last))
-			scanDesc = true
-		}
+	if before != nil {
+		query = query.Where(transaction.PublicIDLT(*before))
+		scanDesc = true
+	}
+
+	if first != nil {
+		query = query.Limit(int(*first))
+	}
+
+	if last != nil {
+		query = query.Limit(int(*last))
+		scanDesc = true
 	}
 
 	if scanDesc {
@@ -83,31 +84,6 @@ func (m *TransactionManager) List(
 		for i, j := 0, len(txns)-1; i < j; i, j = i+1, j-1 {
 			txns[i], txns[j] = txns[j], txns[i]
 		}
-	}
-
-	// Apply in-memory date filtering when requested.
-	// TODO: For large datasets, consider storing date in a sortable plaintext column.
-	if startDate != nil || endDate != nil {
-		filtered := txns[:0]
-		for _, txn := range txns {
-			keyID := txn.Edges.EncryptionKey.ID
-			dateStr, err := m.em.Decrypt(ctx, txn.Date, keyID)
-			if err != nil {
-				return nil, fmt.Errorf("list: decrypt date: %w", err)
-			}
-			d, err := date.NewDate(dateStr)
-			if err != nil {
-				return nil, fmt.Errorf("list: parse date: %w", err)
-			}
-			if startDate != nil && d.String() < startDate.String() {
-				continue
-			}
-			if endDate != nil && d.String() > endDate.String() {
-				continue
-			}
-			filtered = append(filtered, txn)
-		}
-		txns = filtered
 	}
 
 	hasPrevPage, hasNextPage, err := m.getPageInfo(ctx, txns)

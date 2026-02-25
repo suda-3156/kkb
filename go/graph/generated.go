@@ -804,6 +804,7 @@ extend type Query {
 extend type Mutation {
   createTransaction(input: CreateTransactionInput!): Transaction!
 
+  # This mutation will delete and recreate all entries based on input when input.entries is given.
   updateTransaction(input: UpdateTransactionInput!): Transaction!
 
   deleteTransaction(id: ID!): DeleteTransactionPayload!

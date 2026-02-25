@@ -51,12 +51,7 @@ func (m *TransactionManager) Create(
 		return nil, ErrUnbalancedEntries
 	}
 
-	// Encrypt date and description.
-	encDate, err := m.em.Encrypt(ctx, input.Date.String())
-	if err != nil {
-		return nil, fmt.Errorf("create: encrypt date: %w", err)
-	}
-
+	// Encrypt description.
 	encDesc, err := m.em.Encrypt(ctx, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("create: encrypt description: %w", err)
@@ -75,7 +70,7 @@ func (m *TransactionManager) Create(
 	var txn *graph.Transaction
 	var errTx error
 	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
-		txn, errTx = m.createTx(ctx, client, input, encDate, encDesc, encAmounts)
+		txn, errTx = m.createTx(ctx, client, input, encDesc, encAmounts)
 		return errTx
 	}); err != nil {
 		return nil, fmt.Errorf("create: %w", err)
@@ -88,7 +83,6 @@ func (m *TransactionManager) createTx(
 	ctx context.Context,
 	client *ent.Client,
 	input graph.CreateTransactionInput,
-	encDate *encryption.EncryptionPayload,
 	encDesc *encryption.EncryptionPayload,
 	encAmounts [][]byte,
 ) (*graph.Transaction, error) {
@@ -96,9 +90,9 @@ func (m *TransactionManager) createTx(
 
 	created, err := client.Transaction.Create().
 		SetPublicID(publicID).
-		SetDate(encDate.Ciphertext).
+		SetDate(input.Date).
 		SetDescription(encDesc.Ciphertext).
-		SetEncryptionKeyID(encDate.KeyID).
+		SetEncryptionKeyID(encDesc.KeyID).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("create: save transaction: %w", err)
@@ -141,7 +135,7 @@ func (m *TransactionManager) createTx(
 		createdEntries = append(createdEntries, entry)
 	}
 
-	created.Edges.EncryptionKey = &ent.LedgerEncryptionKey{ID: encDate.KeyID}
+	created.Edges.EncryptionKey = &ent.LedgerEncryptionKey{ID: encDesc.KeyID}
 	created.Edges.Entries = createdEntries
 
 	return m.convertToGraph(ctx, created)

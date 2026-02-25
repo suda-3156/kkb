@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -62,8 +63,9 @@ func PublicID(v pulid.ID) predicate.Transaction {
 }
 
 // Date applies equality check predicate on the "date" field. It's identical to DateEQ.
-func Date(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldEQ(FieldDate, v))
+func Date(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldEQ(FieldDate, vc))
 }
 
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
@@ -152,43 +154,87 @@ func PublicIDContainsFold(v pulid.ID) predicate.Transaction {
 }
 
 // DateEQ applies the EQ predicate on the "date" field.
-func DateEQ(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldEQ(FieldDate, v))
+func DateEQ(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldEQ(FieldDate, vc))
 }
 
 // DateNEQ applies the NEQ predicate on the "date" field.
-func DateNEQ(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldNEQ(FieldDate, v))
+func DateNEQ(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldNEQ(FieldDate, vc))
 }
 
 // DateIn applies the In predicate on the "date" field.
-func DateIn(vs ...[]byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldIn(FieldDate, vs...))
+func DateIn(vs ...date.Date) predicate.Transaction {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Transaction(sql.FieldIn(FieldDate, v...))
 }
 
 // DateNotIn applies the NotIn predicate on the "date" field.
-func DateNotIn(vs ...[]byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldNotIn(FieldDate, vs...))
+func DateNotIn(vs ...date.Date) predicate.Transaction {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Transaction(sql.FieldNotIn(FieldDate, v...))
 }
 
 // DateGT applies the GT predicate on the "date" field.
-func DateGT(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldGT(FieldDate, v))
+func DateGT(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldGT(FieldDate, vc))
 }
 
 // DateGTE applies the GTE predicate on the "date" field.
-func DateGTE(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldGTE(FieldDate, v))
+func DateGTE(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldGTE(FieldDate, vc))
 }
 
 // DateLT applies the LT predicate on the "date" field.
-func DateLT(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldLT(FieldDate, v))
+func DateLT(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldLT(FieldDate, vc))
 }
 
 // DateLTE applies the LTE predicate on the "date" field.
-func DateLTE(v []byte) predicate.Transaction {
-	return predicate.Transaction(sql.FieldLTE(FieldDate, v))
+func DateLTE(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldLTE(FieldDate, vc))
+}
+
+// DateContains applies the Contains predicate on the "date" field.
+func DateContains(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldContains(FieldDate, vc))
+}
+
+// DateHasPrefix applies the HasPrefix predicate on the "date" field.
+func DateHasPrefix(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldHasPrefix(FieldDate, vc))
+}
+
+// DateHasSuffix applies the HasSuffix predicate on the "date" field.
+func DateHasSuffix(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldHasSuffix(FieldDate, vc))
+}
+
+// DateEqualFold applies the EqualFold predicate on the "date" field.
+func DateEqualFold(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldEqualFold(FieldDate, vc))
+}
+
+// DateContainsFold applies the ContainsFold predicate on the "date" field.
+func DateContainsFold(v date.Date) predicate.Transaction {
+	vc := string(v)
+	return predicate.Transaction(sql.FieldContainsFold(FieldDate, vc))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.

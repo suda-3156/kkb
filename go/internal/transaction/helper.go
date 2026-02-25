@@ -8,7 +8,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	graph "github.com/suda-3156/kkb/go/graph/model"
-	"github.com/suda-3156/kkb/go/internal/date"
 )
 
 func (m *TransactionManager) convertKindToEnt(kind graph.JournalEntryKind) schema.JournalEntryKind {
@@ -69,16 +68,6 @@ func (m *TransactionManager) convertToGraph(ctx context.Context, txn *ent.Transa
 
 	keyID := txn.Edges.EncryptionKey.ID
 
-	dateStr, err := m.em.Decrypt(ctx, txn.Date, keyID)
-	if err != nil {
-		return nil, fmt.Errorf("convertToGraph: decrypt date: %w", err)
-	}
-
-	dateVal, err := date.NewDate(dateStr)
-	if err != nil {
-		return nil, fmt.Errorf("convertToGraph: parse date: %w", err)
-	}
-
 	descStr, err := m.em.Decrypt(ctx, txn.Description, keyID)
 	if err != nil {
 		return nil, fmt.Errorf("convertToGraph: decrypt description: %w", err)
@@ -96,7 +85,7 @@ func (m *TransactionManager) convertToGraph(ctx context.Context, txn *ent.Transa
 	return &graph.Transaction{
 		ID:          txn.PublicID,
 		Entries:     entries,
-		Date:        *dateVal,
+		Date:        txn.Date,
 		Description: descStr,
 		CreatedAt:   txn.CreatedAt,
 		UpdatedAt:   txn.UpdatedAt,

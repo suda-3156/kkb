@@ -148,7 +148,22 @@ func init() {
 	// transactionDescDate is the schema descriptor for date field.
 	transactionDescDate := transactionFields[1].Descriptor()
 	// transaction.DateValidator is a validator for the "date" field. It is called by the builders before save.
-	transaction.DateValidator = transactionDescDate.Validators[0].(func([]byte) error)
+	transaction.DateValidator = func() func(string) error {
+		validators := transactionDescDate.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(date string) error {
+			for _, fn := range fns {
+				if err := fn(date); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// transactionDescDescription is the schema descriptor for description field.
 	transactionDescDescription := transactionFields[2].Descriptor()
 	// transaction.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.

@@ -17,6 +17,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
+	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -2394,7 +2395,7 @@ type TransactionMutation struct {
 	typ                   string
 	id                    *int
 	public_id             *pulid.ID
-	date                  *[]byte
+	date                  *date.Date
 	description           *[]byte
 	created_at            *time.Time
 	updated_at            *time.Time
@@ -2544,12 +2545,12 @@ func (m *TransactionMutation) ResetPublicID() {
 }
 
 // SetDate sets the "date" field.
-func (m *TransactionMutation) SetDate(b []byte) {
-	m.date = &b
+func (m *TransactionMutation) SetDate(d date.Date) {
+	m.date = &d
 }
 
 // Date returns the value of the "date" field in the mutation.
-func (m *TransactionMutation) Date() (r []byte, exists bool) {
+func (m *TransactionMutation) Date() (r date.Date, exists bool) {
 	v := m.date
 	if v == nil {
 		return
@@ -2560,7 +2561,7 @@ func (m *TransactionMutation) Date() (r []byte, exists bool) {
 // OldDate returns the old "date" field's value of the Transaction entity.
 // If the Transaction object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TransactionMutation) OldDate(ctx context.Context) (v []byte, err error) {
+func (m *TransactionMutation) OldDate(ctx context.Context) (v date.Date, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldDate is only allowed on UpdateOne operations")
 	}
@@ -2884,7 +2885,7 @@ func (m *TransactionMutation) SetField(name string, value ent.Value) error {
 		m.SetPublicID(v)
 		return nil
 	case transaction.FieldDate:
-		v, ok := value.([]byte)
+		v, ok := value.(date.Date)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

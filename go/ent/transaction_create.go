@@ -13,6 +13,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/transaction"
+	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -30,7 +31,7 @@ func (_c *TransactionCreate) SetPublicID(v pulid.ID) *TransactionCreate {
 }
 
 // SetDate sets the "date" field.
-func (_c *TransactionCreate) SetDate(v []byte) *TransactionCreate {
+func (_c *TransactionCreate) SetDate(v date.Date) *TransactionCreate {
 	_c.mutation.SetDate(v)
 	return _c
 }
@@ -162,7 +163,7 @@ func (_c *TransactionCreate) check() error {
 		return &ValidationError{Name: "date", err: errors.New(`ent: missing required field "Transaction.date"`)}
 	}
 	if v, ok := _c.mutation.Date(); ok {
-		if err := transaction.DateValidator(v); err != nil {
+		if err := transaction.DateValidator(string(v)); err != nil {
 			return &ValidationError{Name: "date", err: fmt.Errorf(`ent: validator failed for field "Transaction.date": %w`, err)}
 		}
 	}
@@ -211,7 +212,7 @@ func (_c *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 		_node.PublicID = value
 	}
 	if value, ok := _c.mutation.Date(); ok {
-		_spec.SetField(transaction.FieldDate, field.TypeBytes, value)
+		_spec.SetField(transaction.FieldDate, field.TypeString, value)
 		_node.Date = value
 	}
 	if value, ok := _c.mutation.Description(); ok {

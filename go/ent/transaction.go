@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/transaction"
+	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -22,7 +23,7 @@ type Transaction struct {
 	// PublicID holds the value of the "public_id" field.
 	PublicID pulid.ID `json:"public_id,omitempty"`
 	// Date holds the value of the "date" field.
-	Date []byte `json:"date,omitempty"`
+	Date date.Date `json:"date,omitempty"`
 	// Description holds the value of the "description" field.
 	Description []byte `json:"description,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -72,12 +73,14 @@ func (*Transaction) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case transaction.FieldDate, transaction.FieldDescription:
+		case transaction.FieldDescription:
 			values[i] = new([]byte)
 		case transaction.FieldPublicID:
 			values[i] = new(pulid.ID)
 		case transaction.FieldID:
 			values[i] = new(sql.NullInt64)
+		case transaction.FieldDate:
+			values[i] = new(sql.NullString)
 		case transaction.FieldCreatedAt, transaction.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case transaction.ForeignKeys[0]: // ledger_encryption_key_transactions
@@ -110,10 +113,10 @@ func (_m *Transaction) assignValues(columns []string, values []any) error {
 				_m.PublicID = *value
 			}
 		case transaction.FieldDate:
-			if value, ok := values[i].(*[]byte); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field date", values[i])
-			} else if value != nil {
-				_m.Date = *value
+			} else if value.Valid {
+				_m.Date = date.Date(value.String)
 			}
 		case transaction.FieldDescription:
 			if value, ok := values[i].(*[]byte); !ok {

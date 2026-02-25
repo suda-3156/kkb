@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -27,9 +28,13 @@ func (Transaction) Fields() []ent.Field {
 			NotEmpty().
 			Unique().
 			Immutable(),
-		field.Bytes("date").
-			// Encrypted field.
-			// TODO: MaxLen
+		field.String("date").
+			GoType(date.Date("")).
+			SchemaType(map[string]string{
+				"mysql": "char(10)",
+			}).
+			MaxLen(10).
+			MinLen(10).
 			NotEmpty(),
 		field.Bytes("description").
 			// Encrypted field.

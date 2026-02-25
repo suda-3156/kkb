@@ -48,16 +48,6 @@ func (m *TransactionManager) Update(
 		}
 	}
 
-	// Encrypt date if provided.
-	var encDate *encryption.EncryptionPayload
-	if input.Date != nil {
-		var err error
-		encDate, err = m.em.Encrypt(ctx, input.Date.String())
-		if err != nil {
-			return nil, fmt.Errorf("update: encrypt date: %w", err)
-		}
-	}
-
 	// Encrypt description if provided.
 	var encDesc *encryption.EncryptionPayload
 	if input.Description != nil {
@@ -81,7 +71,7 @@ func (m *TransactionManager) Update(
 	var txn *graph.Transaction
 	var errTx error
 	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
-		txn, errTx = m.updateTx(ctx, client, input, encDate, encDesc, encAmounts)
+		txn, errTx = m.updateTx(ctx, client, input, encDesc, encAmounts)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -100,7 +90,6 @@ func (m *TransactionManager) updateTx(
 	ctx context.Context,
 	client *ent.Client,
 	input graph.UpdateTransactionInput,
-	encDate *encryption.EncryptionPayload,
 	encDesc *encryption.EncryptionPayload,
 	encAmounts [][]byte,
 ) (*graph.Transaction, error) {
@@ -124,17 +113,14 @@ func (m *TransactionManager) updateTx(
 	// Build the update query.
 	updateQuery := existing.Update()
 
-	if encDate != nil {
-		updateQuery = updateQuery.
-			SetDate(encDate.Ciphertext).
-			SetEncryptionKeyID(encDate.KeyID)
+	if input.Date != nil {
+		updateQuery = updateQuery.SetDate(*input.Date)
 	}
 
 	if encDesc != nil {
-		updateQuery = updateQuery.SetDescription(encDesc.Ciphertext)
-		if encDate == nil {
-			updateQuery = updateQuery.SetEncryptionKeyID(encDesc.KeyID)
-		}
+		updateQuery = updateQuery.
+			SetDescription(encDesc.Ciphertext).
+			SetEncryptionKeyID(encDesc.KeyID)
 	}
 
 	updated, err := updateQuery.Save(ctx)
@@ -205,9 +191,7 @@ func (m *TransactionManager) updateTx(
 
 	// Restore the encryption key edge (Save does not populate edges).
 	keyID := existing.Edges.EncryptionKey.ID
-	if encDate != nil {
-		keyID = encDate.KeyID
-	} else if encDesc != nil {
+	if encDesc != nil {
 		keyID = encDesc.KeyID
 	}
 	updated.Edges.EncryptionKey = &ent.LedgerEncryptionKey{ID: keyID}

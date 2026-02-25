@@ -8,9 +8,7 @@ import (
 )
 
 // Date represents a date in YYYY-MM-DD format
-type Date struct {
-	value string
-}
+type Date string
 
 var dateRegex = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
@@ -26,17 +24,17 @@ func NewDate(s string) (*Date, error) {
 		return nil, fmt.Errorf("invalid date: %s", s)
 	}
 
-	return &Date{value: s}, nil
+	return (*Date)(&s), nil
 }
 
 // String returns the string representation of the date
 func (d Date) String() string {
-	return d.value
+	return string(d)
 }
 
 // MarshalGQL implements the graphql.Marshaler interface
 func (d Date) MarshalGQL(w io.Writer) {
-	fmt.Fprintf(w, `"%s"`, d.value)
+	fmt.Fprintf(w, `"%s"`, d)
 }
 
 // UnmarshalGQL implements the graphql.Unmarshaler interface
