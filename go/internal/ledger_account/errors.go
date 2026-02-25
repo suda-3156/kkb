@@ -28,7 +28,8 @@ var (
 
 // Structural constraints
 var (
-	ErrCannotSetSelfAsParent              = errors.New("cannot set itself as parent")
-	ErrConflictingParentOps               = errors.New("cannot set and unset parent at the same time")
-	ErrCannotChangeToNonGroupWithChildren = errors.New("cannot change to non-group account while it has child accounts")
+	ErrCannotSetSelfAsParent                 = errors.New("cannot set itself as parent")
+	ErrConflictingParentOps                  = errors.New("cannot set and unset parent at the same time")
+	ErrCannotChangeToNonGroupWithChildren    = errors.New("cannot change to non-group account while it has child accounts")
+	ErrCannotChangeToGroupWithJournalEntries = errors.New("cannot change to group account while it has journal entries")
 )

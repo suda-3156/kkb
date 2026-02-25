@@ -109,7 +109,13 @@ func (m *LedgerAccountManager) updateTx(
 	if input.IsGroup != nil && *input.IsGroup != existing.IsGroup {
 		if !existing.IsGroup {
 			// If changing from non-group to group, ensure it has no journal entries
-			// TODO: Implement check for journal entries using this account
+			count, err := existing.QueryJournalEntries().Count(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("update: count journal entries: %w", err)
+			}
+			if count > 0 {
+				return nil, ErrCannotChangeToGroupWithJournalEntries
+			}
 		} else {
 			// If changing from group to non-group, ensure it has no child accounts
 			count, err := existing.QueryChildren().Count(ctx)

@@ -123,6 +123,13 @@ func ErrorPresenter(ctx context.Context, err error) *gqlerror.Error {
 				"code": "CANNOT_CHANGE_TO_NON_GROUP_WITH_CHILDREN",
 			},
 		}
+	case errors.Is(err, lac.ErrCannotChangeToGroupWithJournalEntries):
+		return &gqlerror.Error{
+			Message: "Cannot change to group account while it has journal entries",
+			Extensions: map[string]interface{}{
+				"code": "CANNOT_CHANGE_TO_GROUP_WITH_JOURNAL_ENTRIES",
+			},
+		}
 
 	// Transaction lifecycle
 	case errors.Is(err, txn.ErrTransactionNotFound):
