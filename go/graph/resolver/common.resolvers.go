@@ -8,6 +8,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/suda-3156/kkb/go/graph"
@@ -22,7 +23,17 @@ func (r *queryResolver) HealthCheck(ctx context.Context) (string, error) {
 
 // Node is the resolver for the node field.
 func (r *queryResolver) Node(ctx context.Context, id pulid1.ID) (model.Node, error) {
-	panic(fmt.Errorf("not implemented: Node - node"))
+	nElems := strings.SplitN(id.String(), "_", 2)
+	nTypes, _ := nElems[0], nElems[1]
+
+	switch nTypes {
+	case "txn":
+		return r.tnx.GetByPublicID(ctx, id)
+	case "lac":
+		return r.lac.GetByPublicID(ctx, id)
+	default:
+		return nil, graph.ErrInvalidRequest
+	}
 }
 
 // Query returns graph.QueryResolver implementation.

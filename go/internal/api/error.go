@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/suda-3156/kkb/go/graph"
 	lac "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	txn "github.com/suda-3156/kkb/go/internal/transaction"
@@ -15,6 +16,15 @@ func ErrorPresenter(ctx context.Context, err error) *gqlerror.Error {
 	logging.Error(ctx, "error in GraphQL resolver", slog.Any("error", err))
 
 	switch {
+	// graphql layer
+	case errors.Is(err, graph.ErrInvalidRequest):
+		return &gqlerror.Error{
+			Message: "Invalid request",
+			Extensions: map[string]interface{}{
+				"code": "INVALID_REQUEST",
+			},
+		}
+
 	// Ledger account lifecycle
 	case errors.Is(err, lac.ErrAccountNotFound):
 		return &gqlerror.Error{
