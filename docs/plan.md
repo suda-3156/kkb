@@ -17,7 +17,7 @@
 - seeding script
 - env/config
 
-### Queries: Transaction
+### [DONE] Queries: Transaction
 
 - transaction
   - journal entry
