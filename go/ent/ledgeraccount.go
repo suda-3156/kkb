@@ -48,11 +48,13 @@ type LedgerAccountEdges struct {
 	Parent *LedgerAccount `json:"parent,omitempty"`
 	// Children holds the value of the children edge.
 	Children []*LedgerAccount `json:"children,omitempty"`
+	// JournalEntries holds the value of the journal_entries edge.
+	JournalEntries []*JournalEntry `json:"journal_entries,omitempty"`
 	// EncryptionKey holds the value of the encryption_key edge.
 	EncryptionKey *LedgerEncryptionKey `json:"encryption_key,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ParentOrErr returns the Parent value or an error if the edge
@@ -75,12 +77,21 @@ func (e LedgerAccountEdges) ChildrenOrErr() ([]*LedgerAccount, error) {
 	return nil, &NotLoadedError{edge: "children"}
 }
 
+// JournalEntriesOrErr returns the JournalEntries value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerAccountEdges) JournalEntriesOrErr() ([]*JournalEntry, error) {
+	if e.loadedTypes[2] {
+		return e.JournalEntries, nil
+	}
+	return nil, &NotLoadedError{edge: "journal_entries"}
+}
+
 // EncryptionKeyOrErr returns the EncryptionKey value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e LedgerAccountEdges) EncryptionKeyOrErr() (*LedgerEncryptionKey, error) {
 	if e.EncryptionKey != nil {
 		return e.EncryptionKey, nil
-	} else if e.loadedTypes[2] {
+	} else if e.loadedTypes[3] {
 		return nil, &NotFoundError{label: ledgerencryptionkey.Label}
 	}
 	return nil, &NotLoadedError{edge: "encryption_key"}
@@ -206,6 +217,11 @@ func (_m *LedgerAccount) QueryParent() *LedgerAccountQuery {
 // QueryChildren queries the "children" edge of the LedgerAccount entity.
 func (_m *LedgerAccount) QueryChildren() *LedgerAccountQuery {
 	return NewLedgerAccountClient(_m.config).QueryChildren(_m)
+}
+
+// QueryJournalEntries queries the "journal_entries" edge of the LedgerAccount entity.
+func (_m *LedgerAccount) QueryJournalEntries() *JournalEntryQuery {
+	return NewLedgerAccountClient(_m.config).QueryJournalEntries(_m)
 }
 
 // QueryEncryptionKey queries the "encryption_key" edge of the LedgerAccount entity.

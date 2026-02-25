@@ -5,15 +5,52 @@ package ent
 import (
 	"time"
 
+	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
+	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	journalentryFields := schema.JournalEntry{}.Fields()
+	_ = journalentryFields
+	// journalentryDescPublicID is the schema descriptor for public_id field.
+	journalentryDescPublicID := journalentryFields[0].Descriptor()
+	// journalentry.PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
+	journalentry.PublicIDValidator = func() func(string) error {
+		validators := journalentryDescPublicID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(public_id string) error {
+			for _, fn := range fns {
+				if err := fn(public_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// journalentryDescAmount is the schema descriptor for amount field.
+	journalentryDescAmount := journalentryFields[1].Descriptor()
+	// journalentry.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
+	journalentry.AmountValidator = journalentryDescAmount.Validators[0].(func([]byte) error)
+	// journalentryDescCreatedAt is the schema descriptor for created_at field.
+	journalentryDescCreatedAt := journalentryFields[3].Descriptor()
+	// journalentry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	journalentry.DefaultCreatedAt = journalentryDescCreatedAt.Default.(func() time.Time)
+	// journalentryDescUpdatedAt is the schema descriptor for updated_at field.
+	journalentryDescUpdatedAt := journalentryFields[4].Descriptor()
+	// journalentry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	journalentry.DefaultUpdatedAt = journalentryDescUpdatedAt.Default.(func() time.Time)
+	// journalentry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	journalentry.UpdateDefaultUpdatedAt = journalentryDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ledgeraccountFields := schema.LedgerAccount{}.Fields()
 	_ = ledgeraccountFields
 	// ledgeraccountDescPublicID is the schema descriptor for public_id field.
@@ -87,4 +124,43 @@ func init() {
 	ledgerencryptionkey.DefaultUpdatedAt = ledgerencryptionkeyDescUpdatedAt.Default.(func() time.Time)
 	// ledgerencryptionkey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ledgerencryptionkey.UpdateDefaultUpdatedAt = ledgerencryptionkeyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	transactionFields := schema.Transaction{}.Fields()
+	_ = transactionFields
+	// transactionDescPublicID is the schema descriptor for public_id field.
+	transactionDescPublicID := transactionFields[0].Descriptor()
+	// transaction.PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
+	transaction.PublicIDValidator = func() func(string) error {
+		validators := transactionDescPublicID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(public_id string) error {
+			for _, fn := range fns {
+				if err := fn(public_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// transactionDescDate is the schema descriptor for date field.
+	transactionDescDate := transactionFields[1].Descriptor()
+	// transaction.DateValidator is a validator for the "date" field. It is called by the builders before save.
+	transaction.DateValidator = transactionDescDate.Validators[0].(func([]byte) error)
+	// transactionDescDescription is the schema descriptor for description field.
+	transactionDescDescription := transactionFields[2].Descriptor()
+	// transaction.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	transaction.DescriptionValidator = transactionDescDescription.Validators[0].(func([]byte) error)
+	// transactionDescCreatedAt is the schema descriptor for created_at field.
+	transactionDescCreatedAt := transactionFields[3].Descriptor()
+	// transaction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	transaction.DefaultCreatedAt = transactionDescCreatedAt.Default.(func() time.Time)
+	// transactionDescUpdatedAt is the schema descriptor for updated_at field.
+	transactionDescUpdatedAt := transactionFields[4].Descriptor()
+	// transaction.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	transaction.DefaultUpdatedAt = transactionDescUpdatedAt.Default.(func() time.Time)
+	// transaction.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	transaction.UpdateDefaultUpdatedAt = transactionDescUpdatedAt.UpdateDefault.(func() time.Time)
 }

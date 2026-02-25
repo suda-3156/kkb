@@ -9,6 +9,18 @@ import (
 	"github.com/suda-3156/kkb/go/ent"
 )
 
+// The JournalEntryFunc type is an adapter to allow the use of ordinary
+// function as JournalEntry mutator.
+type JournalEntryFunc func(context.Context, *ent.JournalEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JournalEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.JournalEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.JournalEntryMutation", m)
+}
+
 // The LedgerAccountFunc type is an adapter to allow the use of ordinary
 // function as LedgerAccount mutator.
 type LedgerAccountFunc func(context.Context, *ent.LedgerAccountMutation) (ent.Value, error)
@@ -31,6 +43,18 @@ func (f LedgerEncryptionKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LedgerEncryptionKeyMutation", m)
+}
+
+// The TransactionFunc type is an adapter to allow the use of ordinary
+// function as Transaction mutator.
+type TransactionFunc func(context.Context, *ent.TransactionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TransactionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TransactionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TransactionMutation", m)
 }
 
 // Condition is a hook condition function.

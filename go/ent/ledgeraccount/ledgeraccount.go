@@ -34,6 +34,8 @@ const (
 	EdgeParent = "parent"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
 	EdgeChildren = "children"
+	// EdgeJournalEntries holds the string denoting the journal_entries edge name in mutations.
+	EdgeJournalEntries = "journal_entries"
 	// EdgeEncryptionKey holds the string denoting the encryption_key edge name in mutations.
 	EdgeEncryptionKey = "encryption_key"
 	// Table holds the table name of the ledgeraccount in the database.
@@ -46,6 +48,13 @@ const (
 	ChildrenTable = "ledger_accounts"
 	// ChildrenColumn is the table column denoting the children relation/edge.
 	ChildrenColumn = "ledger_account_children"
+	// JournalEntriesTable is the table that holds the journal_entries relation/edge.
+	JournalEntriesTable = "journal_entries"
+	// JournalEntriesInverseTable is the table name for the JournalEntry entity.
+	// It exists in this package in order to avoid circular dependency with the "journalentry" package.
+	JournalEntriesInverseTable = "journal_entries"
+	// JournalEntriesColumn is the table column denoting the journal_entries relation/edge.
+	JournalEntriesColumn = "ledger_account_journal_entries"
 	// EncryptionKeyTable is the table that holds the encryption_key relation/edge.
 	EncryptionKeyTable = "ledger_accounts"
 	// EncryptionKeyInverseTable is the table name for the LedgerEncryptionKey entity.
@@ -171,6 +180,20 @@ func ByChildren(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByJournalEntriesCount orders the results by journal_entries count.
+func ByJournalEntriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newJournalEntriesStep(), opts...)
+	}
+}
+
+// ByJournalEntries orders the results by journal_entries terms.
+func ByJournalEntries(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newJournalEntriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByEncryptionKeyField orders the results by encryption_key field.
 func ByEncryptionKeyField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -189,6 +212,13 @@ func newChildrenStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(Table, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ChildrenTable, ChildrenColumn),
+	)
+}
+func newJournalEntriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(JournalEntriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, JournalEntriesTable, JournalEntriesColumn),
 	)
 }
 func newEncryptionKeyStep() *sqlgraph.Step {

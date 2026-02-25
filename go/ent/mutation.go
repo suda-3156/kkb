@@ -11,10 +11,12 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/schema"
+	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -27,34 +29,766 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
+	TypeJournalEntry        = "JournalEntry"
 	TypeLedgerAccount       = "LedgerAccount"
 	TypeLedgerEncryptionKey = "LedgerEncryptionKey"
+	TypeTransaction         = "Transaction"
 )
 
-// LedgerAccountMutation represents an operation that mutates the LedgerAccount nodes in the graph.
-type LedgerAccountMutation struct {
+// JournalEntryMutation represents an operation that mutates the JournalEntry nodes in the graph.
+type JournalEntryMutation struct {
 	config
 	op                    Op
 	typ                   string
 	id                    *int
 	public_id             *pulid.ID
-	account_name          *[]byte
-	kind                  *schema.LedgerAccountKind
-	is_group              *bool
-	archived_at           *time.Time
+	amount                *[]byte
+	kind                  *schema.JournalEntryKind
 	created_at            *time.Time
 	updated_at            *time.Time
 	clearedFields         map[string]struct{}
-	parent                *int
-	clearedparent         bool
-	children              map[int]struct{}
-	removedchildren       map[int]struct{}
-	clearedchildren       bool
+	transaction           *int
+	clearedtransaction    bool
+	ledger_account        *int
+	clearedledger_account bool
 	encryption_key        *int
 	clearedencryption_key bool
 	done                  bool
-	oldValue              func(context.Context) (*LedgerAccount, error)
-	predicates            []predicate.LedgerAccount
+	oldValue              func(context.Context) (*JournalEntry, error)
+	predicates            []predicate.JournalEntry
+}
+
+var _ ent.Mutation = (*JournalEntryMutation)(nil)
+
+// journalentryOption allows management of the mutation configuration using functional options.
+type journalentryOption func(*JournalEntryMutation)
+
+// newJournalEntryMutation creates new mutation for the JournalEntry entity.
+func newJournalEntryMutation(c config, op Op, opts ...journalentryOption) *JournalEntryMutation {
+	m := &JournalEntryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeJournalEntry,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withJournalEntryID sets the ID field of the mutation.
+func withJournalEntryID(id int) journalentryOption {
+	return func(m *JournalEntryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *JournalEntry
+		)
+		m.oldValue = func(ctx context.Context) (*JournalEntry, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().JournalEntry.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withJournalEntry sets the old JournalEntry of the mutation.
+func withJournalEntry(node *JournalEntry) journalentryOption {
+	return func(m *JournalEntryMutation) {
+		m.oldValue = func(context.Context) (*JournalEntry, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m JournalEntryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m JournalEntryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *JournalEntryMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *JournalEntryMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().JournalEntry.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetPublicID sets the "public_id" field.
+func (m *JournalEntryMutation) SetPublicID(pu pulid.ID) {
+	m.public_id = &pu
+}
+
+// PublicID returns the value of the "public_id" field in the mutation.
+func (m *JournalEntryMutation) PublicID() (r pulid.ID, exists bool) {
+	v := m.public_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublicID returns the old "public_id" field's value of the JournalEntry entity.
+// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JournalEntryMutation) OldPublicID(ctx context.Context) (v pulid.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublicID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublicID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublicID: %w", err)
+	}
+	return oldValue.PublicID, nil
+}
+
+// ResetPublicID resets all changes to the "public_id" field.
+func (m *JournalEntryMutation) ResetPublicID() {
+	m.public_id = nil
+}
+
+// SetAmount sets the "amount" field.
+func (m *JournalEntryMutation) SetAmount(b []byte) {
+	m.amount = &b
+}
+
+// Amount returns the value of the "amount" field in the mutation.
+func (m *JournalEntryMutation) Amount() (r []byte, exists bool) {
+	v := m.amount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAmount returns the old "amount" field's value of the JournalEntry entity.
+// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JournalEntryMutation) OldAmount(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAmount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAmount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAmount: %w", err)
+	}
+	return oldValue.Amount, nil
+}
+
+// ResetAmount resets all changes to the "amount" field.
+func (m *JournalEntryMutation) ResetAmount() {
+	m.amount = nil
+}
+
+// SetKind sets the "kind" field.
+func (m *JournalEntryMutation) SetKind(sek schema.JournalEntryKind) {
+	m.kind = &sek
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *JournalEntryMutation) Kind() (r schema.JournalEntryKind, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the JournalEntry entity.
+// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JournalEntryMutation) OldKind(ctx context.Context) (v schema.JournalEntryKind, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *JournalEntryMutation) ResetKind() {
+	m.kind = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *JournalEntryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *JournalEntryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the JournalEntry entity.
+// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JournalEntryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *JournalEntryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *JournalEntryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *JournalEntryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the JournalEntry entity.
+// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JournalEntryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *JournalEntryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetTransactionID sets the "transaction" edge to the Transaction entity by id.
+func (m *JournalEntryMutation) SetTransactionID(id int) {
+	m.transaction = &id
+}
+
+// ClearTransaction clears the "transaction" edge to the Transaction entity.
+func (m *JournalEntryMutation) ClearTransaction() {
+	m.clearedtransaction = true
+}
+
+// TransactionCleared reports if the "transaction" edge to the Transaction entity was cleared.
+func (m *JournalEntryMutation) TransactionCleared() bool {
+	return m.clearedtransaction
+}
+
+// TransactionID returns the "transaction" edge ID in the mutation.
+func (m *JournalEntryMutation) TransactionID() (id int, exists bool) {
+	if m.transaction != nil {
+		return *m.transaction, true
+	}
+	return
+}
+
+// TransactionIDs returns the "transaction" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TransactionID instead. It exists only for internal usage by the builders.
+func (m *JournalEntryMutation) TransactionIDs() (ids []int) {
+	if id := m.transaction; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTransaction resets all changes to the "transaction" edge.
+func (m *JournalEntryMutation) ResetTransaction() {
+	m.transaction = nil
+	m.clearedtransaction = false
+}
+
+// SetLedgerAccountID sets the "ledger_account" edge to the LedgerAccount entity by id.
+func (m *JournalEntryMutation) SetLedgerAccountID(id int) {
+	m.ledger_account = &id
+}
+
+// ClearLedgerAccount clears the "ledger_account" edge to the LedgerAccount entity.
+func (m *JournalEntryMutation) ClearLedgerAccount() {
+	m.clearedledger_account = true
+}
+
+// LedgerAccountCleared reports if the "ledger_account" edge to the LedgerAccount entity was cleared.
+func (m *JournalEntryMutation) LedgerAccountCleared() bool {
+	return m.clearedledger_account
+}
+
+// LedgerAccountID returns the "ledger_account" edge ID in the mutation.
+func (m *JournalEntryMutation) LedgerAccountID() (id int, exists bool) {
+	if m.ledger_account != nil {
+		return *m.ledger_account, true
+	}
+	return
+}
+
+// LedgerAccountIDs returns the "ledger_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// LedgerAccountID instead. It exists only for internal usage by the builders.
+func (m *JournalEntryMutation) LedgerAccountIDs() (ids []int) {
+	if id := m.ledger_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetLedgerAccount resets all changes to the "ledger_account" edge.
+func (m *JournalEntryMutation) ResetLedgerAccount() {
+	m.ledger_account = nil
+	m.clearedledger_account = false
+}
+
+// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by id.
+func (m *JournalEntryMutation) SetEncryptionKeyID(id int) {
+	m.encryption_key = &id
+}
+
+// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (m *JournalEntryMutation) ClearEncryptionKey() {
+	m.clearedencryption_key = true
+}
+
+// EncryptionKeyCleared reports if the "encryption_key" edge to the LedgerEncryptionKey entity was cleared.
+func (m *JournalEntryMutation) EncryptionKeyCleared() bool {
+	return m.clearedencryption_key
+}
+
+// EncryptionKeyID returns the "encryption_key" edge ID in the mutation.
+func (m *JournalEntryMutation) EncryptionKeyID() (id int, exists bool) {
+	if m.encryption_key != nil {
+		return *m.encryption_key, true
+	}
+	return
+}
+
+// EncryptionKeyIDs returns the "encryption_key" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EncryptionKeyID instead. It exists only for internal usage by the builders.
+func (m *JournalEntryMutation) EncryptionKeyIDs() (ids []int) {
+	if id := m.encryption_key; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEncryptionKey resets all changes to the "encryption_key" edge.
+func (m *JournalEntryMutation) ResetEncryptionKey() {
+	m.encryption_key = nil
+	m.clearedencryption_key = false
+}
+
+// Where appends a list predicates to the JournalEntryMutation builder.
+func (m *JournalEntryMutation) Where(ps ...predicate.JournalEntry) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the JournalEntryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *JournalEntryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.JournalEntry, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *JournalEntryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *JournalEntryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (JournalEntry).
+func (m *JournalEntryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *JournalEntryMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.public_id != nil {
+		fields = append(fields, journalentry.FieldPublicID)
+	}
+	if m.amount != nil {
+		fields = append(fields, journalentry.FieldAmount)
+	}
+	if m.kind != nil {
+		fields = append(fields, journalentry.FieldKind)
+	}
+	if m.created_at != nil {
+		fields = append(fields, journalentry.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, journalentry.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *JournalEntryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case journalentry.FieldPublicID:
+		return m.PublicID()
+	case journalentry.FieldAmount:
+		return m.Amount()
+	case journalentry.FieldKind:
+		return m.Kind()
+	case journalentry.FieldCreatedAt:
+		return m.CreatedAt()
+	case journalentry.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *JournalEntryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case journalentry.FieldPublicID:
+		return m.OldPublicID(ctx)
+	case journalentry.FieldAmount:
+		return m.OldAmount(ctx)
+	case journalentry.FieldKind:
+		return m.OldKind(ctx)
+	case journalentry.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case journalentry.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown JournalEntry field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *JournalEntryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case journalentry.FieldPublicID:
+		v, ok := value.(pulid.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublicID(v)
+		return nil
+	case journalentry.FieldAmount:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAmount(v)
+		return nil
+	case journalentry.FieldKind:
+		v, ok := value.(schema.JournalEntryKind)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
+	case journalentry.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case journalentry.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown JournalEntry field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *JournalEntryMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *JournalEntryMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *JournalEntryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown JournalEntry numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *JournalEntryMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *JournalEntryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *JournalEntryMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown JournalEntry nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *JournalEntryMutation) ResetField(name string) error {
+	switch name {
+	case journalentry.FieldPublicID:
+		m.ResetPublicID()
+		return nil
+	case journalentry.FieldAmount:
+		m.ResetAmount()
+		return nil
+	case journalentry.FieldKind:
+		m.ResetKind()
+		return nil
+	case journalentry.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case journalentry.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown JournalEntry field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *JournalEntryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.transaction != nil {
+		edges = append(edges, journalentry.EdgeTransaction)
+	}
+	if m.ledger_account != nil {
+		edges = append(edges, journalentry.EdgeLedgerAccount)
+	}
+	if m.encryption_key != nil {
+		edges = append(edges, journalentry.EdgeEncryptionKey)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *JournalEntryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case journalentry.EdgeTransaction:
+		if id := m.transaction; id != nil {
+			return []ent.Value{*id}
+		}
+	case journalentry.EdgeLedgerAccount:
+		if id := m.ledger_account; id != nil {
+			return []ent.Value{*id}
+		}
+	case journalentry.EdgeEncryptionKey:
+		if id := m.encryption_key; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *JournalEntryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *JournalEntryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *JournalEntryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedtransaction {
+		edges = append(edges, journalentry.EdgeTransaction)
+	}
+	if m.clearedledger_account {
+		edges = append(edges, journalentry.EdgeLedgerAccount)
+	}
+	if m.clearedencryption_key {
+		edges = append(edges, journalentry.EdgeEncryptionKey)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *JournalEntryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case journalentry.EdgeTransaction:
+		return m.clearedtransaction
+	case journalentry.EdgeLedgerAccount:
+		return m.clearedledger_account
+	case journalentry.EdgeEncryptionKey:
+		return m.clearedencryption_key
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *JournalEntryMutation) ClearEdge(name string) error {
+	switch name {
+	case journalentry.EdgeTransaction:
+		m.ClearTransaction()
+		return nil
+	case journalentry.EdgeLedgerAccount:
+		m.ClearLedgerAccount()
+		return nil
+	case journalentry.EdgeEncryptionKey:
+		m.ClearEncryptionKey()
+		return nil
+	}
+	return fmt.Errorf("unknown JournalEntry unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *JournalEntryMutation) ResetEdge(name string) error {
+	switch name {
+	case journalentry.EdgeTransaction:
+		m.ResetTransaction()
+		return nil
+	case journalentry.EdgeLedgerAccount:
+		m.ResetLedgerAccount()
+		return nil
+	case journalentry.EdgeEncryptionKey:
+		m.ResetEncryptionKey()
+		return nil
+	}
+	return fmt.Errorf("unknown JournalEntry edge %s", name)
+}
+
+// LedgerAccountMutation represents an operation that mutates the LedgerAccount nodes in the graph.
+type LedgerAccountMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int
+	public_id              *pulid.ID
+	account_name           *[]byte
+	kind                   *schema.LedgerAccountKind
+	is_group               *bool
+	archived_at            *time.Time
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	parent                 *int
+	clearedparent          bool
+	children               map[int]struct{}
+	removedchildren        map[int]struct{}
+	clearedchildren        bool
+	journal_entries        map[int]struct{}
+	removedjournal_entries map[int]struct{}
+	clearedjournal_entries bool
+	encryption_key         *int
+	clearedencryption_key  bool
+	done                   bool
+	oldValue               func(context.Context) (*LedgerAccount, error)
+	predicates             []predicate.LedgerAccount
 }
 
 var _ ent.Mutation = (*LedgerAccountMutation)(nil)
@@ -513,6 +1247,60 @@ func (m *LedgerAccountMutation) ResetChildren() {
 	m.removedchildren = nil
 }
 
+// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by ids.
+func (m *LedgerAccountMutation) AddJournalEntryIDs(ids ...int) {
+	if m.journal_entries == nil {
+		m.journal_entries = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.journal_entries[ids[i]] = struct{}{}
+	}
+}
+
+// ClearJournalEntries clears the "journal_entries" edge to the JournalEntry entity.
+func (m *LedgerAccountMutation) ClearJournalEntries() {
+	m.clearedjournal_entries = true
+}
+
+// JournalEntriesCleared reports if the "journal_entries" edge to the JournalEntry entity was cleared.
+func (m *LedgerAccountMutation) JournalEntriesCleared() bool {
+	return m.clearedjournal_entries
+}
+
+// RemoveJournalEntryIDs removes the "journal_entries" edge to the JournalEntry entity by IDs.
+func (m *LedgerAccountMutation) RemoveJournalEntryIDs(ids ...int) {
+	if m.removedjournal_entries == nil {
+		m.removedjournal_entries = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.journal_entries, ids[i])
+		m.removedjournal_entries[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedJournalEntries returns the removed IDs of the "journal_entries" edge to the JournalEntry entity.
+func (m *LedgerAccountMutation) RemovedJournalEntriesIDs() (ids []int) {
+	for id := range m.removedjournal_entries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// JournalEntriesIDs returns the "journal_entries" edge IDs in the mutation.
+func (m *LedgerAccountMutation) JournalEntriesIDs() (ids []int) {
+	for id := range m.journal_entries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetJournalEntries resets all changes to the "journal_entries" edge.
+func (m *LedgerAccountMutation) ResetJournalEntries() {
+	m.journal_entries = nil
+	m.clearedjournal_entries = false
+	m.removedjournal_entries = nil
+}
+
 // SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by id.
 func (m *LedgerAccountMutation) SetEncryptionKeyID(id int) {
 	m.encryption_key = &id
@@ -796,12 +1584,15 @@ func (m *LedgerAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LedgerAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.parent != nil {
 		edges = append(edges, ledgeraccount.EdgeParent)
 	}
 	if m.children != nil {
 		edges = append(edges, ledgeraccount.EdgeChildren)
+	}
+	if m.journal_entries != nil {
+		edges = append(edges, ledgeraccount.EdgeJournalEntries)
 	}
 	if m.encryption_key != nil {
 		edges = append(edges, ledgeraccount.EdgeEncryptionKey)
@@ -823,6 +1614,12 @@ func (m *LedgerAccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgeraccount.EdgeJournalEntries:
+		ids := make([]ent.Value, 0, len(m.journal_entries))
+		for id := range m.journal_entries {
+			ids = append(ids, id)
+		}
+		return ids
 	case ledgeraccount.EdgeEncryptionKey:
 		if id := m.encryption_key; id != nil {
 			return []ent.Value{*id}
@@ -833,9 +1630,12 @@ func (m *LedgerAccountMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LedgerAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedchildren != nil {
 		edges = append(edges, ledgeraccount.EdgeChildren)
+	}
+	if m.removedjournal_entries != nil {
+		edges = append(edges, ledgeraccount.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -850,18 +1650,27 @@ func (m *LedgerAccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgeraccount.EdgeJournalEntries:
+		ids := make([]ent.Value, 0, len(m.removedjournal_entries))
+		for id := range m.removedjournal_entries {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LedgerAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedparent {
 		edges = append(edges, ledgeraccount.EdgeParent)
 	}
 	if m.clearedchildren {
 		edges = append(edges, ledgeraccount.EdgeChildren)
+	}
+	if m.clearedjournal_entries {
+		edges = append(edges, ledgeraccount.EdgeJournalEntries)
 	}
 	if m.clearedencryption_key {
 		edges = append(edges, ledgeraccount.EdgeEncryptionKey)
@@ -877,6 +1686,8 @@ func (m *LedgerAccountMutation) EdgeCleared(name string) bool {
 		return m.clearedparent
 	case ledgeraccount.EdgeChildren:
 		return m.clearedchildren
+	case ledgeraccount.EdgeJournalEntries:
+		return m.clearedjournal_entries
 	case ledgeraccount.EdgeEncryptionKey:
 		return m.clearedencryption_key
 	}
@@ -907,6 +1718,9 @@ func (m *LedgerAccountMutation) ResetEdge(name string) error {
 	case ledgeraccount.EdgeChildren:
 		m.ResetChildren()
 		return nil
+	case ledgeraccount.EdgeJournalEntries:
+		m.ResetJournalEntries()
+		return nil
 	case ledgeraccount.EdgeEncryptionKey:
 		m.ResetEncryptionKey()
 		return nil
@@ -929,6 +1743,12 @@ type LedgerEncryptionKeyMutation struct {
 	ledger_accounts        map[int]struct{}
 	removedledger_accounts map[int]struct{}
 	clearedledger_accounts bool
+	transactions           map[int]struct{}
+	removedtransactions    map[int]struct{}
+	clearedtransactions    bool
+	journal_entries        map[int]struct{}
+	removedjournal_entries map[int]struct{}
+	clearedjournal_entries bool
 	done                   bool
 	oldValue               func(context.Context) (*LedgerEncryptionKey, error)
 	predicates             []predicate.LedgerEncryptionKey
@@ -1266,6 +2086,114 @@ func (m *LedgerEncryptionKeyMutation) ResetLedgerAccounts() {
 	m.removedledger_accounts = nil
 }
 
+// AddTransactionIDs adds the "transactions" edge to the Transaction entity by ids.
+func (m *LedgerEncryptionKeyMutation) AddTransactionIDs(ids ...int) {
+	if m.transactions == nil {
+		m.transactions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.transactions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTransactions clears the "transactions" edge to the Transaction entity.
+func (m *LedgerEncryptionKeyMutation) ClearTransactions() {
+	m.clearedtransactions = true
+}
+
+// TransactionsCleared reports if the "transactions" edge to the Transaction entity was cleared.
+func (m *LedgerEncryptionKeyMutation) TransactionsCleared() bool {
+	return m.clearedtransactions
+}
+
+// RemoveTransactionIDs removes the "transactions" edge to the Transaction entity by IDs.
+func (m *LedgerEncryptionKeyMutation) RemoveTransactionIDs(ids ...int) {
+	if m.removedtransactions == nil {
+		m.removedtransactions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.transactions, ids[i])
+		m.removedtransactions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTransactions returns the removed IDs of the "transactions" edge to the Transaction entity.
+func (m *LedgerEncryptionKeyMutation) RemovedTransactionsIDs() (ids []int) {
+	for id := range m.removedtransactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TransactionsIDs returns the "transactions" edge IDs in the mutation.
+func (m *LedgerEncryptionKeyMutation) TransactionsIDs() (ids []int) {
+	for id := range m.transactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTransactions resets all changes to the "transactions" edge.
+func (m *LedgerEncryptionKeyMutation) ResetTransactions() {
+	m.transactions = nil
+	m.clearedtransactions = false
+	m.removedtransactions = nil
+}
+
+// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by ids.
+func (m *LedgerEncryptionKeyMutation) AddJournalEntryIDs(ids ...int) {
+	if m.journal_entries == nil {
+		m.journal_entries = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.journal_entries[ids[i]] = struct{}{}
+	}
+}
+
+// ClearJournalEntries clears the "journal_entries" edge to the JournalEntry entity.
+func (m *LedgerEncryptionKeyMutation) ClearJournalEntries() {
+	m.clearedjournal_entries = true
+}
+
+// JournalEntriesCleared reports if the "journal_entries" edge to the JournalEntry entity was cleared.
+func (m *LedgerEncryptionKeyMutation) JournalEntriesCleared() bool {
+	return m.clearedjournal_entries
+}
+
+// RemoveJournalEntryIDs removes the "journal_entries" edge to the JournalEntry entity by IDs.
+func (m *LedgerEncryptionKeyMutation) RemoveJournalEntryIDs(ids ...int) {
+	if m.removedjournal_entries == nil {
+		m.removedjournal_entries = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.journal_entries, ids[i])
+		m.removedjournal_entries[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedJournalEntries returns the removed IDs of the "journal_entries" edge to the JournalEntry entity.
+func (m *LedgerEncryptionKeyMutation) RemovedJournalEntriesIDs() (ids []int) {
+	for id := range m.removedjournal_entries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// JournalEntriesIDs returns the "journal_entries" edge IDs in the mutation.
+func (m *LedgerEncryptionKeyMutation) JournalEntriesIDs() (ids []int) {
+	for id := range m.journal_entries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetJournalEntries resets all changes to the "journal_entries" edge.
+func (m *LedgerEncryptionKeyMutation) ResetJournalEntries() {
+	m.journal_entries = nil
+	m.clearedjournal_entries = false
+	m.removedjournal_entries = nil
+}
+
 // Where appends a list predicates to the LedgerEncryptionKeyMutation builder.
 func (m *LedgerEncryptionKeyMutation) Where(ps ...predicate.LedgerEncryptionKey) {
 	m.predicates = append(m.predicates, ps...)
@@ -1467,9 +2395,15 @@ func (m *LedgerEncryptionKeyMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LedgerEncryptionKeyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.ledger_accounts != nil {
 		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
+	}
+	if m.transactions != nil {
+		edges = append(edges, ledgerencryptionkey.EdgeTransactions)
+	}
+	if m.journal_entries != nil {
+		edges = append(edges, ledgerencryptionkey.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -1484,15 +2418,33 @@ func (m *LedgerEncryptionKeyMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgerencryptionkey.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.transactions))
+		for id := range m.transactions {
+			ids = append(ids, id)
+		}
+		return ids
+	case ledgerencryptionkey.EdgeJournalEntries:
+		ids := make([]ent.Value, 0, len(m.journal_entries))
+		for id := range m.journal_entries {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LedgerEncryptionKeyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.removedledger_accounts != nil {
 		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
+	}
+	if m.removedtransactions != nil {
+		edges = append(edges, ledgerencryptionkey.EdgeTransactions)
+	}
+	if m.removedjournal_entries != nil {
+		edges = append(edges, ledgerencryptionkey.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -1507,15 +2459,33 @@ func (m *LedgerEncryptionKeyMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgerencryptionkey.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.removedtransactions))
+		for id := range m.removedtransactions {
+			ids = append(ids, id)
+		}
+		return ids
+	case ledgerencryptionkey.EdgeJournalEntries:
+		ids := make([]ent.Value, 0, len(m.removedjournal_entries))
+		for id := range m.removedjournal_entries {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LedgerEncryptionKeyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.clearedledger_accounts {
 		edges = append(edges, ledgerencryptionkey.EdgeLedgerAccounts)
+	}
+	if m.clearedtransactions {
+		edges = append(edges, ledgerencryptionkey.EdgeTransactions)
+	}
+	if m.clearedjournal_entries {
+		edges = append(edges, ledgerencryptionkey.EdgeJournalEntries)
 	}
 	return edges
 }
@@ -1526,6 +2496,10 @@ func (m *LedgerEncryptionKeyMutation) EdgeCleared(name string) bool {
 	switch name {
 	case ledgerencryptionkey.EdgeLedgerAccounts:
 		return m.clearedledger_accounts
+	case ledgerencryptionkey.EdgeTransactions:
+		return m.clearedtransactions
+	case ledgerencryptionkey.EdgeJournalEntries:
+		return m.clearedjournal_entries
 	}
 	return false
 }
@@ -1545,6 +2519,706 @@ func (m *LedgerEncryptionKeyMutation) ResetEdge(name string) error {
 	case ledgerencryptionkey.EdgeLedgerAccounts:
 		m.ResetLedgerAccounts()
 		return nil
+	case ledgerencryptionkey.EdgeTransactions:
+		m.ResetTransactions()
+		return nil
+	case ledgerencryptionkey.EdgeJournalEntries:
+		m.ResetJournalEntries()
+		return nil
 	}
 	return fmt.Errorf("unknown LedgerEncryptionKey edge %s", name)
+}
+
+// TransactionMutation represents an operation that mutates the Transaction nodes in the graph.
+type TransactionMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *int
+	public_id             *pulid.ID
+	date                  *[]byte
+	description           *[]byte
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	entries               map[int]struct{}
+	removedentries        map[int]struct{}
+	clearedentries        bool
+	encryption_key        *int
+	clearedencryption_key bool
+	done                  bool
+	oldValue              func(context.Context) (*Transaction, error)
+	predicates            []predicate.Transaction
+}
+
+var _ ent.Mutation = (*TransactionMutation)(nil)
+
+// transactionOption allows management of the mutation configuration using functional options.
+type transactionOption func(*TransactionMutation)
+
+// newTransactionMutation creates new mutation for the Transaction entity.
+func newTransactionMutation(c config, op Op, opts ...transactionOption) *TransactionMutation {
+	m := &TransactionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTransaction,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTransactionID sets the ID field of the mutation.
+func withTransactionID(id int) transactionOption {
+	return func(m *TransactionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Transaction
+		)
+		m.oldValue = func(ctx context.Context) (*Transaction, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Transaction.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTransaction sets the old Transaction of the mutation.
+func withTransaction(node *Transaction) transactionOption {
+	return func(m *TransactionMutation) {
+		m.oldValue = func(context.Context) (*Transaction, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TransactionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TransactionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TransactionMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TransactionMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Transaction.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetPublicID sets the "public_id" field.
+func (m *TransactionMutation) SetPublicID(pu pulid.ID) {
+	m.public_id = &pu
+}
+
+// PublicID returns the value of the "public_id" field in the mutation.
+func (m *TransactionMutation) PublicID() (r pulid.ID, exists bool) {
+	v := m.public_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublicID returns the old "public_id" field's value of the Transaction entity.
+// If the Transaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TransactionMutation) OldPublicID(ctx context.Context) (v pulid.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublicID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublicID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublicID: %w", err)
+	}
+	return oldValue.PublicID, nil
+}
+
+// ResetPublicID resets all changes to the "public_id" field.
+func (m *TransactionMutation) ResetPublicID() {
+	m.public_id = nil
+}
+
+// SetDate sets the "date" field.
+func (m *TransactionMutation) SetDate(b []byte) {
+	m.date = &b
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *TransactionMutation) Date() (r []byte, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the Transaction entity.
+// If the Transaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TransactionMutation) OldDate(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *TransactionMutation) ResetDate() {
+	m.date = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *TransactionMutation) SetDescription(b []byte) {
+	m.description = &b
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *TransactionMutation) Description() (r []byte, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Transaction entity.
+// If the Transaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TransactionMutation) OldDescription(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *TransactionMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TransactionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TransactionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Transaction entity.
+// If the Transaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TransactionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TransactionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *TransactionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *TransactionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Transaction entity.
+// If the Transaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TransactionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *TransactionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddEntryIDs adds the "entries" edge to the JournalEntry entity by ids.
+func (m *TransactionMutation) AddEntryIDs(ids ...int) {
+	if m.entries == nil {
+		m.entries = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.entries[ids[i]] = struct{}{}
+	}
+}
+
+// ClearEntries clears the "entries" edge to the JournalEntry entity.
+func (m *TransactionMutation) ClearEntries() {
+	m.clearedentries = true
+}
+
+// EntriesCleared reports if the "entries" edge to the JournalEntry entity was cleared.
+func (m *TransactionMutation) EntriesCleared() bool {
+	return m.clearedentries
+}
+
+// RemoveEntryIDs removes the "entries" edge to the JournalEntry entity by IDs.
+func (m *TransactionMutation) RemoveEntryIDs(ids ...int) {
+	if m.removedentries == nil {
+		m.removedentries = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.entries, ids[i])
+		m.removedentries[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedEntries returns the removed IDs of the "entries" edge to the JournalEntry entity.
+func (m *TransactionMutation) RemovedEntriesIDs() (ids []int) {
+	for id := range m.removedentries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// EntriesIDs returns the "entries" edge IDs in the mutation.
+func (m *TransactionMutation) EntriesIDs() (ids []int) {
+	for id := range m.entries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetEntries resets all changes to the "entries" edge.
+func (m *TransactionMutation) ResetEntries() {
+	m.entries = nil
+	m.clearedentries = false
+	m.removedentries = nil
+}
+
+// SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by id.
+func (m *TransactionMutation) SetEncryptionKeyID(id int) {
+	m.encryption_key = &id
+}
+
+// ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
+func (m *TransactionMutation) ClearEncryptionKey() {
+	m.clearedencryption_key = true
+}
+
+// EncryptionKeyCleared reports if the "encryption_key" edge to the LedgerEncryptionKey entity was cleared.
+func (m *TransactionMutation) EncryptionKeyCleared() bool {
+	return m.clearedencryption_key
+}
+
+// EncryptionKeyID returns the "encryption_key" edge ID in the mutation.
+func (m *TransactionMutation) EncryptionKeyID() (id int, exists bool) {
+	if m.encryption_key != nil {
+		return *m.encryption_key, true
+	}
+	return
+}
+
+// EncryptionKeyIDs returns the "encryption_key" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EncryptionKeyID instead. It exists only for internal usage by the builders.
+func (m *TransactionMutation) EncryptionKeyIDs() (ids []int) {
+	if id := m.encryption_key; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEncryptionKey resets all changes to the "encryption_key" edge.
+func (m *TransactionMutation) ResetEncryptionKey() {
+	m.encryption_key = nil
+	m.clearedencryption_key = false
+}
+
+// Where appends a list predicates to the TransactionMutation builder.
+func (m *TransactionMutation) Where(ps ...predicate.Transaction) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TransactionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TransactionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Transaction, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TransactionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TransactionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Transaction).
+func (m *TransactionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TransactionMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.public_id != nil {
+		fields = append(fields, transaction.FieldPublicID)
+	}
+	if m.date != nil {
+		fields = append(fields, transaction.FieldDate)
+	}
+	if m.description != nil {
+		fields = append(fields, transaction.FieldDescription)
+	}
+	if m.created_at != nil {
+		fields = append(fields, transaction.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, transaction.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TransactionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case transaction.FieldPublicID:
+		return m.PublicID()
+	case transaction.FieldDate:
+		return m.Date()
+	case transaction.FieldDescription:
+		return m.Description()
+	case transaction.FieldCreatedAt:
+		return m.CreatedAt()
+	case transaction.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TransactionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case transaction.FieldPublicID:
+		return m.OldPublicID(ctx)
+	case transaction.FieldDate:
+		return m.OldDate(ctx)
+	case transaction.FieldDescription:
+		return m.OldDescription(ctx)
+	case transaction.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case transaction.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Transaction field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TransactionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case transaction.FieldPublicID:
+		v, ok := value.(pulid.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublicID(v)
+		return nil
+	case transaction.FieldDate:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
+		return nil
+	case transaction.FieldDescription:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case transaction.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case transaction.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Transaction field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TransactionMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TransactionMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TransactionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Transaction numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TransactionMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TransactionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TransactionMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Transaction nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TransactionMutation) ResetField(name string) error {
+	switch name {
+	case transaction.FieldPublicID:
+		m.ResetPublicID()
+		return nil
+	case transaction.FieldDate:
+		m.ResetDate()
+		return nil
+	case transaction.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case transaction.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case transaction.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Transaction field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TransactionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.entries != nil {
+		edges = append(edges, transaction.EdgeEntries)
+	}
+	if m.encryption_key != nil {
+		edges = append(edges, transaction.EdgeEncryptionKey)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case transaction.EdgeEntries:
+		ids := make([]ent.Value, 0, len(m.entries))
+		for id := range m.entries {
+			ids = append(ids, id)
+		}
+		return ids
+	case transaction.EdgeEncryptionKey:
+		if id := m.encryption_key; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TransactionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedentries != nil {
+		edges = append(edges, transaction.EdgeEntries)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TransactionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case transaction.EdgeEntries:
+		ids := make([]ent.Value, 0, len(m.removedentries))
+		for id := range m.removedentries {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TransactionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedentries {
+		edges = append(edges, transaction.EdgeEntries)
+	}
+	if m.clearedencryption_key {
+		edges = append(edges, transaction.EdgeEncryptionKey)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TransactionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case transaction.EdgeEntries:
+		return m.clearedentries
+	case transaction.EdgeEncryptionKey:
+		return m.clearedencryption_key
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TransactionMutation) ClearEdge(name string) error {
+	switch name {
+	case transaction.EdgeEncryptionKey:
+		m.ClearEncryptionKey()
+		return nil
+	}
+	return fmt.Errorf("unknown Transaction unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TransactionMutation) ResetEdge(name string) error {
+	switch name {
+	case transaction.EdgeEntries:
+		m.ResetEntries()
+		return nil
+	case transaction.EdgeEncryptionKey:
+		m.ResetEncryptionKey()
+		return nil
+	}
+	return fmt.Errorf("unknown Transaction edge %s", name)
 }

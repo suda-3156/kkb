@@ -10,8 +10,10 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
 // LedgerEncryptionKeyCreate is the builder for creating a LedgerEncryptionKey entity.
@@ -88,6 +90,36 @@ func (_c *LedgerEncryptionKeyCreate) AddLedgerAccounts(v ...*LedgerAccount) *Led
 		ids[i] = v[i].ID
 	}
 	return _c.AddLedgerAccountIDs(ids...)
+}
+
+// AddTransactionIDs adds the "transactions" edge to the Transaction entity by IDs.
+func (_c *LedgerEncryptionKeyCreate) AddTransactionIDs(ids ...int) *LedgerEncryptionKeyCreate {
+	_c.mutation.AddTransactionIDs(ids...)
+	return _c
+}
+
+// AddTransactions adds the "transactions" edges to the Transaction entity.
+func (_c *LedgerEncryptionKeyCreate) AddTransactions(v ...*Transaction) *LedgerEncryptionKeyCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTransactionIDs(ids...)
+}
+
+// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by IDs.
+func (_c *LedgerEncryptionKeyCreate) AddJournalEntryIDs(ids ...int) *LedgerEncryptionKeyCreate {
+	_c.mutation.AddJournalEntryIDs(ids...)
+	return _c
+}
+
+// AddJournalEntries adds the "journal_entries" edges to the JournalEntry entity.
+func (_c *LedgerEncryptionKeyCreate) AddJournalEntries(v ...*JournalEntry) *LedgerEncryptionKeyCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddJournalEntryIDs(ids...)
 }
 
 // Mutation returns the LedgerEncryptionKeyMutation object of the builder.
@@ -221,6 +253,38 @@ func (_c *LedgerEncryptionKeyCreate) createSpec() (*LedgerEncryptionKey, *sqlgra
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgeraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.TransactionsTable,
+			Columns: []string{ledgerencryptionkey.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(transaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.JournalEntriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.JournalEntriesTable,
+			Columns: []string{ledgerencryptionkey.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

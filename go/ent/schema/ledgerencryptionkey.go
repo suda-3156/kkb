@@ -41,6 +41,11 @@ func (LedgerEncryptionKey) Fields() []ent.Field {
 // Edges of the LedgerEncryptionKey.
 func (LedgerEncryptionKey) Edges() []ent.Edge {
 	return []ent.Edge{
+		// Ledger accounts using this key for encrypting their data
 		edge.To("ledger_accounts", LedgerAccount.Type),
+		// Transactions using this key for encrypting their data
+		edge.To("transactions", Transaction.Type),
+		// Journal entries using this key for encrypting their data
+		edge.To("journal_entries", JournalEntry.Type),
 	}
 }

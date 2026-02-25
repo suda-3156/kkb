@@ -26,6 +26,10 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeLedgerAccounts holds the string denoting the ledger_accounts edge name in mutations.
 	EdgeLedgerAccounts = "ledger_accounts"
+	// EdgeTransactions holds the string denoting the transactions edge name in mutations.
+	EdgeTransactions = "transactions"
+	// EdgeJournalEntries holds the string denoting the journal_entries edge name in mutations.
+	EdgeJournalEntries = "journal_entries"
 	// Table holds the table name of the ledgerencryptionkey in the database.
 	Table = "ledger_encryption_keys"
 	// LedgerAccountsTable is the table that holds the ledger_accounts relation/edge.
@@ -35,6 +39,20 @@ const (
 	LedgerAccountsInverseTable = "ledger_accounts"
 	// LedgerAccountsColumn is the table column denoting the ledger_accounts relation/edge.
 	LedgerAccountsColumn = "ledger_encryption_key_ledger_accounts"
+	// TransactionsTable is the table that holds the transactions relation/edge.
+	TransactionsTable = "transactions"
+	// TransactionsInverseTable is the table name for the Transaction entity.
+	// It exists in this package in order to avoid circular dependency with the "transaction" package.
+	TransactionsInverseTable = "transactions"
+	// TransactionsColumn is the table column denoting the transactions relation/edge.
+	TransactionsColumn = "ledger_encryption_key_transactions"
+	// JournalEntriesTable is the table that holds the journal_entries relation/edge.
+	JournalEntriesTable = "journal_entries"
+	// JournalEntriesInverseTable is the table name for the JournalEntry entity.
+	// It exists in this package in order to avoid circular dependency with the "journalentry" package.
+	JournalEntriesInverseTable = "journal_entries"
+	// JournalEntriesColumn is the table column denoting the journal_entries relation/edge.
+	JournalEntriesColumn = "ledger_encryption_key_journal_entries"
 )
 
 // Columns holds all SQL columns for ledgerencryptionkey fields.
@@ -108,10 +126,52 @@ func ByLedgerAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newLedgerAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByTransactionsCount orders the results by transactions count.
+func ByTransactionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTransactionsStep(), opts...)
+	}
+}
+
+// ByTransactions orders the results by transactions terms.
+func ByTransactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTransactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByJournalEntriesCount orders the results by journal_entries count.
+func ByJournalEntriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newJournalEntriesStep(), opts...)
+	}
+}
+
+// ByJournalEntries orders the results by journal_entries terms.
+func ByJournalEntries(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newJournalEntriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newLedgerAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LedgerAccountsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LedgerAccountsTable, LedgerAccountsColumn),
+	)
+}
+func newTransactionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TransactionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TransactionsTable, TransactionsColumn),
+	)
+}
+func newJournalEntriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(JournalEntriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, JournalEntriesTable, JournalEntriesColumn),
 	)
 }

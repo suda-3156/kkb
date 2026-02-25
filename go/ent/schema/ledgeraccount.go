@@ -96,7 +96,7 @@ func (LedgerAccount) Edges() []ent.Edge {
 			From("parent").
 			Unique(),
 		// Journal entries using this account
-		// edge.To("journal_entries", JournalEntry.Type),
+		edge.To("journal_entries", JournalEntry.Type),
 		// Ledger encryption key used for encrypting this account's data
 		edge.From("encryption_key", LedgerEncryptionKey.Type).
 			Ref("ledger_accounts").

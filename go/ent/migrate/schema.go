@@ -8,6 +8,44 @@ import (
 )
 
 var (
+	// JournalEntriesColumns holds the columns for the "journal_entries" table.
+	JournalEntriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
+		{Name: "amount", Type: field.TypeBytes},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"DEBIT", "CREDIT"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "ledger_account_journal_entries", Type: field.TypeInt},
+		{Name: "ledger_encryption_key_journal_entries", Type: field.TypeInt, Nullable: true},
+		{Name: "transaction_entries", Type: field.TypeInt},
+	}
+	// JournalEntriesTable holds the schema information for the "journal_entries" table.
+	JournalEntriesTable = &schema.Table{
+		Name:       "journal_entries",
+		Columns:    JournalEntriesColumns,
+		PrimaryKey: []*schema.Column{JournalEntriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "journal_entries_ledger_accounts_journal_entries",
+				Columns:    []*schema.Column{JournalEntriesColumns[6]},
+				RefColumns: []*schema.Column{LedgerAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "journal_entries_ledger_encryption_keys_journal_entries",
+				Columns:    []*schema.Column{JournalEntriesColumns[7]},
+				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "journal_entries_transactions_entries",
+				Columns:    []*schema.Column{JournalEntriesColumns[8]},
+				RefColumns: []*schema.Column{TransactionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// LedgerAccountsColumns holds the columns for the "ledger_accounts" table.
 	LedgerAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -56,14 +94,44 @@ var (
 		Columns:    LedgerEncryptionKeysColumns,
 		PrimaryKey: []*schema.Column{LedgerEncryptionKeysColumns[0]},
 	}
+	// TransactionsColumns holds the columns for the "transactions" table.
+	TransactionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
+		{Name: "date", Type: field.TypeBytes},
+		{Name: "description", Type: field.TypeBytes},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "ledger_encryption_key_transactions", Type: field.TypeInt, Nullable: true},
+	}
+	// TransactionsTable holds the schema information for the "transactions" table.
+	TransactionsTable = &schema.Table{
+		Name:       "transactions",
+		Columns:    TransactionsColumns,
+		PrimaryKey: []*schema.Column{TransactionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "transactions_ledger_encryption_keys_transactions",
+				Columns:    []*schema.Column{TransactionsColumns[6]},
+				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		JournalEntriesTable,
 		LedgerAccountsTable,
 		LedgerEncryptionKeysTable,
+		TransactionsTable,
 	}
 )
 
 func init() {
+	JournalEntriesTable.ForeignKeys[0].RefTable = LedgerAccountsTable
+	JournalEntriesTable.ForeignKeys[1].RefTable = LedgerEncryptionKeysTable
+	JournalEntriesTable.ForeignKeys[2].RefTable = TransactionsTable
 	LedgerAccountsTable.ForeignKeys[0].RefTable = LedgerAccountsTable
 	LedgerAccountsTable.ForeignKeys[1].RefTable = LedgerEncryptionKeysTable
+	TransactionsTable.ForeignKeys[0].RefTable = LedgerEncryptionKeysTable
 }

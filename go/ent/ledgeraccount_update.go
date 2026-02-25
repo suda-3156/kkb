@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
@@ -109,6 +110,21 @@ func (_u *LedgerAccountUpdate) AddChildren(v ...*LedgerAccount) *LedgerAccountUp
 	return _u.AddChildIDs(ids...)
 }
 
+// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by IDs.
+func (_u *LedgerAccountUpdate) AddJournalEntryIDs(ids ...int) *LedgerAccountUpdate {
+	_u.mutation.AddJournalEntryIDs(ids...)
+	return _u
+}
+
+// AddJournalEntries adds the "journal_entries" edges to the JournalEntry entity.
+func (_u *LedgerAccountUpdate) AddJournalEntries(v ...*JournalEntry) *LedgerAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddJournalEntryIDs(ids...)
+}
+
 // SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
 func (_u *LedgerAccountUpdate) SetEncryptionKeyID(id int) *LedgerAccountUpdate {
 	_u.mutation.SetEncryptionKeyID(id)
@@ -158,6 +174,27 @@ func (_u *LedgerAccountUpdate) RemoveChildren(v ...*LedgerAccount) *LedgerAccoun
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChildIDs(ids...)
+}
+
+// ClearJournalEntries clears all "journal_entries" edges to the JournalEntry entity.
+func (_u *LedgerAccountUpdate) ClearJournalEntries() *LedgerAccountUpdate {
+	_u.mutation.ClearJournalEntries()
+	return _u
+}
+
+// RemoveJournalEntryIDs removes the "journal_entries" edge to JournalEntry entities by IDs.
+func (_u *LedgerAccountUpdate) RemoveJournalEntryIDs(ids ...int) *LedgerAccountUpdate {
+	_u.mutation.RemoveJournalEntryIDs(ids...)
+	return _u
+}
+
+// RemoveJournalEntries removes "journal_entries" edges to JournalEntry entities.
+func (_u *LedgerAccountUpdate) RemoveJournalEntries(v ...*JournalEntry) *LedgerAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveJournalEntryIDs(ids...)
 }
 
 // ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
@@ -313,6 +350,51 @@ func (_u *LedgerAccountUpdate) sqlSave(ctx context.Context) (_node int, err erro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.JournalEntriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.JournalEntriesTable,
+			Columns: []string{ledgeraccount.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedJournalEntriesIDs(); len(nodes) > 0 && !_u.mutation.JournalEntriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.JournalEntriesTable,
+			Columns: []string{ledgeraccount.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.JournalEntriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.JournalEntriesTable,
+			Columns: []string{ledgeraccount.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.EncryptionKeyCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -442,6 +524,21 @@ func (_u *LedgerAccountUpdateOne) AddChildren(v ...*LedgerAccount) *LedgerAccoun
 	return _u.AddChildIDs(ids...)
 }
 
+// AddJournalEntryIDs adds the "journal_entries" edge to the JournalEntry entity by IDs.
+func (_u *LedgerAccountUpdateOne) AddJournalEntryIDs(ids ...int) *LedgerAccountUpdateOne {
+	_u.mutation.AddJournalEntryIDs(ids...)
+	return _u
+}
+
+// AddJournalEntries adds the "journal_entries" edges to the JournalEntry entity.
+func (_u *LedgerAccountUpdateOne) AddJournalEntries(v ...*JournalEntry) *LedgerAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddJournalEntryIDs(ids...)
+}
+
 // SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
 func (_u *LedgerAccountUpdateOne) SetEncryptionKeyID(id int) *LedgerAccountUpdateOne {
 	_u.mutation.SetEncryptionKeyID(id)
@@ -491,6 +588,27 @@ func (_u *LedgerAccountUpdateOne) RemoveChildren(v ...*LedgerAccount) *LedgerAcc
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChildIDs(ids...)
+}
+
+// ClearJournalEntries clears all "journal_entries" edges to the JournalEntry entity.
+func (_u *LedgerAccountUpdateOne) ClearJournalEntries() *LedgerAccountUpdateOne {
+	_u.mutation.ClearJournalEntries()
+	return _u
+}
+
+// RemoveJournalEntryIDs removes the "journal_entries" edge to JournalEntry entities by IDs.
+func (_u *LedgerAccountUpdateOne) RemoveJournalEntryIDs(ids ...int) *LedgerAccountUpdateOne {
+	_u.mutation.RemoveJournalEntryIDs(ids...)
+	return _u
+}
+
+// RemoveJournalEntries removes "journal_entries" edges to JournalEntry entities.
+func (_u *LedgerAccountUpdateOne) RemoveJournalEntries(v ...*JournalEntry) *LedgerAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveJournalEntryIDs(ids...)
 }
 
 // ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
@@ -669,6 +787,51 @@ func (_u *LedgerAccountUpdateOne) sqlSave(ctx context.Context) (_node *LedgerAcc
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgeraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.JournalEntriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.JournalEntriesTable,
+			Columns: []string{ledgeraccount.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedJournalEntriesIDs(); len(nodes) > 0 && !_u.mutation.JournalEntriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.JournalEntriesTable,
+			Columns: []string{ledgeraccount.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.JournalEntriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.JournalEntriesTable,
+			Columns: []string{ledgeraccount.JournalEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

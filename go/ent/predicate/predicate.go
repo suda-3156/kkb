@@ -6,8 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// JournalEntry is the predicate function for journalentry builders.
+type JournalEntry func(*sql.Selector)
+
 // LedgerAccount is the predicate function for ledgeraccount builders.
 type LedgerAccount func(*sql.Selector)
 
 // LedgerEncryptionKey is the predicate function for ledgerencryptionkey builders.
 type LedgerEncryptionKey func(*sql.Selector)
+
+// Transaction is the predicate function for transaction builders.
+type Transaction func(*sql.Selector)

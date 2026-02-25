@@ -15,8 +15,10 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
 // Client is the client that holds all ent builders.
@@ -24,10 +26,14 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// JournalEntry is the client for interacting with the JournalEntry builders.
+	JournalEntry *JournalEntryClient
 	// LedgerAccount is the client for interacting with the LedgerAccount builders.
 	LedgerAccount *LedgerAccountClient
 	// LedgerEncryptionKey is the client for interacting with the LedgerEncryptionKey builders.
 	LedgerEncryptionKey *LedgerEncryptionKeyClient
+	// Transaction is the client for interacting with the Transaction builders.
+	Transaction *TransactionClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -39,8 +45,10 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.JournalEntry = NewJournalEntryClient(c.config)
 	c.LedgerAccount = NewLedgerAccountClient(c.config)
 	c.LedgerEncryptionKey = NewLedgerEncryptionKeyClient(c.config)
+	c.Transaction = NewTransactionClient(c.config)
 }
 
 type (
@@ -133,8 +141,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:                 ctx,
 		config:              cfg,
+		JournalEntry:        NewJournalEntryClient(cfg),
 		LedgerAccount:       NewLedgerAccountClient(cfg),
 		LedgerEncryptionKey: NewLedgerEncryptionKeyClient(cfg),
+		Transaction:         NewTransactionClient(cfg),
 	}, nil
 }
 
@@ -154,15 +164,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:                 ctx,
 		config:              cfg,
+		JournalEntry:        NewJournalEntryClient(cfg),
 		LedgerAccount:       NewLedgerAccountClient(cfg),
 		LedgerEncryptionKey: NewLedgerEncryptionKeyClient(cfg),
+		Transaction:         NewTransactionClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		LedgerAccount.
+//		JournalEntry.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -184,26 +196,215 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.JournalEntry.Use(hooks...)
 	c.LedgerAccount.Use(hooks...)
 	c.LedgerEncryptionKey.Use(hooks...)
+	c.Transaction.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.JournalEntry.Intercept(interceptors...)
 	c.LedgerAccount.Intercept(interceptors...)
 	c.LedgerEncryptionKey.Intercept(interceptors...)
+	c.Transaction.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *JournalEntryMutation:
+		return c.JournalEntry.mutate(ctx, m)
 	case *LedgerAccountMutation:
 		return c.LedgerAccount.mutate(ctx, m)
 	case *LedgerEncryptionKeyMutation:
 		return c.LedgerEncryptionKey.mutate(ctx, m)
+	case *TransactionMutation:
+		return c.Transaction.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// JournalEntryClient is a client for the JournalEntry schema.
+type JournalEntryClient struct {
+	config
+}
+
+// NewJournalEntryClient returns a client for the JournalEntry from the given config.
+func NewJournalEntryClient(c config) *JournalEntryClient {
+	return &JournalEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `journalentry.Hooks(f(g(h())))`.
+func (c *JournalEntryClient) Use(hooks ...Hook) {
+	c.hooks.JournalEntry = append(c.hooks.JournalEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `journalentry.Intercept(f(g(h())))`.
+func (c *JournalEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JournalEntry = append(c.inters.JournalEntry, interceptors...)
+}
+
+// Create returns a builder for creating a JournalEntry entity.
+func (c *JournalEntryClient) Create() *JournalEntryCreate {
+	mutation := newJournalEntryMutation(c.config, OpCreate)
+	return &JournalEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JournalEntry entities.
+func (c *JournalEntryClient) CreateBulk(builders ...*JournalEntryCreate) *JournalEntryCreateBulk {
+	return &JournalEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JournalEntryClient) MapCreateBulk(slice any, setFunc func(*JournalEntryCreate, int)) *JournalEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JournalEntryCreateBulk{err: fmt.Errorf("calling to JournalEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JournalEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JournalEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JournalEntry.
+func (c *JournalEntryClient) Update() *JournalEntryUpdate {
+	mutation := newJournalEntryMutation(c.config, OpUpdate)
+	return &JournalEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JournalEntryClient) UpdateOne(_m *JournalEntry) *JournalEntryUpdateOne {
+	mutation := newJournalEntryMutation(c.config, OpUpdateOne, withJournalEntry(_m))
+	return &JournalEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JournalEntryClient) UpdateOneID(id int) *JournalEntryUpdateOne {
+	mutation := newJournalEntryMutation(c.config, OpUpdateOne, withJournalEntryID(id))
+	return &JournalEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JournalEntry.
+func (c *JournalEntryClient) Delete() *JournalEntryDelete {
+	mutation := newJournalEntryMutation(c.config, OpDelete)
+	return &JournalEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JournalEntryClient) DeleteOne(_m *JournalEntry) *JournalEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JournalEntryClient) DeleteOneID(id int) *JournalEntryDeleteOne {
+	builder := c.Delete().Where(journalentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JournalEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for JournalEntry.
+func (c *JournalEntryClient) Query() *JournalEntryQuery {
+	return &JournalEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJournalEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JournalEntry entity by its id.
+func (c *JournalEntryClient) Get(ctx context.Context, id int) (*JournalEntry, error) {
+	return c.Query().Where(journalentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JournalEntryClient) GetX(ctx context.Context, id int) *JournalEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTransaction queries the transaction edge of a JournalEntry.
+func (c *JournalEntryClient) QueryTransaction(_m *JournalEntry) *TransactionQuery {
+	query := (&TransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(journalentry.Table, journalentry.FieldID, id),
+			sqlgraph.To(transaction.Table, transaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, journalentry.TransactionTable, journalentry.TransactionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLedgerAccount queries the ledger_account edge of a JournalEntry.
+func (c *JournalEntryClient) QueryLedgerAccount(_m *JournalEntry) *LedgerAccountQuery {
+	query := (&LedgerAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(journalentry.Table, journalentry.FieldID, id),
+			sqlgraph.To(ledgeraccount.Table, ledgeraccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, journalentry.LedgerAccountTable, journalentry.LedgerAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEncryptionKey queries the encryption_key edge of a JournalEntry.
+func (c *JournalEntryClient) QueryEncryptionKey(_m *JournalEntry) *LedgerEncryptionKeyQuery {
+	query := (&LedgerEncryptionKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(journalentry.Table, journalentry.FieldID, id),
+			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, journalentry.EncryptionKeyTable, journalentry.EncryptionKeyColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JournalEntryClient) Hooks() []Hook {
+	return c.hooks.JournalEntry
+}
+
+// Interceptors returns the client interceptors.
+func (c *JournalEntryClient) Interceptors() []Interceptor {
+	return c.inters.JournalEntry
+}
+
+func (c *JournalEntryClient) mutate(ctx context.Context, m *JournalEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JournalEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JournalEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JournalEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JournalEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown JournalEntry mutation op: %q", m.Op())
 	}
 }
 
@@ -340,6 +541,22 @@ func (c *LedgerAccountClient) QueryChildren(_m *LedgerAccount) *LedgerAccountQue
 			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, id),
 			sqlgraph.To(ledgeraccount.Table, ledgeraccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgeraccount.ChildrenTable, ledgeraccount.ChildrenColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryJournalEntries queries the journal_entries edge of a LedgerAccount.
+func (c *LedgerAccountClient) QueryJournalEntries(_m *LedgerAccount) *JournalEntryQuery {
+	query := (&JournalEntryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, id),
+			sqlgraph.To(journalentry.Table, journalentry.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgeraccount.JournalEntriesTable, ledgeraccount.JournalEntriesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -512,6 +729,38 @@ func (c *LedgerEncryptionKeyClient) QueryLedgerAccounts(_m *LedgerEncryptionKey)
 	return query
 }
 
+// QueryTransactions queries the transactions edge of a LedgerEncryptionKey.
+func (c *LedgerEncryptionKeyClient) QueryTransactions(_m *LedgerEncryptionKey) *TransactionQuery {
+	query := (&TransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, id),
+			sqlgraph.To(transaction.Table, transaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.TransactionsTable, ledgerencryptionkey.TransactionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryJournalEntries queries the journal_entries edge of a LedgerEncryptionKey.
+func (c *LedgerEncryptionKeyClient) QueryJournalEntries(_m *LedgerEncryptionKey) *JournalEntryQuery {
+	query := (&JournalEntryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, id),
+			sqlgraph.To(journalentry.Table, journalentry.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.JournalEntriesTable, ledgerencryptionkey.JournalEntriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LedgerEncryptionKeyClient) Hooks() []Hook {
 	return c.hooks.LedgerEncryptionKey
@@ -537,12 +786,177 @@ func (c *LedgerEncryptionKeyClient) mutate(ctx context.Context, m *LedgerEncrypt
 	}
 }
 
+// TransactionClient is a client for the Transaction schema.
+type TransactionClient struct {
+	config
+}
+
+// NewTransactionClient returns a client for the Transaction from the given config.
+func NewTransactionClient(c config) *TransactionClient {
+	return &TransactionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `transaction.Hooks(f(g(h())))`.
+func (c *TransactionClient) Use(hooks ...Hook) {
+	c.hooks.Transaction = append(c.hooks.Transaction, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `transaction.Intercept(f(g(h())))`.
+func (c *TransactionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Transaction = append(c.inters.Transaction, interceptors...)
+}
+
+// Create returns a builder for creating a Transaction entity.
+func (c *TransactionClient) Create() *TransactionCreate {
+	mutation := newTransactionMutation(c.config, OpCreate)
+	return &TransactionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Transaction entities.
+func (c *TransactionClient) CreateBulk(builders ...*TransactionCreate) *TransactionCreateBulk {
+	return &TransactionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TransactionClient) MapCreateBulk(slice any, setFunc func(*TransactionCreate, int)) *TransactionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TransactionCreateBulk{err: fmt.Errorf("calling to TransactionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TransactionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TransactionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Transaction.
+func (c *TransactionClient) Update() *TransactionUpdate {
+	mutation := newTransactionMutation(c.config, OpUpdate)
+	return &TransactionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TransactionClient) UpdateOne(_m *Transaction) *TransactionUpdateOne {
+	mutation := newTransactionMutation(c.config, OpUpdateOne, withTransaction(_m))
+	return &TransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TransactionClient) UpdateOneID(id int) *TransactionUpdateOne {
+	mutation := newTransactionMutation(c.config, OpUpdateOne, withTransactionID(id))
+	return &TransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Transaction.
+func (c *TransactionClient) Delete() *TransactionDelete {
+	mutation := newTransactionMutation(c.config, OpDelete)
+	return &TransactionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TransactionClient) DeleteOne(_m *Transaction) *TransactionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TransactionClient) DeleteOneID(id int) *TransactionDeleteOne {
+	builder := c.Delete().Where(transaction.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TransactionDeleteOne{builder}
+}
+
+// Query returns a query builder for Transaction.
+func (c *TransactionClient) Query() *TransactionQuery {
+	return &TransactionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTransaction},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Transaction entity by its id.
+func (c *TransactionClient) Get(ctx context.Context, id int) (*Transaction, error) {
+	return c.Query().Where(transaction.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TransactionClient) GetX(ctx context.Context, id int) *Transaction {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEntries queries the entries edge of a Transaction.
+func (c *TransactionClient) QueryEntries(_m *Transaction) *JournalEntryQuery {
+	query := (&JournalEntryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, id),
+			sqlgraph.To(journalentry.Table, journalentry.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, transaction.EntriesTable, transaction.EntriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEncryptionKey queries the encryption_key edge of a Transaction.
+func (c *TransactionClient) QueryEncryptionKey(_m *Transaction) *LedgerEncryptionKeyQuery {
+	query := (&LedgerEncryptionKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, id),
+			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.EncryptionKeyTable, transaction.EncryptionKeyColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TransactionClient) Hooks() []Hook {
+	return c.hooks.Transaction
+}
+
+// Interceptors returns the client interceptors.
+func (c *TransactionClient) Interceptors() []Interceptor {
+	return c.inters.Transaction
+}
+
+func (c *TransactionClient) mutate(ctx context.Context, m *TransactionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TransactionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TransactionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TransactionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Transaction mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		LedgerAccount, LedgerEncryptionKey []ent.Hook
+		JournalEntry, LedgerAccount, LedgerEncryptionKey, Transaction []ent.Hook
 	}
 	inters struct {
-		LedgerAccount, LedgerEncryptionKey []ent.Interceptor
+		JournalEntry, LedgerAccount, LedgerEncryptionKey, Transaction []ent.Interceptor
 	}
 )
