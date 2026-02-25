@@ -44,7 +44,7 @@ func SetupWith(
 		Lookuper: lookuper,
 		Mutators: mutators,
 	}); err != nil {
-		return nil, fmt.Errorf("failed to process environment variables: %w", err)
+		return nil, fmt.Errorf("setup: process env: %w", err)
 	}
 	logging.Info(
 		ctx,
@@ -87,12 +87,12 @@ func SetupWith(
 			Lookuper: lookuper,
 			Mutators: mutators,
 		}); err != nil {
-			return nil, fmt.Errorf("failed to process key manager environment variables: %w", err)
+			return nil, fmt.Errorf("setup: process key manager env: %w", err)
 		}
 
 		km, err := keys.KeyManagerFor(ctx, kmConfig)
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize key manager: %w", err)
+			return nil, fmt.Errorf("setup: init key manager: %w", err)
 		}
 
 		serverEnvOpts = append(serverEnvOpts, serverenv.WithKeyManager(km))

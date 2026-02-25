@@ -25,7 +25,7 @@ func (em *EncryptionManager) Encrypt(
 
 	// Check cache first
 	if err := em.maybeRefresh(ctx); err != nil {
-		return nil, fmt.Errorf("failed to refresh cache: %w", err)
+		return nil, fmt.Errorf("encrypt: refresh cache: %w", err)
 	}
 
 	// Get the effective key for encryption
@@ -45,17 +45,17 @@ func (em *EncryptionManager) Encrypt(
 	// Encrypt
 	block, err := aes.NewCipher(dek)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create cipher: %w", err)
+		return nil, fmt.Errorf("encrypt: create cipher: %w", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create GCM: %w", err)
+		return nil, fmt.Errorf("encrypt: create GCM: %w", err)
 	}
 
 	nonce := make([]byte, aesgcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, fmt.Errorf("failed to generate nonce: %w", err)
+		return nil, fmt.Errorf("encrypt: generate nonce: %w", err)
 	}
 
 	ciphertext := aesgcm.Seal(nonce, nonce, []byte(plaintext), nil)

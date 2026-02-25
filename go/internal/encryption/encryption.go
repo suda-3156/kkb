@@ -62,7 +62,7 @@ func New(config *Config) *EncryptionManager {
 	}
 
 	if err := em.maybeRefresh(context.Background()); err != nil {
-		panic(fmt.Sprintf("failed to initialize encryption manager: %v", err))
+		panic(fmt.Sprintf("init encryption manager: %v", err))
 	}
 
 	return em
@@ -88,7 +88,7 @@ func (em *EncryptionManager) maybeRefresh(ctx context.Context) error {
 		Order(ledgerencryptionkey.ByCreatedAt(sql.OrderDesc())).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to query allowed keys: %w", err)
+		return fmt.Errorf("maybeRefresh: query allowed keys: %w", err)
 	}
 
 	var effective *ent.LedgerEncryptionKey
@@ -100,7 +100,7 @@ func (em *EncryptionManager) maybeRefresh(ctx context.Context) error {
 	// and the effective key ID is the same as the cached one, no need to refresh.
 	needed, err := em.isRefreshNeeded(allowed, effective)
 	if err != nil {
-		return fmt.Errorf("failed to check if refresh is needed: %w", err)
+		return fmt.Errorf("maybeRefresh: check refresh needed: %w", err)
 	}
 	if !needed {
 		return nil
@@ -112,7 +112,7 @@ func (em *EncryptionManager) maybeRefresh(ctx context.Context) error {
 	em.effective = nil
 
 	if err := em.refreshCache(ctx, allowed, effective); err != nil {
-		return fmt.Errorf("failed to refresh cache: %w", err)
+		return fmt.Errorf("maybeRefresh: refresh cache: %w", err)
 	}
 
 	em.refreshAfter = time.Now().Add(em.cacheTTL)
@@ -161,7 +161,7 @@ func (em *EncryptionManager) refreshCache(
 		// No allowed keys in the database, create a new one and cache it.
 		dek, err := em.createKey(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to create new key: %w", err)
+			return fmt.Errorf("refreshCache: create key: %w", err)
 		}
 
 		em.allowed = map[int]*EncryptionKey{dek.ID: dek}
@@ -174,7 +174,7 @@ func (em *EncryptionManager) refreshCache(
 	for _, key := range allowed {
 		unwrapped, err := em.km.Decrypt(ctx, em.wrapperKeyID, key.WrappedCipher, key.Aad)
 		if err != nil {
-			return fmt.Errorf("failed to unwrap key %d: %w", key.ID, err)
+			return fmt.Errorf("refreshCache: unwrap key id=%d: %w", key.ID, err)
 		}
 		em.allowed[key.ID] = &EncryptionKey{
 			ID:            key.ID,
@@ -196,18 +196,18 @@ func (em *EncryptionManager) createKey(ctx context.Context) (*EncryptionKey, err
 	// Generate a new DEK (Ledger Encryption Key)
 	dek := make([]byte, 32) // AES-256
 	if _, err := rand.Read(dek); err != nil {
-		return nil, fmt.Errorf("failed to generate DEK: %w", err)
+		return nil, fmt.Errorf("createKey: generate DEK: %w", err)
 	}
 
 	aad := make([]byte, 16)
 	if _, err := rand.Read(aad); err != nil {
-		return nil, fmt.Errorf("failed to generate random data: %w", err)
+		return nil, fmt.Errorf("createKey: generate AAD: %w", err)
 	}
 
 	// Wrap the DEK with the wrapper key
 	wrapped, err := em.km.Encrypt(ctx, em.wrapperKeyID, dek, aad)
 	if err != nil {
-		return nil, fmt.Errorf("failed to wrap encryption key: %w", err)
+		return nil, fmt.Errorf("createKey: wrap DEK: %w", err)
 	}
 
 	// Store the wrapped key in the database
@@ -222,7 +222,7 @@ func (em *EncryptionManager) createKey(ctx context.Context) (*EncryptionKey, err
 
 		return errTx
 	}); err != nil {
-		return nil, fmt.Errorf("failed to persist created encryption key: %w", err)
+		return nil, fmt.Errorf("createKey: save: %w", err)
 	}
 
 	return &EncryptionKey{

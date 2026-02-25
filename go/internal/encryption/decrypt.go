@@ -19,7 +19,7 @@ func (em *EncryptionManager) Decrypt(
 
 	// Check cache first
 	if err := em.maybeRefresh(ctx); err != nil {
-		return "", fmt.Errorf("failed to refresh cache: %w", err)
+		return "", fmt.Errorf("decrypt: refresh cache: %w", err)
 	}
 
 	// Get the key for decryption
@@ -41,12 +41,12 @@ func (em *EncryptionManager) Decrypt(
 	// Decrypt
 	block, err := aes.NewCipher(dek)
 	if err != nil {
-		return "", fmt.Errorf("failed to create cipher: %w", err)
+		return "", fmt.Errorf("decrypt: create cipher: %w", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", fmt.Errorf("failed to create GCM: %w", err)
+		return "", fmt.Errorf("decrypt: create GCM: %w", err)
 	}
 
 	if len(ciphertext) < aesgcm.NonceSize() {
@@ -57,7 +57,7 @@ func (em *EncryptionManager) Decrypt(
 
 	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to decrypt: %w", err)
+		return "", fmt.Errorf("decrypt: aes-gcm open: %w", err)
 	}
 
 	return string(plaintext), nil
