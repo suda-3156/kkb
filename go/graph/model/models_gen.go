@@ -66,18 +66,6 @@ type PageInfo struct {
 type Query struct {
 }
 
-type Transaction struct {
-	ID          pulid.ID        `json:"id"`
-	Entries     []*JournalEntry `json:"entries"`
-	Date        date.Date       `json:"date"`
-	Description string          `json:"description"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	UpdatedAt   time.Time       `json:"updatedAt"`
-}
-
-func (Transaction) IsNode()              {}
-func (this Transaction) GetID() pulid.ID { return this.ID }
-
 type TransactionConnection struct {
 	Edges      []*TransactionEdge `json:"edges,omitempty"`
 	Nodes      []*Transaction     `json:"nodes,omitempty"`

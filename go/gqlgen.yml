@@ -70,3 +70,11 @@ models:
     fields:
       ledgerAccount:
         resolver: true
+
+  Transaction:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.Transaction
+    fields:
+      entries:
+        # Because the journal entries are always treated as children of a transaction.
+        resolver: false

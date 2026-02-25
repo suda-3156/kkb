@@ -41,7 +41,7 @@ func (r *queryResolver) Transaction(ctx context.Context, id pulid1.ID) (*model.T
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, startDate *date.Date, endDate *date.Date, ledgerAccountID *pulid1.ID) (*model.TransactionConnection, error) {
+func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error) {
 	panic(fmt.Errorf("not implemented: Transactions - transactions"))
 }
 

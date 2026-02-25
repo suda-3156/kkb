@@ -110,7 +110,7 @@ type ComplexityRoot struct {
 		LedgerAccounts func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) int
 		Node           func(childComplexity int, id pulid.ID) int
 		Transaction    func(childComplexity int, id pulid.ID) int
-		Transactions   func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date, ledgerAccountID *pulid.ID) int
+		Transactions   func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date) int
 	}
 
 	Transaction struct {
@@ -156,7 +156,7 @@ type QueryResolver interface {
 	LedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error)
 	LedgerAccounts(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error)
 	Transaction(ctx context.Context, id pulid.ID) (*model.Transaction, error)
-	Transactions(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date, ledgerAccountID *pulid.ID) (*model.TransactionConnection, error)
+	Transactions(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error)
 }
 
 type executableSchema struct {
@@ -472,7 +472,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["after"].(*pulid.ID), args["last"].(*int32), args["before"].(*pulid.ID), args["startDate"].(*date.Date), args["endDate"].(*date.Date), args["ledgerAccountId"].(*pulid.ID)), true
+		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["after"].(*pulid.ID), args["last"].(*int32), args["before"].(*pulid.ID), args["startDate"].(*date.Date), args["endDate"].(*date.Date)), true
 
 	case "Transaction.createdAt":
 		if e.complexity.Transaction.CreatedAt == nil {
@@ -798,7 +798,6 @@ extend type Query {
     before: ID
     startDate: Date
     endDate: Date
-    ledgerAccountId: ID
   ): TransactionConnection!
 }
 
@@ -1075,11 +1074,6 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 		return nil, err
 	}
 	args["endDate"] = arg5
-	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "ledgerAccountId", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
-	if err != nil {
-		return nil, err
-	}
-	args["ledgerAccountId"] = arg6
 	return args, nil
 }
 
@@ -2582,7 +2576,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		ec.fieldContext_Query_transactions,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*pulid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*pulid.ID), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date), fc.Args["ledgerAccountId"].(*pulid.ID))
+			return ec.resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*pulid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*pulid.ID), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date))
 		},
 		nil,
 		ec.marshalNTransactionConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionConnection,

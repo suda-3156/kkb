@@ -45,7 +45,6 @@ extend type Query {
     before: ID
     startDate: Date
     endDate: Date
-    ledgerAccountId: ID
   ): TransactionConnection!
 }
 
