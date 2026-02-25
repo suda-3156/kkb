@@ -35,11 +35,19 @@ func (m *TransactionManager) Create(
 		return nil, ErrDescriptionRequired
 	}
 
+	if len([]rune(input.Description)) > 300 {
+		return nil, ErrDescriptionTooLong
+	}
+
 	// Validate amounts and double-entry bookkeeping.
 	var totalDebit, totalCredit int32
 	for _, entry := range input.Entries {
 		if entry.Amount <= 0 {
 			return nil, ErrAmountMustBePositive
+		}
+
+		if len(strconv.FormatInt(int64(entry.Amount), 10)) > 9 {
+			return nil, ErrAmountTooLarge
 		}
 		if entry.Kind == graph.JournalEntryKindDebit {
 			totalDebit += entry.Amount

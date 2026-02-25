@@ -37,6 +37,11 @@ func (m *TransactionManager) Update(
 			if entry.Amount <= 0 {
 				return nil, ErrAmountMustBePositive
 			}
+
+			if len(strconv.FormatInt(int64(entry.Amount), 10)) > 9 {
+				return nil, ErrAmountTooLarge
+			}
+
 			if entry.Kind == graph.JournalEntryKindDebit {
 				totalDebit += entry.Amount
 			} else {
@@ -48,9 +53,13 @@ func (m *TransactionManager) Update(
 		}
 	}
 
-	// Encrypt description if provided.
+	// Validate and encrypt description if provided.
 	var encDesc *encryption.EncryptionPayload
 	if input.Description != nil {
+		if len([]rune(*input.Description)) > 300 {
+			return nil, ErrDescriptionTooLong
+		}
+
 		var err error
 		encDesc, err = m.em.Encrypt(ctx, *input.Description)
 		if err != nil {

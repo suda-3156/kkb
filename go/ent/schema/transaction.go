@@ -38,7 +38,7 @@ func (Transaction) Fields() []ent.Field {
 			NotEmpty(),
 		field.Bytes("description").
 			// Encrypted field.
-			// TODO: MaxLen
+			MaxLen(1536). // 300 chars in UTF8mb4 (~ 1200 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			NotEmpty(),
 		field.Time("created_at").
 			SchemaType(map[string]string{

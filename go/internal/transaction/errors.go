@@ -25,4 +25,6 @@ var (
 // Field validation
 var (
 	ErrDescriptionRequired = errors.New("description is required")
+	ErrDescriptionTooLong  = errors.New("description must be at most 300 characters")
+	ErrAmountTooLarge      = errors.New("amount must be at most 9 digits (999,999,999)")
 )

@@ -48,7 +48,7 @@ func (JournalEntry) Fields() []ent.Field {
 			Immutable(),
 		field.Bytes("amount").
 			// Encrypted field.
-			// TODO: MaxLen
+			MaxLen(256). // 10 chars in UTF8mb4 (~ 40 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
 			NotEmpty(),
 		field.Enum("kind").
 			GoType(JournalEntryKind("")),
