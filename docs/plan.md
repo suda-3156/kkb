@@ -13,16 +13,28 @@
 
 ### Dataloader, etc.
 
-- dataloader
-- complexity
+- error
 - seeding script
 - env/config
 
 ### Queries: Transaction
 
-- journal entry
+- transaction
+  - journal entry
+
+- create
+- update
+- delete
+- fetch one
+- fetch many
 
 ### go tests, github actions, etc.
+
+- complexity
+- dataloader
+- github actions
+  - go test
+  - lint
 
 ### Analysis queries
 
