@@ -39,10 +39,7 @@ func (l *ledgerAccountBatcher) BatchGetLedgerAccounts(ctx context.Context, ids [
 
 	for _, acc := range accounts.Nodes {
 		results[idxs[acc.IntID]] = &dataloader.Result[*graph.LedgerAccount]{
-			Data: &graph.LedgerAccount{
-				ID:   acc.ID,
-				Name: acc.Name,
-			},
+			Data: acc,
 		}
 	}
 

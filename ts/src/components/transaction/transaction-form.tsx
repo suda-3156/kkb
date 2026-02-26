@@ -6,7 +6,6 @@ import { useAtom, useSetAtom } from "jotai"
 import { PlusCircle, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -184,7 +183,7 @@ function EntryRow({
 // ---------------------------------------------------------------------------
 // Main form
 // ---------------------------------------------------------------------------
-export function TransactionForm() {
+export function TransactionForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [form, setForm] = useAtom(transactionFormAtom)
   const addEntry = useSetAtom(newEntryAtom)
   const resetForm = useSetAtom(resetTransactionFormAtom)
@@ -200,8 +199,10 @@ export function TransactionForm() {
   const [createTransaction, { loading: submitting, error: mutationError }] = useMutation(
     CREATE_TRANSACTION,
     {
+      refetchQueries: ["GetDashboardData"],
       onCompleted() {
         resetForm()
+        onSuccess?.()
       },
     },
   )
@@ -237,98 +238,88 @@ export function TransactionForm() {
   }
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>取引を記録</CardTitle>
-      </CardHeader>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Date */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label htmlFor="date">日付</Label>
+          <Input
+            id="date"
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+            required
+          />
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {/* Date */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="date">日付</Label>
-              <Input
-                id="date"
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-                required
-              />
-            </div>
+        {/* Description */}
+        <div className="space-y-1">
+          <Label htmlFor="description">摘要</Label>
+          <Input
+            id="description"
+            placeholder="取引の内容を入力"
+            value={form.description}
+            onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
 
-            {/* Description */}
-            <div className="space-y-1">
-              <Label htmlFor="description">摘要</Label>
-              <Input
-                id="description"
-                placeholder="取引の内容を入力"
-                value={form.description}
-                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Journal Entries */}
+      {/* Journal Entries */}
+      <div className="space-y-2">
+        <Label>仕訳明細</Label>
+        {accountsLoading ? (
+          <p className="text-muted-foreground text-sm">勘定科目を読み込み中...</p>
+        ) : accountsError ? (
+          <p className="text-destructive text-sm">
+            勘定科目の取得に失敗しました: {accountsError.message}
+          </p>
+        ) : accounts.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            勘定科目が登録されていません。先に勘定科目を作成してください。
+          </p>
+        ) : (
           <div className="space-y-2">
-            <Label>仕訳明細</Label>
-            {accountsLoading ? (
-              <p className="text-muted-foreground text-sm">勘定科目を読み込み中...</p>
-            ) : accountsError ? (
-              <p className="text-destructive text-sm">
-                勘定科目の取得に失敗しました: {accountsError.message}
-              </p>
-            ) : accounts.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                勘定科目が登録されていません。先に勘定科目を作成してください。
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {form.entries.map((entry, i) => (
-                  <EntryRow
-                    key={entry.id}
-                    entry={entry}
-                    accounts={accounts}
-                    index={i}
-                    canRemove={form.entries.length > 2}
-                  />
-                ))}
-              </div>
-            )}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addEntry}
-              className="mt-2"
-              disabled={accounts.length === 0}
-            >
-              <PlusCircle className="mr-1 h-4 w-4" />
-              行を追加
-            </Button>
+            {form.entries.map((entry, i) => (
+              <EntryRow
+                key={entry.id}
+                entry={entry}
+                accounts={accounts}
+                index={i}
+                canRemove={form.entries.length > 2}
+              />
+            ))}
           </div>
+        )}
 
-          {mutationError && (
-            <p className="text-destructive text-sm">
-              エラーが発生しました: {mutationError.message}
-            </p>
-          )}
-        </CardContent>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addEntry}
+          className="mt-2"
+          disabled={accounts.length === 0}
+        >
+          <PlusCircle className="mr-1 h-4 w-4" />
+          行を追加
+        </Button>
+      </div>
 
-        <CardFooter className="justify-end gap-2">
-          <Button type="button" variant="outline" onClick={resetForm} disabled={submitting}>
-            リセット
-          </Button>
-          <Button
-            type="submit"
-            disabled={submitting || accountsLoading || !!accountsError || accounts.length === 0}
-          >
-            {submitting ? "保存中..." : "保存"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+      {mutationError && (
+        <p className="text-destructive text-sm">エラーが発生しました: {mutationError.message}</p>
+      )}
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={resetForm} disabled={submitting}>
+          リセット
+        </Button>
+        <Button
+          type="submit"
+          disabled={submitting || accountsLoading || !!accountsError || accounts.length === 0}
+        >
+          {submitting ? "保存中..." : "保存"}
+        </Button>
+      </div>
+    </form>
   )
 }
