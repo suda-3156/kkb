@@ -1,6 +1,6 @@
 {
   "root": false,
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -21,6 +21,11 @@
       "semicolons": "asNeeded"
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -34,7 +39,7 @@
           "fix": "safe",
           "options": {
             "attributes": ["classList"],
-            "functions": ["cn", "twMerge", "twJoin", "tw", "tw.*"]
+            "functions": ["clsx", "twMerge", "cn", "cva", "tw", "tw.*"]
           }
         }
       }
