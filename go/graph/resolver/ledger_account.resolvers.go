@@ -15,10 +15,12 @@ import (
 
 // Parent is the resolver for the parent field.
 func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAccount) (*model.LedgerAccount, error) {
-	if obj.Parent == nil {
-		return nil, nil
+	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.Parent.IntID)
+	lacs, err := thunk()
+	if err != nil {
+		return nil, err
 	}
-	return r.lac.GetByInternalID(ctx, obj.Parent.IntID)
+	return lacs, nil
 }
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.

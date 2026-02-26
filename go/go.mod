@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.14.5
 	github.com/99designs/gqlgen v0.17.86
 	github.com/go-sql-driver/mysql v1.9.3
+	github.com/graph-gophers/dataloader/v7 v7.1.3
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/vektah/gqlparser/v2 v2.5.31

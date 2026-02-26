@@ -16,10 +16,12 @@ import (
 
 // LedgerAccount is the resolver for the ledgerAccount field.
 func (r *journalEntryResolver) LedgerAccount(ctx context.Context, obj *model.JournalEntry) (*model.LedgerAccount, error) {
-	if obj.LedgerAccount == nil {
-		return nil, nil
+	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.LedgerAccount.IntID)
+	lacs, err := thunk()
+	if err != nil {
+		return nil, err
 	}
-	return r.lac.GetByInternalID(ctx, obj.LedgerAccount.IntID)
+	return lacs, nil
 }
 
 // CreateTransaction is the resolver for the createTransaction field.

@@ -30,20 +30,32 @@
 
 ### go tests, github actions, etc.
 
-- complexity
 - dataloader
 - github actions
   - go test
   - lint
 
-### Analysis queries
-
 ## Phase 2: Frontend
 
 ## Phase 3: DB Migration system (and terraform)
 
+- migration job
+- dev project
+
 ## Phase 4: CI/CD pipeline
 
-## Phase 5: Implement tests
+- prod project
+- pipeline project?
 
-## Phase 6: Enhance
+---
+
+## Phase 5: Aggregation, Complexity
+
+## Phase 6: Implement tests
+
+## Phase N:
+
+- Key rotation
+  - requires: lock control in DB -> lock table
+- Backup
+- CSV export
