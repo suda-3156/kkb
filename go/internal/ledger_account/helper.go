@@ -62,6 +62,7 @@ func (m *LedgerAccountManager) convertToGraph(ctx context.Context, lac *ent.Ledg
 	}
 
 	return &graph.LedgerAccount{
+		IntID:      lac.ID,
 		ID:         lac.PublicID,
 		Parent:     parent,
 		Name:       name,
