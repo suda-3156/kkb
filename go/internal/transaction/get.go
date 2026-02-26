@@ -41,16 +41,16 @@ func (m *TransactionManager) GetByPublicID(
 
 func (m *TransactionManager) GetByInternalID(
 	ctx context.Context,
-	ID int,
+	id int,
 ) (*graph.Transaction, error) {
 	logging.Debug(
 		ctx,
 		"transaction - get by internal ID called",
-		slog.Int("internal_id", ID),
+		slog.Int("internal_id", id),
 	)
 
 	txn, err := m.db.Client.Transaction.Query().
-		Where(transaction.ID(ID)).
+		Where(transaction.ID(id)).
 		WithEncryptionKey().
 		WithEntries(func(q *ent.JournalEntryQuery) {
 			q.WithLedgerAccount()

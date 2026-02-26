@@ -40,16 +40,16 @@ func (m *LedgerAccountManager) GetByPublicID(
 
 func (m *LedgerAccountManager) GetByInternalID(
 	ctx context.Context,
-	ID int,
+	id int,
 ) (*graph.LedgerAccount, error) {
 	logging.Debug(
 		ctx,
 		"ledger account - get by internal ID called",
-		slog.Int("internal_id", ID),
+		slog.Int("internal_id", id),
 	)
 
 	account, err := m.db.Client.LedgerAccount.Query().
-		Where(ledgeraccount.ID(ID)).
+		Where(ledgeraccount.ID(id)).
 		WithEncryptionKey().
 		Only(ctx)
 	if err != nil {

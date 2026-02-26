@@ -9,7 +9,7 @@ import (
 // New creates a new logger with the specified log level and mode.
 // level: "default", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency" (default: "info")
 // mode: "dev", "prod" (default: "prod")
-func New(level string, mode string) *Logger {
+func New(level, mode string) *Logger {
 	var config Config
 	switch mode {
 	case "dev":

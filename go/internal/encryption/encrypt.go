@@ -31,7 +31,7 @@ func (em *EncryptionManager) Encrypt(
 	// Get the effective key for encryption
 	var dek []byte
 	var kid int
-	{
+	{ //nolint:gocritic // Avoid locking for the entire encryption process
 		em.mu.RLock()
 		dek = em.effective.DEK
 		kid = em.effective.ID

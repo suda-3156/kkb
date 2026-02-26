@@ -98,10 +98,7 @@ func (em *EncryptionManager) maybeRefresh(ctx context.Context) error {
 
 	// If cache IDs contains all allowed keys in the database
 	// and the effective key ID is the same as the cached one, no need to refresh.
-	needed, err := em.isRefreshNeeded(allowed, effective)
-	if err != nil {
-		return fmt.Errorf("maybeRefresh: check refresh needed: %w", err)
-	}
+	needed := em.isRefreshNeeded(allowed, effective)
 	if !needed {
 		return nil
 	}
@@ -122,14 +119,14 @@ func (em *EncryptionManager) maybeRefresh(ctx context.Context) error {
 // Must be called with write lock held
 func (em *EncryptionManager) isRefreshNeeded(
 	allowed []*ent.LedgerEncryptionKey, effective *ent.LedgerEncryptionKey,
-) (bool, error) {
+) bool {
 	if em.effective == nil {
-		return true, nil
+		return true
 	}
 
 	// If the effective key ID is different, we must refresh.
 	if em.effective.ID != effective.ID {
-		return true, nil
+		return true
 	}
 
 	// If the set of allowed keys in the database is not in the cache, we must refresh.
@@ -140,7 +137,7 @@ func (em *EncryptionManager) isRefreshNeeded(
 
 	for new := range allowedIDs {
 		if _, ok := em.allowed[new]; !ok {
-			return true, nil
+			return true
 		}
 	}
 
@@ -150,7 +147,7 @@ func (em *EncryptionManager) isRefreshNeeded(
 		}
 	}
 
-	return false, nil
+	return false
 }
 
 // Must be called with write lock held

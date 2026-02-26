@@ -28,7 +28,7 @@
 - fetch one
 - fetch many
 
-### go tests, github actions, etc.
+### [DONE] go tests, github actions, etc.
 
 - dataloader
 - github actions

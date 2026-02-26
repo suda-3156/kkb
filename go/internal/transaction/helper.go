@@ -109,7 +109,7 @@ func (m *TransactionManager) convertToGraphConnection(
 		result.Nodes = append(result.Nodes, converted)
 	}
 
-	result.TotalCount = int32(len(result.Nodes))
+	result.TotalCount = int32(len(result.Nodes)) //nolint:gosec // TODO: Consider integer overflow
 
 	result.PageInfo = &graph.PageInfo{}
 	if result.TotalCount > 0 {

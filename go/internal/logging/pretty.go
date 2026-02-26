@@ -59,6 +59,8 @@ func (h *prettyHandler) Enabled(_ context.Context, level slog.Level) bool {
 }
 
 // Handle formats and writes a single log record.
+//
+//nolint:gocritic // r slog.Record is heavy to copy, but slog.Handler.Handle requires it to be passed by value.
 func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
 	var sb strings.Builder
 
@@ -221,6 +223,7 @@ func writePrettyAttr(sb *strings.Builder, a slog.Attr, indent int) {
 	writePrettyIndent(sb, indent)
 	sb.WriteString(a.Key)
 	sb.WriteString(": ")
+	//nolint:gocritic,staticcheck // For better readability, not use fmt.Fprintf
 	sb.WriteString(fmt.Sprintf("%v", a.Value.Any()))
 	sb.WriteByte('\n')
 }

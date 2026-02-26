@@ -115,7 +115,7 @@ func (m *TransactionManager) applyFilter(
 func (m *TransactionManager) getPageInfo(
 	ctx context.Context,
 	txns []*ent.Transaction,
-) (hasPrevPage bool, hasNextPage bool, err error) {
+) (hasPrevPage, hasNextPage bool, err error) {
 	if len(txns) > 0 {
 		startCursor := txns[0].PublicID
 		endCursor := txns[len(txns)-1].PublicID

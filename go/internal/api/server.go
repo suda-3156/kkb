@@ -63,7 +63,6 @@ func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, e
 }
 
 func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
-
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
 		Resolvers: resolver.New(
 			s.env.Database(), s.em,

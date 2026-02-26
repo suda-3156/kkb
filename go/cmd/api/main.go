@@ -47,6 +47,7 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("api.New: %w", err)
 	}
 
+	//nolint: gocritic // This is intended shadow import
 	server := server.New(cfg.Port)
 
 	return server.ServeHTTP(ctx, srv.ServeMux(ctx))

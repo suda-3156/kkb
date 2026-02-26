@@ -57,11 +57,11 @@ func NewFilesystem(ctx context.Context, cfg *Config) (KeyManager, error) {
 	}, nil
 }
 
-func (k *Filesystem) Encrypt(ctx context.Context, KeyID string, plaintext, aad []byte) ([]byte, error) {
+func (k *Filesystem) Encrypt(_ context.Context, keyID string, plaintext, aad []byte) ([]byte, error) {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 
-	path := filepath.Join(k.root, KeyID)
+	path := filepath.Join(k.root, keyID)
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list keys: %w", err)
@@ -82,7 +82,7 @@ func (k *Filesystem) Encrypt(ctx context.Context, KeyID string, plaintext, aad [
 		}
 	}
 	if latest == nil {
-		return nil, fmt.Errorf("key %s has no versions", KeyID)
+		return nil, fmt.Errorf("key %s has no versions", keyID)
 	}
 
 	latestPath := filepath.Join(path, latest.Name())
@@ -112,7 +112,7 @@ func (k *Filesystem) Encrypt(ctx context.Context, KeyID string, plaintext, aad [
 	return ciphertext, nil
 }
 
-func (k *Filesystem) Decrypt(ctx context.Context, keyID string, ciphertext, aad []byte) ([]byte, error) {
+func (k *Filesystem) Decrypt(_ context.Context, keyID string, ciphertext, aad []byte) ([]byte, error) {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 
@@ -155,7 +155,7 @@ func (k *Filesystem) Decrypt(ctx context.Context, keyID string, ciphertext, aad 
 	return plaintext, nil
 }
 
-func (k *Filesystem) CreateEncryptionKey(ctx context.Context, group, name string) (string, error) {
+func (k *Filesystem) CreateEncryptionKey(_ context.Context, group, name string) (string, error) {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 

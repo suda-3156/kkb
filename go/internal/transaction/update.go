@@ -18,7 +18,7 @@ import (
 
 func (m *TransactionManager) Update(
 	ctx context.Context,
-	input graph.UpdateTransactionInput,
+	input graph.UpdateTransactionInput, //nolint:gocritic // To follow the generated code pattern.
 ) (*graph.Transaction, error) {
 	logging.Debug(
 		ctx,
@@ -98,7 +98,7 @@ func (m *TransactionManager) Update(
 func (m *TransactionManager) updateTx(
 	ctx context.Context,
 	client *ent.Client,
-	input graph.UpdateTransactionInput,
+	input graph.UpdateTransactionInput, //nolint:gocritic // To follow the generated code pattern.
 	encDesc *encryption.EncryptionPayload,
 	encAmounts [][]byte,
 ) (*graph.Transaction, error) {

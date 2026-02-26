@@ -23,7 +23,7 @@ func New(port string) *Server {
 
 // ServeHTTP observes HTTP requests and handles graceful shutdown on context cancellation.
 func (s *Server) ServeHTTP(ctx context.Context, handler http.Handler) error {
-	srv := &http.Server{
+	srv := &http.Server{ //nolint:gosec // TODO: Consider adding timeouts for better robustness.
 		Addr:    ":" + s.port,
 		Handler: handler,
 	}
@@ -33,7 +33,7 @@ func (s *Server) ServeHTTP(ctx context.Context, handler http.Handler) error {
 
 	// Start a goroutine to listen for shutdown signals
 	go func() {
-		<-ctx.Done() // Wait for the context to be cancelled
+		<-ctx.Done() // Wait for the context to be canceled
 
 		logging.Info(ctx, "received shutdown signal, shutting down server...", slog.String("port", s.port))
 

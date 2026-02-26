@@ -34,7 +34,7 @@ func (m *LedgerAccountManager) List(
 		"ledger account - list called",
 	)
 
-	var scanDesc bool = false
+	var scanDesc bool
 	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey()
 
 	query, scanDesc = m.applyFilter(filter, query)
@@ -105,7 +105,7 @@ func (m *LedgerAccountManager) getPageInfo(
 	ctx context.Context,
 	lacs []*ent.LedgerAccount,
 	scanDesc bool,
-) (hasPrevPage bool, hasNextPage bool, err error) {
+) (hasPrevPage, hasNextPage bool, err error) {
 	if len(lacs) > 0 {
 		if scanDesc {
 			for i, j := 0, len(lacs)-1; i < j; i, j = i+1, j-1 {

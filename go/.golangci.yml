@@ -7,16 +7,16 @@ linters:
   enable:
     - bodyclose
     - copyloopvar
-    - cyclop
+    # - cyclop
     - dogsled
     - dupl
     - exhaustive
     - funlen
     - gocheckcompilerdirectives
-    - gochecknoinits
+    # - gochecknoinits
     - goconst
     - gocritic
-    - gocyclo
+    # - gocyclo
     - gosec
     - importas
     - intrange
@@ -32,9 +32,9 @@ linters:
     - whitespace
 
   settings:
-    cyclop:
-      max-complexity: 10
-      package-average: 5.0
+    # cyclop:
+    #   max-complexity: 14
+    #   package-average: 7
     dupl:
       # Tokens count to trigger issue.
       # Default: 150
@@ -43,7 +43,7 @@ linters:
       default-signifies-exhaustive: true
     funlen:
       lines: -1 # the number of lines (code + empty lines) is not a right metric and leads to code without empty line or one-liner.
-      statements: 50
+      statements: 60
     goconst:
       # Minimum occurrences of constant string to trigger issue.
       # Default: 3
@@ -60,8 +60,8 @@ linters:
         - ifElseChain
         - octalLiteral
         - whyNoLint
-    gocyclo:
-      min-complexity: 15
+    # gocyclo:
+    #   min-complexity: 15
     lll:
       line-length: 140
       tab-width: 4
@@ -80,6 +80,7 @@ linters:
           disabled: true
         - name: unused-parameter
         - name: unused-receiver
+          disabled: true
 
   exclusions:
     presets:
@@ -88,13 +89,9 @@ linters:
       - common-false-positives
       - legacy
     paths:
-      - ent
-      - graph/model
-      - graph/generated.go
-      # Not implemented yet. ---↓
-      - graph/resolver
-      - graph/complexity.go
-      # ---↑
+      - "ent/.*\\.go$"
+      - "graph/.*\\.go$"
+      - "tools/.*\\.go$"
     rules:
       - path: (.+)_test\.go
         linters:

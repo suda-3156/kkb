@@ -103,7 +103,9 @@ func run(ctx context.Context) error {
 	return nil
 }
 
-func create(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, name string, kind graph.LedgerAccountKind, isGroup bool, parentID *pulid.ID) (*graph.LedgerAccount, error) {
+func create(
+	ctx context.Context, lac *ledgeraccount.LedgerAccountManager, name string, kind graph.LedgerAccountKind, isGroup bool, parentID *pulid.ID,
+) (*graph.LedgerAccount, error) {
 	a, err := lac.Create(ctx, graph.CreateLedgerAccountInput{
 		Name:     name,
 		Kind:     kind,

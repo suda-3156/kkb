@@ -19,7 +19,7 @@ type ServerEnv struct {
 type Option func(*ServerEnv) *ServerEnv
 
 // New creates a new ServerEnv with the provided options.
-func New(ctx context.Context, opts ...Option) *ServerEnv {
+func New(_ context.Context, opts ...Option) *ServerEnv {
 	env := &ServerEnv{}
 
 	for _, opt := range opts {

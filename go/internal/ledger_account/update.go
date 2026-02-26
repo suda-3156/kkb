@@ -21,7 +21,7 @@ func (m *LedgerAccountManager) Update(
 		return nil, ErrCannotSetSelfAsParent
 	}
 
-	if input.ParentID != nil && input.UnsetParent == true {
+	if input.ParentID != nil && input.UnsetParent {
 		return nil, ErrConflictingParentOps
 	}
 
