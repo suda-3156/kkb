@@ -44,6 +44,14 @@ tasks:
         pnpm dev
     silent: true
 
+  init:
+    desc: Initialize database in local development
+    cmds:
+      - task: start:db
+      - task: start:api
+      - |
+        docker compose exec api bash -c "go run ./tools/seed/"
+
   start:all:
     desc: Start all containers
     cmds:
