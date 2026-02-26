@@ -36,12 +36,20 @@ tasks:
         docker compose up -d --build api
     silent: true
 
+  start:next:
+    desc: Start the Next.js app without container
+    cmds:
+      - |
+        cd ts
+        pnpm dev
+    silent: true
+
   start:all:
     desc: Start all containers
     cmds:
       - task: start:db
       - task: start:api
-      - echo "[TODO] pnpm run dev to start the frontend"
+      - task: start:next
     silent: true
 
   down:all:

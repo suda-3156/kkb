@@ -19,3 +19,6 @@ db/docker/logs/
 
 # go
 air_tmp
+
+# node
+node_modules
