@@ -1,4 +1,4 @@
-import { Dashboard } from "@/components/dashboard/dashboard"
+import { Dashboard } from "@/app/dashboard/_components/dashboard"
 import { TransactionModal } from "@/components/transaction/transaction-modal"
 
 export default function Home() {

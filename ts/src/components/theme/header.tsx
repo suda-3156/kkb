@@ -14,8 +14,8 @@ export function ThemeHeader() {
   const { setTheme } = useTheme()
 
   return (
-    <header className="fixed z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex items-center justify-end p-2">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
+      <div className="container pointer-events-auto mx-auto flex items-center justify-end pt-1 pr-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="relative">
             <Button variant="outline" size="icon" className="overflow-clip">
