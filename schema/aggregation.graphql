@@ -1,0 +1,46 @@
+# Aggregation Schema Definitions
+
+type AccountAmountSummary {
+  ledgerAccount: LedgerAccount!
+  totalAmount: Int!
+  ratio: Float!
+}
+
+type ExpenseSummary {
+  totalAmount: Int!
+  byAccount: [AccountAmountSummary!]!
+}
+
+type RevenueSummary {
+  totalAmount: Int!
+  byAccount: [AccountAmountSummary!]!
+}
+
+# Aggregated financial data for a given date range
+type PeriodAggregation {
+  startDate: Date!
+  endDate: Date!
+  expenses: ExpenseSummary!
+  revenue: RevenueSummary!
+  # Net amount: revenue.totalAmount - expenses.totalAmount
+  netAmount: Int!
+}
+
+# Ratio breakdown of direct children of a given LedgerAccount for a period
+type ChildAccountBreakdown {
+  parent: LedgerAccount!
+  startDate: Date!
+  endDate: Date!
+  totalAmount: Int!
+  children: [AccountAmountSummary!]!
+}
+
+extend type Query {
+  periodAggregation(startDate: Date!, endDate: Date!): PeriodAggregation!
+
+  childAccountBreakdown(
+    parentId: ID!
+    startDate: Date!
+    endDate: Date!
+  ): ChildAccountBreakdown!
+}

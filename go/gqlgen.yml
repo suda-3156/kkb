@@ -78,3 +78,8 @@ models:
       entries:
         # Because the journal entries are always treated as children of a transaction.
         resolver: false
+
+  AccountAmountSummary:
+    fields:
+      ledgerAccount:
+        resolver: true
