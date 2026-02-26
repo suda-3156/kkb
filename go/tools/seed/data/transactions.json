@@ -1,0 +1,804 @@
+[
+  {
+    "date": "2025-12-01",
+    "description": "給与振込（12月分）",
+    "entries": [
+      { "account": "普通預金", "amount": 320000, "kind": "DEBIT" },
+      { "account": "給与",     "amount": 320000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-02",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 8400, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 8400, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-03",
+    "description": "交通系ICカードチャージ",
+    "entries": [
+      { "account": "交通費", "amount": 3000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 3000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-04",
+    "description": "ドラッグストアで日用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 2300, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 2300, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-05",
+    "description": "電力会社 電気代（12月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 7800, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 7800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-05",
+    "description": "ガス代引き落とし（12月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 3200, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 3200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-06",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 6200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 6200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-08",
+    "description": "子供教育費（12月分）",
+    "entries": [
+      { "account": "教育費", "amount": 25000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 25000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-08",
+    "description": "コンビニで昼食購入",
+    "entries": [
+      { "account": "食費", "amount": 980, "kind": "DEBIT" },
+      { "account": "現金",  "amount": 980, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-10",
+    "description": "スマートフォン料金（12月分）",
+    "entries": [
+      { "account": "通信費", "amount": 4800, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 4800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-10",
+    "description": "インターネット回線料金（12月分）",
+    "entries": [
+      { "account": "通信費", "amount": 4500, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 4500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-11",
+    "description": "薬局で風邪薬購入",
+    "entries": [
+      { "account": "医療費", "amount": 1500, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 1500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-12",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 9100, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 9100, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-13",
+    "description": "映画鑑賞",
+    "entries": [
+      { "account": "娯楽費",          "amount": 3600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-14",
+    "description": "電車定期券購入（3ヶ月）",
+    "entries": [
+      { "account": "交通費", "amount": 12000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 12000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-15",
+    "description": "外食（ランチ）",
+    "entries": [
+      { "account": "食費",           "amount": 4200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 4200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-16",
+    "description": "水道代（12月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 3600, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 3600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-17",
+    "description": "クレジットカード引き落とし（11月利用分）",
+    "entries": [
+      { "account": "クレジットカード", "amount": 45000, "kind": "DEBIT" },
+      { "account": "普通預金",         "amount": 45000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-18",
+    "description": "住宅ローン返済（12月分）",
+    "entries": [
+      { "account": "住宅ローン", "amount": 85000, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 85000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-19",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 7800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 7800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-20",
+    "description": "賞与振込（年末賞与）",
+    "entries": [
+      { "account": "普通預金", "amount": 500000, "kind": "DEBIT" },
+      { "account": "賞与",     "amount": 500000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-21",
+    "description": "書籍購入",
+    "entries": [
+      { "account": "娯楽費",          "amount": 2800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 2800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-22",
+    "description": "副収入（フリーランス案件）",
+    "entries": [
+      { "account": "普通預金", "amount": 30000, "kind": "DEBIT" },
+      { "account": "副収入",   "amount": 30000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-22",
+    "description": "内科クリニック受診",
+    "entries": [
+      { "account": "医療費", "amount": 2800, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 2800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-23",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 11200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 11200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-24",
+    "description": "クリスマスディナー（外食）",
+    "entries": [
+      { "account": "食費",           "amount": 15000, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 15000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-25",
+    "description": "年末忘年会",
+    "entries": [
+      { "account": "娯楽費", "amount": 8000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 8000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-26",
+    "description": "日用品購入（年末用）",
+    "entries": [
+      { "account": "日用品",          "amount": 4500, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 4500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-27",
+    "description": "スーパー年末特売で食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 13500, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 13500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-28",
+    "description": "帰省用新幹線チケット",
+    "entries": [
+      { "account": "交通費",          "amount": 22000, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 22000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-28",
+    "description": "子供塾代（12月分）",
+    "entries": [
+      { "account": "教育費",          "amount": 18000, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 18000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-29",
+    "description": "お歳暮送付",
+    "entries": [
+      { "account": "娯楽費", "amount": 5000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 5000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-30",
+    "description": "年末大掃除用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 3200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-31",
+    "description": "定期預金積立（12月分）",
+    "entries": [
+      { "account": "定期預金", "amount": 50000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 50000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2025-12-31",
+    "description": "普通預金利息（12月分）",
+    "entries": [
+      { "account": "普通預金", "amount": 800, "kind": "DEBIT" },
+      { "account": "利息収入", "amount": 800, "kind": "CREDIT" }
+    ]
+  },
+
+  {
+    "date": "2026-01-05",
+    "description": "給与振込（1月分）",
+    "entries": [
+      { "account": "普通預金", "amount": 320000, "kind": "DEBIT" },
+      { "account": "給与",     "amount": 320000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-06",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 7600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 7600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-06",
+    "description": "交通系ICカードチャージ",
+    "entries": [
+      { "account": "交通費", "amount": 3000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 3000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-07",
+    "description": "初売りで食料品購入",
+    "entries": [
+      { "account": "食費", "amount": 12000, "kind": "DEBIT" },
+      { "account": "現金", "amount": 12000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-08",
+    "description": "クレジットカード引き落とし（12月利用分）",
+    "entries": [
+      { "account": "クレジットカード", "amount": 89000, "kind": "DEBIT" },
+      { "account": "普通預金",         "amount": 89000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-09",
+    "description": "住宅ローン返済（1月分）",
+    "entries": [
+      { "account": "住宅ローン", "amount": 85000, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 85000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-10",
+    "description": "スマートフォン料金（1月分）",
+    "entries": [
+      { "account": "通信費", "amount": 4800, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 4800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-10",
+    "description": "インターネット回線料金（1月分）",
+    "entries": [
+      { "account": "通信費", "amount": 4500, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 4500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-11",
+    "description": "初詣・お賽銭・参拝グッズ",
+    "entries": [
+      { "account": "娯楽費", "amount": 3000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 3000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-12",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 8900, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 8900, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-13",
+    "description": "ドラッグストアで日用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 2800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 2800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-14",
+    "description": "電力会社 電気代（1月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 9200, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 9200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-14",
+    "description": "ガス代引き落とし（1月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 4100, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 4100, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-15",
+    "description": "コンビニで昼食購入",
+    "entries": [
+      { "account": "食費", "amount": 1200, "kind": "DEBIT" },
+      { "account": "現金", "amount": 1200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-15",
+    "description": "外食（ランチ）",
+    "entries": [
+      { "account": "食費",           "amount": 5600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 5600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-16",
+    "description": "内科クリニック受診",
+    "entries": [
+      { "account": "医療費", "amount": 1800, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 1800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-16",
+    "description": "子供塾代（1月分）",
+    "entries": [
+      { "account": "教育費",          "amount": 18000, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 18000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-17",
+    "description": "書籍購入",
+    "entries": [
+      { "account": "娯楽費",          "amount": 1800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 1800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-18",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 9200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 9200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-19",
+    "description": "ジム月会費",
+    "entries": [
+      { "account": "娯楽費", "amount": 7000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 7000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-20",
+    "description": "日用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 3600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-21",
+    "description": "友人との飲み会",
+    "entries": [
+      { "account": "娯楽費", "amount": 5000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 5000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-22",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 7800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 7800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-23",
+    "description": "水道代（1月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 3800, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 3800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-24",
+    "description": "コンビニで食料品購入",
+    "entries": [
+      { "account": "食費", "amount": 1560, "kind": "DEBIT" },
+      { "account": "現金", "amount": 1560, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-25",
+    "description": "子供教育費（1月分）",
+    "entries": [
+      { "account": "教育費", "amount": 25000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 25000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-25",
+    "description": "電車定期券更新",
+    "entries": [
+      { "account": "交通費", "amount": 12000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 12000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-26",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 8400, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 8400, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-27",
+    "description": "映画鑑賞",
+    "entries": [
+      { "account": "娯楽費",          "amount": 3600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-28",
+    "description": "タクシー代",
+    "entries": [
+      { "account": "交通費", "amount": 2400, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 2400, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-29",
+    "description": "副収入（フリーランス案件）",
+    "entries": [
+      { "account": "普通預金", "amount": 25000, "kind": "DEBIT" },
+      { "account": "副収入",   "amount": 25000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-30",
+    "description": "ドラッグストアで日用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 3200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-31",
+    "description": "定期預金積立（1月分）",
+    "entries": [
+      { "account": "定期預金", "amount": 50000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 50000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-01-31",
+    "description": "普通預金利息（1月分）",
+    "entries": [
+      { "account": "普通預金", "amount": 820, "kind": "DEBIT" },
+      { "account": "利息収入", "amount": 820, "kind": "CREDIT" }
+    ]
+  },
+
+  {
+    "date": "2026-02-05",
+    "description": "給与振込（2月分）",
+    "entries": [
+      { "account": "普通預金", "amount": 320000, "kind": "DEBIT" },
+      { "account": "給与",     "amount": 320000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-05",
+    "description": "クレジットカード引き落とし（1月利用分）",
+    "entries": [
+      { "account": "クレジットカード", "amount": 67000, "kind": "DEBIT" },
+      { "account": "普通預金",         "amount": 67000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-06",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 8200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 8200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-07",
+    "description": "電力会社 電気代（2月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 10100, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 10100, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-07",
+    "description": "ガス代引き落とし（2月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 4800, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 4800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-08",
+    "description": "交通系ICカードチャージ",
+    "entries": [
+      { "account": "交通費", "amount": 3000, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 3000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-09",
+    "description": "住宅ローン返済（2月分）",
+    "entries": [
+      { "account": "住宅ローン", "amount": 85000, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 85000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-10",
+    "description": "スマートフォン料金（2月分）",
+    "entries": [
+      { "account": "通信費", "amount": 4800, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 4800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-10",
+    "description": "インターネット回線料金（2月分）",
+    "entries": [
+      { "account": "通信費", "amount": 4500, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 4500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-11",
+    "description": "バレンタイン用チョコレート購入",
+    "entries": [
+      { "account": "食費",           "amount": 4500, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 4500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-12",
+    "description": "電車定期券更新",
+    "entries": [
+      { "account": "交通費", "amount": 12000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 12000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-12",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 9800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 9800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-13",
+    "description": "ドラッグストアで日用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 3100, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3100, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-14",
+    "description": "バレンタインディナー（外食）",
+    "entries": [
+      { "account": "食費",           "amount": 14000, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 14000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-15",
+    "description": "コンビニで昼食購入",
+    "entries": [
+      { "account": "食費", "amount": 1100, "kind": "DEBIT" },
+      { "account": "現金", "amount": 1100, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-16",
+    "description": "内科クリニック受診",
+    "entries": [
+      { "account": "医療費", "amount": 2200, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 2200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-17",
+    "description": "書籍購入",
+    "entries": [
+      { "account": "娯楽費",          "amount": 2400, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 2400, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-18",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 8800, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 8800, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-19",
+    "description": "水道代（2月分）",
+    "entries": [
+      { "account": "水道光熱費", "amount": 3900, "kind": "DEBIT" },
+      { "account": "普通預金",   "amount": 3900, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-19",
+    "description": "ジム月会費",
+    "entries": [
+      { "account": "娯楽費", "amount": 7000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 7000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-20",
+    "description": "日用品購入",
+    "entries": [
+      { "account": "日用品",          "amount": 4200, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 4200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-21",
+    "description": "映画鑑賞",
+    "entries": [
+      { "account": "娯楽費",          "amount": 3600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 3600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-22",
+    "description": "スーパーで食料品購入",
+    "entries": [
+      { "account": "食費",           "amount": 7600, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 7600, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-23",
+    "description": "友人との飲み会",
+    "entries": [
+      { "account": "娯楽費", "amount": 4500, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 4500, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-24",
+    "description": "子供教育費（2月分）",
+    "entries": [
+      { "account": "教育費", "amount": 25000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 25000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-25",
+    "description": "コンビニで食料品購入",
+    "entries": [
+      { "account": "食費", "amount": 1380, "kind": "DEBIT" },
+      { "account": "現金", "amount": 1380, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-25",
+    "description": "子供塾代（2月分）",
+    "entries": [
+      { "account": "教育費",          "amount": 18000, "kind": "DEBIT" },
+      { "account": "クレジットカード", "amount": 18000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-26",
+    "description": "副収入（フリーランス案件）",
+    "entries": [
+      { "account": "普通預金", "amount": 40000, "kind": "DEBIT" },
+      { "account": "副収入",   "amount": 40000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-27",
+    "description": "タクシー代",
+    "entries": [
+      { "account": "交通費", "amount": 2200, "kind": "DEBIT" },
+      { "account": "現金",   "amount": 2200, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-28",
+    "description": "定期預金積立（2月分）",
+    "entries": [
+      { "account": "定期預金", "amount": 50000, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 50000, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "date": "2026-02-28",
+    "description": "普通預金利息（2月分）",
+    "entries": [
+      { "account": "普通預金", "amount": 840, "kind": "DEBIT" },
+      { "account": "利息収入", "amount": 840, "kind": "CREDIT" }
+    ]
+  }
+]

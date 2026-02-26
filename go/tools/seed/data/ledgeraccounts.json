@@ -1,0 +1,37 @@
+[
+  { "name": "資産",     "type": "ASSET",     "is_group": true },
+  { "name": "流動資産", "type": "ASSET",     "is_group": true,  "parent": "資産" },
+  { "name": "現金",     "type": "ASSET",     "is_group": false, "parent": "流動資産" },
+  { "name": "普通預金", "type": "ASSET",     "is_group": false, "parent": "流動資産" },
+  { "name": "定期預金", "type": "ASSET",     "is_group": false, "parent": "流動資産" },
+  { "name": "固定資産", "type": "ASSET",     "is_group": true,  "parent": "資産" },
+  { "name": "不動産",   "type": "ASSET",     "is_group": false, "parent": "固定資産" },
+  { "name": "有価証券", "type": "ASSET",     "is_group": false, "parent": "固定資産" },
+
+  { "name": "負債",             "type": "LIABILITY", "is_group": true },
+  { "name": "クレジットカード", "type": "LIABILITY", "is_group": false, "parent": "負債" },
+  { "name": "住宅ローン",       "type": "LIABILITY", "is_group": false, "parent": "負債" },
+  { "name": "その他ローン",     "type": "LIABILITY", "is_group": false, "parent": "負債" },
+
+  { "name": "費用",       "type": "EXPENSE", "is_group": true },
+  { "name": "生活費",     "type": "EXPENSE", "is_group": true,  "parent": "費用" },
+  { "name": "食費",       "type": "EXPENSE", "is_group": false, "parent": "生活費" },
+  { "name": "水道光熱費", "type": "EXPENSE", "is_group": false, "parent": "生活費" },
+  { "name": "通信費",     "type": "EXPENSE", "is_group": false, "parent": "生活費" },
+  { "name": "日用品",     "type": "EXPENSE", "is_group": false, "parent": "生活費" },
+  { "name": "その他費用", "type": "EXPENSE", "is_group": true,  "parent": "費用" },
+  { "name": "交通費",     "type": "EXPENSE", "is_group": false, "parent": "その他費用" },
+  { "name": "娯楽費",     "type": "EXPENSE", "is_group": false, "parent": "その他費用" },
+  { "name": "医療費",     "type": "EXPENSE", "is_group": false, "parent": "その他費用" },
+  { "name": "教育費",     "type": "EXPENSE", "is_group": false, "parent": "その他費用" },
+
+  { "name": "収益",     "type": "REVENUE", "is_group": true },
+  { "name": "給与",     "type": "REVENUE", "is_group": false, "parent": "収益" },
+  { "name": "賞与",     "type": "REVENUE", "is_group": false, "parent": "収益" },
+  { "name": "副収入",   "type": "REVENUE", "is_group": false, "parent": "収益" },
+  { "name": "利息収入", "type": "REVENUE", "is_group": false, "parent": "収益" },
+
+  { "name": "純資産",         "type": "EQUITY", "is_group": true },
+  { "name": "元入金",         "type": "EQUITY", "is_group": false, "parent": "純資産" },
+  { "name": "繰越利益剰余金", "type": "EQUITY", "is_group": false, "parent": "純資産" }
+]

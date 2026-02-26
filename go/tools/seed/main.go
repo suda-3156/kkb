@@ -18,6 +18,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 	"github.com/suda-3156/kkb/go/internal/setup"
+	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
 
 var (
@@ -45,7 +46,7 @@ func main() {
 
 	logging.SetDefault(logging.NewFromEnv())
 
-	logging.Info(ctx, "Starting seed process for local development")
+	logging.Notice(ctx, "Starting seed process for local DEVELOPMENT environment")
 
 	err := run(ctx)
 	done()
@@ -55,7 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logging.Info(ctx, "Seed process completed successfully")
+	logging.Notice(ctx, "Seed process completed successfully")
 }
 
 func run(ctx context.Context) error {
@@ -96,7 +97,9 @@ func run(ctx context.Context) error {
 
 	// Insert sample data.
 	lac := ledgeraccount.New(env.Database(), em)
-	if err := insertSampleData(ctx, lac); err != nil {
+	tm := transaction.New(env.Database(), em)
+	err = insertData(ctx, lac, tm)
+	if err != nil {
 		return err
 	}
 
@@ -151,132 +154,6 @@ func createEncryptionKey(ctx context.Context, cfg *keys.Config) error {
 	if _, err := kmst.CreateKeyVersion(ctx, keyID); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-/*
-資産 (ASSET, グループ)
-
-	└─ 流動資産 (グループ)
-	     ├─ 現金 / 普通預金 / 定期預金
-	└─ 固定資産 (グループ)
-	     ├─ 不動産 / 有価証券
-
-負債 (LIABILITY, グループ)
-
-	└─ クレジットカード / 住宅ローン / その他ローン
-
-費用 (EXPENSE, グループ)
-
-	└─ 生活費 (グループ)
-	     ├─ 食費 / 水道光熱費 / 通信費 / 日用品
-	└─ その他費用 (グループ)
-	     ├─ 交通費 / 娯楽費 / 医療費 / 教育費
-
-収益 (REVENUE, グループ)
-
-	└─ 給与 / 賞与 / 副収入 / 利息収入
-
-純資産 (EQUITY, グループ)
-
-	└─ 元入金 / 繰越利益剰余金
-*/
-func insertSampleData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager) error {
-	type entry struct {
-		name    string
-		kind    graph.LedgerAccountKind
-		isGroup bool
-		parent  *graph.LedgerAccount
-	}
-
-	// --- 資産 (ASSET) ---
-	assetGroup, err := create(ctx, lac, "資産", graph.LedgerAccountKindAsset, true, nil)
-	if err != nil {
-		return err
-	}
-	currentAssets, err := create(ctx, lac, "流動資産", graph.LedgerAccountKindAsset, true, &assetGroup.ID)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"現金", "普通預金", "定期預金"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindAsset, false, &currentAssets.ID); err != nil {
-			return err
-		}
-	}
-	fixedAssets, err := create(ctx, lac, "固定資産", graph.LedgerAccountKindAsset, true, &assetGroup.ID)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"不動産", "有価証券"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindAsset, false, &fixedAssets.ID); err != nil {
-			return err
-		}
-	}
-
-	// --- 負債 (LIABILITY) ---
-	liabGroup, err := create(ctx, lac, "負債", graph.LedgerAccountKindLiability, true, nil)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"クレジットカード", "住宅ローン", "その他ローン"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindLiability, false, &liabGroup.ID); err != nil {
-			return err
-		}
-	}
-
-	// --- 費用 (EXPENSE) ---
-	expGroup, err := create(ctx, lac, "費用", graph.LedgerAccountKindExpense, true, nil)
-	if err != nil {
-		return err
-	}
-	livingExp, err := create(ctx, lac, "生活費", graph.LedgerAccountKindExpense, true, &expGroup.ID)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"食費", "水道光熱費", "通信費", "日用品"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindExpense, false, &livingExp.ID); err != nil {
-			return err
-		}
-	}
-	otherExp, err := create(ctx, lac, "その他費用", graph.LedgerAccountKindExpense, true, &expGroup.ID)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"交通費", "娯楽費", "医療費", "教育費"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindExpense, false, &otherExp.ID); err != nil {
-			return err
-		}
-	}
-
-	// --- 収益 (REVENUE) ---
-	revGroup, err := create(ctx, lac, "収益", graph.LedgerAccountKindRevenue, true, nil)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"給与", "賞与", "副収入", "利息収入"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindRevenue, false, &revGroup.ID); err != nil {
-			return err
-		}
-	}
-
-	// --- 純資産 (EQUITY) ---
-	eqGroup, err := create(ctx, lac, "純資産", graph.LedgerAccountKindEquity, true, nil)
-	if err != nil {
-		return err
-	}
-	for _, name := range []string{"元入金", "繰越利益剰余金"} {
-		if _, err := create(ctx, lac, name, graph.LedgerAccountKindEquity, false, &eqGroup.ID); err != nil {
-			return err
-		}
-	}
-
-	_ = liabGroup
-	_ = revGroup
-	_ = eqGroup
-
-	// transaction with journal entries
-	// todo later
 
 	return nil
 }
