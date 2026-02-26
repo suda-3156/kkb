@@ -5,6 +5,7 @@ dist/
 # env
 *.env*
 !.env.example
+!.env.test
 # secrets variables are written in .env* files, and .envrc is only used to load them
 !.envrc
 

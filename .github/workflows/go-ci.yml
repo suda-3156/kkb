@@ -1,0 +1,109 @@
+name: Go CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  files-changed:
+    uses: ./.github/workflows/files-changed.yaml
+    permissions:
+      contents: read
+      pull-requests: read
+
+  build:
+    name: Build
+    needs: files-changed
+    if: needs.files-changed.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6.2.0
+        with:
+          go-version-file: "./go.mod"
+          cache-dependency-path: "./go.sum"
+          check-latest: true
+          cache: true
+
+      - run: go mod download
+      - run: go build ./...
+      - run: go clean -modcache
+
+  lint:
+    name: Lint
+    needs: files-changed
+    if: needs.files-changed.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6.2.0
+        with:
+          go-version-file: "./go.mod"
+          cache-dependency-path: "./go.sum"
+          check-latest: true
+          cache: true
+
+      - run: go mod download
+      - uses: golangci/golangci-lint-action@v8
+      - run: go clean -modcache
+
+  test:
+    name: Test
+    needs: files-changed
+    if: needs.files-changed.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6.2.0
+        with:
+          go-version-file: "./go.mod"
+          cache-dependency-path: "./go.sum"
+          check-latest: true
+          cache: true
+
+      - run: go mod download
+
+      - name: Set up test environment variables
+        run: |
+          if [ -f ./.env.test ]; then
+            export $(cat ./.env.test | grep -v '^#' | xargs)
+            env | grep -E '^[A-Z_]+=' >> $GITHUB_ENV
+          fi
+
+      - name: Run Tests
+        run: |
+          go test ./... -json > test-report.json
+
+      - name: Test Report
+        uses: dorny/test-reporter@v2.5.0
+        if: ${{ !cancelled() }}
+        with:
+          name: Unit Tests
+          path: test-report.json
+          reporter: golang-json
