@@ -12,6 +12,7 @@ import (
 	"github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
 	pulid1 "github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/transaction"
 )
 
 // LedgerAccount is the resolver for the ledgerAccount field.
@@ -46,7 +47,16 @@ func (r *queryResolver) Transaction(ctx context.Context, id pulid1.ID) (*model.T
 
 // Transactions is the resolver for the transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error) {
-	return r.tnx.List(ctx, first, nil, nil, after, last, before, startDate, endDate)
+	filter := &transaction.Filter{
+		First:     first,
+		After:     after,
+		Last:      last,
+		Before:    before,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	return r.tnx.List(ctx, filter)
 }
 
 // JournalEntry returns graph.JournalEntryResolver implementation.

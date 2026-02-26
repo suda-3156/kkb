@@ -12,16 +12,23 @@ import (
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
+type Filter struct {
+	PublicIDs []pulid.ID
+	// IDs is used for dataloader
+	IDs []int
+
+	First  *int32
+	After  *pulid.ID
+	Last   *int32
+	Before *pulid.ID
+
+	StartDate *date.Date
+	EndDate   *date.Date
+}
+
 func (m *TransactionManager) List(
 	ctx context.Context,
-	first *int32,
-	publicIDs []pulid.ID,
-	IDs []int,
-	after *pulid.ID,
-	last *int32,
-	before *pulid.ID,
-	startDate *date.Date,
-	endDate *date.Date,
+	filter *Filter,
 ) (*graph.TransactionConnection, error) {
 	logging.Debug(
 		ctx,
@@ -35,45 +42,7 @@ func (m *TransactionManager) List(
 			q.WithLedgerAccount()
 		})
 
-	if len(publicIDs) > 0 {
-		query = query.Where(transaction.PublicIDIn(publicIDs...))
-	}
-
-	if len(IDs) > 0 {
-		query = query.Where(transaction.IDIn(IDs...))
-	}
-
-	if startDate != nil {
-		query = query.Where(transaction.DateGTE(*startDate))
-	}
-
-	if endDate != nil {
-		query = query.Where(transaction.DateLTE(*endDate))
-	}
-
-	if after != nil {
-		query = query.Where(transaction.PublicIDGT(*after))
-	}
-
-	if before != nil {
-		query = query.Where(transaction.PublicIDLT(*before))
-		scanDesc = true
-	}
-
-	if first != nil {
-		query = query.Limit(int(*first))
-	}
-
-	if last != nil {
-		query = query.Limit(int(*last))
-		scanDesc = true
-	}
-
-	if scanDesc {
-		query = query.Order(ent.Desc(transaction.FieldPublicID))
-	} else {
-		query = query.Order(ent.Asc(transaction.FieldPublicID))
-	}
+	query, scanDesc = m.applyFilter(filter, query)
 
 	txns, err := query.All(ctx)
 	if err != nil {
@@ -92,6 +61,55 @@ func (m *TransactionManager) List(
 	}
 
 	return m.convertToGraphConnection(ctx, txns, hasPrevPage, hasNextPage)
+}
+
+func (m *TransactionManager) applyFilter(
+	filter *Filter,
+	query *ent.TransactionQuery,
+) (*ent.TransactionQuery, bool) {
+	var scanDesc = false
+
+	if len(filter.PublicIDs) > 0 {
+		query = query.Where(transaction.PublicIDIn(filter.PublicIDs...))
+	}
+
+	if len(filter.IDs) > 0 {
+		query = query.Where(transaction.IDIn(filter.IDs...))
+	}
+
+	if filter.StartDate != nil {
+		query = query.Where(transaction.DateGTE(*filter.StartDate))
+	}
+
+	if filter.EndDate != nil {
+		query = query.Where(transaction.DateLTE(*filter.EndDate))
+	}
+
+	if filter.After != nil {
+		query = query.Where(transaction.PublicIDGT(*filter.After))
+	}
+
+	if filter.Before != nil {
+		query = query.Where(transaction.PublicIDLT(*filter.Before))
+		scanDesc = true
+	}
+
+	if filter.First != nil {
+		query = query.Limit(int(*filter.First))
+	}
+
+	if filter.Last != nil {
+		query = query.Limit(int(*filter.Last))
+		scanDesc = true
+	}
+
+	if scanDesc {
+		query = query.Order(ent.Desc(transaction.FieldPublicID))
+	} else {
+		query = query.Order(ent.Asc(transaction.FieldPublicID))
+	}
+
+	return query, scanDesc
 }
 
 func (m *TransactionManager) getPageInfo(

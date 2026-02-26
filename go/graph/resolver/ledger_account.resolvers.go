@@ -10,6 +10,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
+	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
@@ -50,7 +51,16 @@ func (r *queryResolver) LedgerAccount(ctx context.Context, id pulid.ID) (*model.
 
 // LedgerAccounts is the resolver for the ledgerAccounts field.
 func (r *queryResolver) LedgerAccounts(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error) {
-	return r.lac.List(ctx, first, nil, nil, after, last, before, kind, includeArchived)
+	filter := &ledgeraccount.Filter{
+		First:           first,
+		After:           after,
+		Last:            last,
+		Before:          before,
+		Kind:            kind,
+		IncludeArchived: includeArchived,
+	}
+
+	return r.lac.List(ctx, filter)
 }
 
 // LedgerAccount returns graph.LedgerAccountResolver implementation.

@@ -25,7 +25,9 @@ func (l *ledgerAccountBatcher) BatchGetLedgerAccounts(ctx context.Context, IDs [
 		idxs[id] = i
 	}
 
-	accounts, err := l.lac.List(ctx, nil, nil, IDs, nil, nil, nil, nil, nil)
+	accounts, err := l.lac.List(ctx, &ledgeraccount.Filter{
+		IDs: IDs,
+	})
 	if err != nil {
 		for i := range results {
 			results[i] = &dataloader.Result[*graph.LedgerAccount]{

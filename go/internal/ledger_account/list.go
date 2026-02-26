@@ -11,16 +11,23 @@ import (
 	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
+type Filter struct {
+	PublicIDs []pulid.ID
+	// IDs is used for dataloader
+	IDs []int
+
+	First  *int32
+	After  *pulid.ID
+	Last   *int32
+	Before *pulid.ID
+
+	Kind            *graph.LedgerAccountKind
+	IncludeArchived *bool
+}
+
 func (m *LedgerAccountManager) List(
 	ctx context.Context,
-	first *int32,
-	publicIDs []pulid.ID,
-	IDs []int,
-	after *pulid.ID,
-	last *int32,
-	before *pulid.ID,
-	kind *graph.LedgerAccountKind,
-	includeArchived *bool,
+	filter *Filter,
 ) (*graph.LedgerAccountConnection, error) {
 	logging.Debug(
 		ctx,
@@ -30,17 +37,7 @@ func (m *LedgerAccountManager) List(
 	var scanDesc bool = false
 	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey()
 
-	query, scanDesc = m.applyFilter(
-		first,
-		publicIDs,
-		IDs,
-		after,
-		last,
-		before,
-		kind,
-		includeArchived,
-		query,
-	)
+	query, scanDesc = m.applyFilter(filter, query)
 
 	lacs, err := query.All(ctx)
 	if err != nil {
@@ -56,41 +53,34 @@ func (m *LedgerAccountManager) List(
 }
 
 func (m *LedgerAccountManager) applyFilter(
-	first *int32,
-	publicIDs []pulid.ID,
-	IDs []int,
-	after *pulid.ID,
-	last *int32,
-	before *pulid.ID,
-	kind *graph.LedgerAccountKind,
-	includeArchived *bool,
+	filter *Filter,
 	query *ent.LedgerAccountQuery,
 ) (*ent.LedgerAccountQuery, bool) {
 	var scanDesc = false
 
-	if len(publicIDs) > 0 {
-		query = query.Where(ledgeraccount.PublicIDIn(publicIDs...))
+	if len(filter.PublicIDs) > 0 {
+		query = query.Where(ledgeraccount.PublicIDIn(filter.PublicIDs...))
 	}
 
-	if len(IDs) > 0 {
-		query = query.Where(ledgeraccount.IDIn(IDs...))
+	if len(filter.IDs) > 0 {
+		query = query.Where(ledgeraccount.IDIn(filter.IDs...))
 	}
 
-	if after != nil {
-		query = query.Where(ledgeraccount.PublicIDGT(*after))
+	if filter.After != nil {
+		query = query.Where(ledgeraccount.PublicIDGT(*filter.After))
 	}
 
-	if before != nil {
-		query = query.Where(ledgeraccount.PublicIDLT(*before))
+	if filter.Before != nil {
+		query = query.Where(ledgeraccount.PublicIDLT(*filter.Before))
 		scanDesc = true
 	}
 
-	if first != nil {
-		query = query.Limit(int(*first))
+	if filter.First != nil {
+		query = query.Limit(int(*filter.First))
 	}
 
-	if last != nil {
-		query = query.Limit(int(*last))
+	if filter.Last != nil {
+		query = query.Limit(int(*filter.Last))
 		scanDesc = true
 	}
 
@@ -100,11 +90,11 @@ func (m *LedgerAccountManager) applyFilter(
 		query = query.Order(ent.Asc(ledgeraccount.FieldPublicID))
 	}
 
-	if kind != nil {
-		query = query.Where(ledgeraccount.KindEQ(m.convertKindToEnt(*kind)))
+	if filter.Kind != nil {
+		query = query.Where(ledgeraccount.KindEQ(m.convertKindToEnt(*filter.Kind)))
 	}
 
-	if includeArchived == nil || !*includeArchived {
+	if filter.IncludeArchived == nil || !*filter.IncludeArchived {
 		query = query.Where(ledgeraccount.ArchivedAtIsNil())
 	}
 
