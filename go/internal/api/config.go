@@ -18,6 +18,8 @@ type Config struct {
 	EncryptionManger encryption.Config
 
 	Port string `env:"PORT, default=8080"`
+
+	AllowedOrigins []string `env:"ALLOWED_ORIGINS, default=http://localhost:3000"`
 }
 
 func (c *Config) DatabaseConfig() *database.Config {

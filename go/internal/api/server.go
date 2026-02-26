@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/cors"
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/resolver"
 	"github.com/suda-3156/kkb/go/internal/encryption"
@@ -62,7 +63,7 @@ func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, e
 	}, nil
 }
 
-func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
+func (s *Server) ServeMux(ctx context.Context) http.Handler {
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
 		Resolvers: resolver.New(
 			s.env.Database(), s.em,
@@ -88,6 +89,16 @@ func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", srv)
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   s.cfg.AllowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Apollo-Require-Preflight"},
+		AllowCredentials: false,
+		Debug:            true,
+	})
+
+	h := c.Handler(mux)
+
 	logging.Info(
 		ctx,
 		"serving GraphQL playground and query endpoint",
@@ -95,5 +106,5 @@ func (s *Server) ServeMux(ctx context.Context) *http.ServeMux {
 		slog.String("queryEndpoint", "/query"),
 	)
 
-	return mux
+	return h
 }
