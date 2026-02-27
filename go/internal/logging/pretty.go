@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -222,8 +223,95 @@ func writePrettyAttr(sb *strings.Builder, a slog.Attr, indent int) {
 
 	writePrettyIndent(sb, indent)
 	sb.WriteString(a.Key)
+	expanded := reflectExpand(a.Value.Any())
+	if expanded.Kind() == slog.KindGroup {
+		children := expanded.Group()
+		if len(children) == 0 {
+			sb.WriteString(": {}\n")
+			return
+		}
+		sb.WriteString(":\n")
+		for _, child := range children {
+			writePrettyAttr(sb, child, indent+1)
+		}
+		return
+	}
 	sb.WriteString(": ")
 	//nolint:gocritic,staticcheck // For better readability, not use fmt.Fprintf
-	sb.WriteString(fmt.Sprintf("%v", a.Value.Any()))
+	sb.WriteString(fmt.Sprintf("%v", expanded.Any()))
 	sb.WriteByte('\n')
+}
+
+// reflectExpand converts any value to a slog.Value, recursively expanding
+// structs (and pointers to structs), slices, arrays, and maps so that all
+// fields are visible in the pretty log output.
+func reflectExpand(v any) slog.Value {
+	if v == nil {
+		return slog.AnyValue(nil)
+	}
+	// Let slog.LogValuer implementations describe themselves.
+	if lv, ok := v.(slog.LogValuer); ok {
+		return reflectExpand(lv.LogValue().Resolve().Any())
+	}
+	return reflectValue(reflect.ValueOf(v))
+}
+
+// reflectValue recursively converts a reflect.Value into a slog.Value.
+func reflectValue(rv reflect.Value) slog.Value {
+	// Dereference pointer chains.
+	for rv.Kind() == reflect.Pointer {
+		if rv.IsNil() {
+			return slog.StringValue("<nil>")
+		}
+		rv = rv.Elem()
+	}
+	// Unwrap interfaces.
+	if rv.Kind() == reflect.Interface {
+		if rv.IsNil() {
+			return slog.StringValue("<nil>")
+		}
+		rv = rv.Elem()
+	}
+	switch rv.Kind() {
+	case reflect.Struct:
+		rt := rv.Type()
+		attrs := make([]slog.Attr, 0, rt.NumField())
+		for i := range rt.NumField() {
+			f := rt.Field(i)
+			if !f.IsExported() {
+				continue
+			}
+			attrs = append(attrs, slog.Attr{
+				Key:   f.Name,
+				Value: reflectValue(rv.Field(i)),
+			})
+		}
+		return slog.GroupValue(attrs...)
+	case reflect.Slice, reflect.Array:
+		if rv.Len() == 0 {
+			return slog.StringValue("[]")
+		}
+		attrs := make([]slog.Attr, 0, rv.Len())
+		for i := range rv.Len() {
+			attrs = append(attrs, slog.Attr{
+				Key:   fmt.Sprintf("[%d]", i),
+				Value: reflectValue(rv.Index(i)),
+			})
+		}
+		return slog.GroupValue(attrs...)
+	case reflect.Map:
+		if rv.Len() == 0 {
+			return slog.StringValue("{}")
+		}
+		attrs := make([]slog.Attr, 0, rv.Len())
+		for _, key := range rv.MapKeys() {
+			attrs = append(attrs, slog.Attr{
+				Key:   fmt.Sprintf("%v", key.Interface()),
+				Value: reflectValue(rv.MapIndex(key)),
+			})
+		}
+		return slog.GroupValue(attrs...)
+	default:
+		return slog.AnyValue(rv.Interface())
+	}
 }
