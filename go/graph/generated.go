@@ -41,6 +41,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	AccountAmountSummary() AccountAmountSummaryResolver
 	JournalEntry() JournalEntryResolver
 	LedgerAccount() LedgerAccountResolver
 	Mutation() MutationResolver
@@ -51,8 +52,27 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AccountAmountSummary struct {
+		LedgerAccount func(childComplexity int) int
+		Ratio         func(childComplexity int) int
+		TotalAmount   func(childComplexity int) int
+	}
+
+	ChildAccountBreakdown struct {
+		Children    func(childComplexity int) int
+		EndDate     func(childComplexity int) int
+		Parent      func(childComplexity int) int
+		StartDate   func(childComplexity int) int
+		TotalAmount func(childComplexity int) int
+	}
+
 	DeleteTransactionPayload struct {
 		Success func(childComplexity int) int
+	}
+
+	ExpenseSummary struct {
+		ByAccount   func(childComplexity int) int
+		TotalAmount func(childComplexity int) int
 	}
 
 	JournalEntry struct {
@@ -104,13 +124,28 @@ type ComplexityRoot struct {
 		StartCursor     func(childComplexity int) int
 	}
 
+	PeriodAggregation struct {
+		EndDate   func(childComplexity int) int
+		Expenses  func(childComplexity int) int
+		NetAmount func(childComplexity int) int
+		Revenue   func(childComplexity int) int
+		StartDate func(childComplexity int) int
+	}
+
 	Query struct {
-		HealthCheck    func(childComplexity int) int
-		LedgerAccount  func(childComplexity int, id pulid.ID) int
-		LedgerAccounts func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) int
-		Node           func(childComplexity int, id pulid.ID) int
-		Transaction    func(childComplexity int, id pulid.ID) int
-		Transactions   func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date) int
+		ChildAccountBreakdown func(childComplexity int, parentID pulid.ID, startDate date.Date, endDate date.Date) int
+		HealthCheck           func(childComplexity int) int
+		LedgerAccount         func(childComplexity int, id pulid.ID) int
+		LedgerAccounts        func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) int
+		Node                  func(childComplexity int, id pulid.ID) int
+		PeriodAggregation     func(childComplexity int, startDate date.Date, endDate date.Date) int
+		Transaction           func(childComplexity int, id pulid.ID) int
+		Transactions          func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date) int
+	}
+
+	RevenueSummary struct {
+		ByAccount   func(childComplexity int) int
+		TotalAmount func(childComplexity int) int
 	}
 
 	Transaction struct {
@@ -135,6 +170,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type AccountAmountSummaryResolver interface {
+	LedgerAccount(ctx context.Context, obj *model.AccountAmountSummary) (*model.LedgerAccount, error)
+}
 type JournalEntryResolver interface {
 	LedgerAccount(ctx context.Context, obj *model.JournalEntry) (*model.LedgerAccount, error)
 }
@@ -153,6 +191,8 @@ type MutationResolver interface {
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (string, error)
 	Node(ctx context.Context, id pulid.ID) (model.Node, error)
+	PeriodAggregation(ctx context.Context, startDate date.Date, endDate date.Date) (*model.PeriodAggregation, error)
+	ChildAccountBreakdown(ctx context.Context, parentID pulid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error)
 	LedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error)
 	LedgerAccounts(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error)
 	Transaction(ctx context.Context, id pulid.ID) (*model.Transaction, error)
@@ -178,12 +218,75 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AccountAmountSummary.ledgerAccount":
+		if e.complexity.AccountAmountSummary.LedgerAccount == nil {
+			break
+		}
+
+		return e.complexity.AccountAmountSummary.LedgerAccount(childComplexity), true
+	case "AccountAmountSummary.ratio":
+		if e.complexity.AccountAmountSummary.Ratio == nil {
+			break
+		}
+
+		return e.complexity.AccountAmountSummary.Ratio(childComplexity), true
+	case "AccountAmountSummary.totalAmount":
+		if e.complexity.AccountAmountSummary.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.AccountAmountSummary.TotalAmount(childComplexity), true
+
+	case "ChildAccountBreakdown.children":
+		if e.complexity.ChildAccountBreakdown.Children == nil {
+			break
+		}
+
+		return e.complexity.ChildAccountBreakdown.Children(childComplexity), true
+	case "ChildAccountBreakdown.endDate":
+		if e.complexity.ChildAccountBreakdown.EndDate == nil {
+			break
+		}
+
+		return e.complexity.ChildAccountBreakdown.EndDate(childComplexity), true
+	case "ChildAccountBreakdown.parent":
+		if e.complexity.ChildAccountBreakdown.Parent == nil {
+			break
+		}
+
+		return e.complexity.ChildAccountBreakdown.Parent(childComplexity), true
+	case "ChildAccountBreakdown.startDate":
+		if e.complexity.ChildAccountBreakdown.StartDate == nil {
+			break
+		}
+
+		return e.complexity.ChildAccountBreakdown.StartDate(childComplexity), true
+	case "ChildAccountBreakdown.totalAmount":
+		if e.complexity.ChildAccountBreakdown.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.ChildAccountBreakdown.TotalAmount(childComplexity), true
+
 	case "DeleteTransactionPayload.success":
 		if e.complexity.DeleteTransactionPayload.Success == nil {
 			break
 		}
 
 		return e.complexity.DeleteTransactionPayload.Success(childComplexity), true
+
+	case "ExpenseSummary.byAccount":
+		if e.complexity.ExpenseSummary.ByAccount == nil {
+			break
+		}
+
+		return e.complexity.ExpenseSummary.ByAccount(childComplexity), true
+	case "ExpenseSummary.totalAmount":
+		if e.complexity.ExpenseSummary.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.ExpenseSummary.TotalAmount(childComplexity), true
 
 	case "JournalEntry.amount":
 		if e.complexity.JournalEntry.Amount == nil {
@@ -412,6 +515,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PageInfo.StartCursor(childComplexity), true
 
+	case "PeriodAggregation.endDate":
+		if e.complexity.PeriodAggregation.EndDate == nil {
+			break
+		}
+
+		return e.complexity.PeriodAggregation.EndDate(childComplexity), true
+	case "PeriodAggregation.expenses":
+		if e.complexity.PeriodAggregation.Expenses == nil {
+			break
+		}
+
+		return e.complexity.PeriodAggregation.Expenses(childComplexity), true
+	case "PeriodAggregation.netAmount":
+		if e.complexity.PeriodAggregation.NetAmount == nil {
+			break
+		}
+
+		return e.complexity.PeriodAggregation.NetAmount(childComplexity), true
+	case "PeriodAggregation.revenue":
+		if e.complexity.PeriodAggregation.Revenue == nil {
+			break
+		}
+
+		return e.complexity.PeriodAggregation.Revenue(childComplexity), true
+	case "PeriodAggregation.startDate":
+		if e.complexity.PeriodAggregation.StartDate == nil {
+			break
+		}
+
+		return e.complexity.PeriodAggregation.StartDate(childComplexity), true
+
+	case "Query.childAccountBreakdown":
+		if e.complexity.Query.ChildAccountBreakdown == nil {
+			break
+		}
+
+		args, err := ec.field_Query_childAccountBreakdown_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ChildAccountBreakdown(childComplexity, args["parentId"].(pulid.ID), args["startDate"].(date.Date), args["endDate"].(date.Date)), true
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
 			break
@@ -451,6 +596,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Node(childComplexity, args["id"].(pulid.ID)), true
+	case "Query.periodAggregation":
+		if e.complexity.Query.PeriodAggregation == nil {
+			break
+		}
+
+		args, err := ec.field_Query_periodAggregation_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PeriodAggregation(childComplexity, args["startDate"].(date.Date), args["endDate"].(date.Date)), true
 	case "Query.transaction":
 		if e.complexity.Query.Transaction == nil {
 			break
@@ -473,6 +629,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["after"].(*pulid.ID), args["last"].(*int32), args["before"].(*pulid.ID), args["startDate"].(*date.Date), args["endDate"].(*date.Date)), true
+
+	case "RevenueSummary.byAccount":
+		if e.complexity.RevenueSummary.ByAccount == nil {
+			break
+		}
+
+		return e.complexity.RevenueSummary.ByAccount(childComplexity), true
+	case "RevenueSummary.totalAmount":
+		if e.complexity.RevenueSummary.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.RevenueSummary.TotalAmount(childComplexity), true
 
 	case "Transaction.createdAt":
 		if e.complexity.Transaction.CreatedAt == nil {
@@ -659,6 +828,52 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../../schema/aggregation.graphql", Input: `# Aggregation Schema Definitions
+
+type AccountAmountSummary {
+  ledgerAccount: LedgerAccount!
+  totalAmount: Int!
+  ratio: Float!
+}
+
+type ExpenseSummary {
+  totalAmount: Int!
+  byAccount: [AccountAmountSummary!]!
+}
+
+type RevenueSummary {
+  totalAmount: Int!
+  byAccount: [AccountAmountSummary!]!
+}
+
+# Aggregated financial data for a given date range
+type PeriodAggregation {
+  startDate: Date!
+  endDate: Date!
+  expenses: ExpenseSummary!
+  revenue: RevenueSummary!
+  # Net amount: revenue.totalAmount - expenses.totalAmount
+  netAmount: Int!
+}
+
+# Ratio breakdown of direct children of a given LedgerAccount for a period
+type ChildAccountBreakdown {
+  parent: LedgerAccount!
+  startDate: Date!
+  endDate: Date!
+  totalAmount: Int!
+  children: [AccountAmountSummary!]!
+}
+
+extend type Query {
+  periodAggregation(startDate: Date!, endDate: Date!): PeriodAggregation!
+
+  childAccountBreakdown(
+    parentId: ID!
+    startDate: Date!
+    endDate: Date!
+  ): ChildAccountBreakdown!
+}`, BuiltIn: false},
 	{Name: "../../schema/common.graphql", Input: `scalar DateTime
 scalar Date # 2006-01-02 format
 interface Node {
@@ -973,6 +1188,27 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_childAccountBreakdown_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "parentId", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	if err != nil {
+		return nil, err
+	}
+	args["parentId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "startDate", ec.unmarshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
+	if err != nil {
+		return nil, err
+	}
+	args["startDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "endDate", ec.unmarshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
+	if err != nil {
+		return nil, err
+	}
+	args["endDate"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_ledgerAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1028,6 +1264,22 @@ func (ec *executionContext) field_Query_node_args(ctx context.Context, rawArgs m
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_periodAggregation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "startDate", ec.unmarshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
+	if err != nil {
+		return nil, err
+	}
+	args["startDate"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "endDate", ec.unmarshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
+	if err != nil {
+		return nil, err
+	}
+	args["endDate"] = arg1
 	return args, nil
 }
 
@@ -1130,6 +1382,282 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AccountAmountSummary_ledgerAccount(ctx context.Context, field graphql.CollectedField, obj *model.AccountAmountSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AccountAmountSummary_ledgerAccount,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AccountAmountSummary().LedgerAccount(ctx, obj)
+		},
+		nil,
+		ec.marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AccountAmountSummary_ledgerAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountAmountSummary",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LedgerAccount_id(ctx, field)
+			case "parent":
+				return ec.fieldContext_LedgerAccount_parent(ctx, field)
+			case "name":
+				return ec.fieldContext_LedgerAccount_name(ctx, field)
+			case "kind":
+				return ec.fieldContext_LedgerAccount_kind(ctx, field)
+			case "isGroup":
+				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountAmountSummary_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.AccountAmountSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AccountAmountSummary_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int32,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AccountAmountSummary_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountAmountSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountAmountSummary_ratio(ctx context.Context, field graphql.CollectedField, obj *model.AccountAmountSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AccountAmountSummary_ratio,
+		func(ctx context.Context) (any, error) {
+			return obj.Ratio, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AccountAmountSummary_ratio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountAmountSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChildAccountBreakdown_parent(ctx context.Context, field graphql.CollectedField, obj *model.ChildAccountBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChildAccountBreakdown_parent,
+		func(ctx context.Context) (any, error) {
+			return obj.Parent, nil
+		},
+		nil,
+		ec.marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChildAccountBreakdown_parent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChildAccountBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LedgerAccount_id(ctx, field)
+			case "parent":
+				return ec.fieldContext_LedgerAccount_parent(ctx, field)
+			case "name":
+				return ec.fieldContext_LedgerAccount_name(ctx, field)
+			case "kind":
+				return ec.fieldContext_LedgerAccount_kind(ctx, field)
+			case "isGroup":
+				return ec.fieldContext_LedgerAccount_isGroup(ctx, field)
+			case "archivedAt":
+				return ec.fieldContext_LedgerAccount_archivedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChildAccountBreakdown_startDate(ctx context.Context, field graphql.CollectedField, obj *model.ChildAccountBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChildAccountBreakdown_startDate,
+		func(ctx context.Context) (any, error) {
+			return obj.StartDate, nil
+		},
+		nil,
+		ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChildAccountBreakdown_startDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChildAccountBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChildAccountBreakdown_endDate(ctx context.Context, field graphql.CollectedField, obj *model.ChildAccountBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChildAccountBreakdown_endDate,
+		func(ctx context.Context) (any, error) {
+			return obj.EndDate, nil
+		},
+		nil,
+		ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChildAccountBreakdown_endDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChildAccountBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChildAccountBreakdown_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.ChildAccountBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChildAccountBreakdown_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int32,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChildAccountBreakdown_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChildAccountBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChildAccountBreakdown_children(ctx context.Context, field graphql.CollectedField, obj *model.ChildAccountBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChildAccountBreakdown_children,
+		func(ctx context.Context) (any, error) {
+			return obj.Children, nil
+		},
+		nil,
+		ec.marshalNAccountAmountSummary2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐAccountAmountSummaryᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChildAccountBreakdown_children(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChildAccountBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ledgerAccount":
+				return ec.fieldContext_AccountAmountSummary_ledgerAccount(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_AccountAmountSummary_totalAmount(ctx, field)
+			case "ratio":
+				return ec.fieldContext_AccountAmountSummary_ratio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountAmountSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeleteTransactionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteTransactionPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1154,6 +1682,72 @@ func (ec *executionContext) fieldContext_DeleteTransactionPayload_success(_ cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseSummary_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseSummary_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int32,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseSummary_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseSummary_byAccount(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseSummary_byAccount,
+		func(ctx context.Context) (any, error) {
+			return obj.ByAccount, nil
+		},
+		nil,
+		ec.marshalNAccountAmountSummary2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐAccountAmountSummaryᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseSummary_byAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ledgerAccount":
+				return ec.fieldContext_AccountAmountSummary_ledgerAccount(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_AccountAmountSummary_totalAmount(ctx, field)
+			case "ratio":
+				return ec.fieldContext_AccountAmountSummary_ratio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountAmountSummary", field.Name)
 		},
 	}
 	return fc, nil
@@ -2334,6 +2928,163 @@ func (ec *executionContext) fieldContext_PageInfo_hasNextPage(_ context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _PeriodAggregation_startDate(ctx context.Context, field graphql.CollectedField, obj *model.PeriodAggregation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PeriodAggregation_startDate,
+		func(ctx context.Context) (any, error) {
+			return obj.StartDate, nil
+		},
+		nil,
+		ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PeriodAggregation_startDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PeriodAggregation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PeriodAggregation_endDate(ctx context.Context, field graphql.CollectedField, obj *model.PeriodAggregation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PeriodAggregation_endDate,
+		func(ctx context.Context) (any, error) {
+			return obj.EndDate, nil
+		},
+		nil,
+		ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PeriodAggregation_endDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PeriodAggregation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PeriodAggregation_expenses(ctx context.Context, field graphql.CollectedField, obj *model.PeriodAggregation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PeriodAggregation_expenses,
+		func(ctx context.Context) (any, error) {
+			return obj.Expenses, nil
+		},
+		nil,
+		ec.marshalNExpenseSummary2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐExpenseSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PeriodAggregation_expenses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PeriodAggregation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "totalAmount":
+				return ec.fieldContext_ExpenseSummary_totalAmount(ctx, field)
+			case "byAccount":
+				return ec.fieldContext_ExpenseSummary_byAccount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PeriodAggregation_revenue(ctx context.Context, field graphql.CollectedField, obj *model.PeriodAggregation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PeriodAggregation_revenue,
+		func(ctx context.Context) (any, error) {
+			return obj.Revenue, nil
+		},
+		nil,
+		ec.marshalNRevenueSummary2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐRevenueSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PeriodAggregation_revenue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PeriodAggregation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "totalAmount":
+				return ec.fieldContext_RevenueSummary_totalAmount(ctx, field)
+			case "byAccount":
+				return ec.fieldContext_RevenueSummary_byAccount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RevenueSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PeriodAggregation_netAmount(ctx context.Context, field graphql.CollectedField, obj *model.PeriodAggregation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PeriodAggregation_netAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.NetAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int32,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PeriodAggregation_netAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PeriodAggregation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_healthCheck(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2398,6 +3149,112 @@ func (ec *executionContext) fieldContext_Query_node(ctx context.Context, field g
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_node_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_periodAggregation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_periodAggregation,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().PeriodAggregation(ctx, fc.Args["startDate"].(date.Date), fc.Args["endDate"].(date.Date))
+		},
+		nil,
+		ec.marshalNPeriodAggregation2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregation,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_periodAggregation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "startDate":
+				return ec.fieldContext_PeriodAggregation_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_PeriodAggregation_endDate(ctx, field)
+			case "expenses":
+				return ec.fieldContext_PeriodAggregation_expenses(ctx, field)
+			case "revenue":
+				return ec.fieldContext_PeriodAggregation_revenue(ctx, field)
+			case "netAmount":
+				return ec.fieldContext_PeriodAggregation_netAmount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PeriodAggregation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_periodAggregation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_childAccountBreakdown(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_childAccountBreakdown,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ChildAccountBreakdown(ctx, fc.Args["parentId"].(pulid.ID), fc.Args["startDate"].(date.Date), fc.Args["endDate"].(date.Date))
+		},
+		nil,
+		ec.marshalNChildAccountBreakdown2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐChildAccountBreakdown,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_childAccountBreakdown(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "parent":
+				return ec.fieldContext_ChildAccountBreakdown_parent(ctx, field)
+			case "startDate":
+				return ec.fieldContext_ChildAccountBreakdown_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_ChildAccountBreakdown_endDate(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_ChildAccountBreakdown_totalAmount(ctx, field)
+			case "children":
+				return ec.fieldContext_ChildAccountBreakdown_children(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChildAccountBreakdown", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_childAccountBreakdown_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2723,6 +3580,72 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RevenueSummary_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.RevenueSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RevenueSummary_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int32,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RevenueSummary_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RevenueSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RevenueSummary_byAccount(ctx context.Context, field graphql.CollectedField, obj *model.RevenueSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RevenueSummary_byAccount,
+		func(ctx context.Context) (any, error) {
+			return obj.ByAccount, nil
+		},
+		nil,
+		ec.marshalNAccountAmountSummary2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐAccountAmountSummaryᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RevenueSummary_byAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RevenueSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ledgerAccount":
+				return ec.fieldContext_AccountAmountSummary_ledgerAccount(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_AccountAmountSummary_totalAmount(ctx, field)
+			case "ratio":
+				return ec.fieldContext_AccountAmountSummary_ratio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountAmountSummary", field.Name)
 		},
 	}
 	return fc, nil
@@ -4877,6 +5800,145 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 
 // region    **************************** object.gotpl ****************************
 
+var accountAmountSummaryImplementors = []string{"AccountAmountSummary"}
+
+func (ec *executionContext) _AccountAmountSummary(ctx context.Context, sel ast.SelectionSet, obj *model.AccountAmountSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, accountAmountSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AccountAmountSummary")
+		case "ledgerAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AccountAmountSummary_ledgerAccount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "totalAmount":
+			out.Values[i] = ec._AccountAmountSummary_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "ratio":
+			out.Values[i] = ec._AccountAmountSummary_ratio(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var childAccountBreakdownImplementors = []string{"ChildAccountBreakdown"}
+
+func (ec *executionContext) _ChildAccountBreakdown(ctx context.Context, sel ast.SelectionSet, obj *model.ChildAccountBreakdown) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, childAccountBreakdownImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChildAccountBreakdown")
+		case "parent":
+			out.Values[i] = ec._ChildAccountBreakdown_parent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startDate":
+			out.Values[i] = ec._ChildAccountBreakdown_startDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endDate":
+			out.Values[i] = ec._ChildAccountBreakdown_endDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAmount":
+			out.Values[i] = ec._ChildAccountBreakdown_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "children":
+			out.Values[i] = ec._ChildAccountBreakdown_children(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var deleteTransactionPayloadImplementors = []string{"DeleteTransactionPayload"}
 
 func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteTransactionPayload) graphql.Marshaler {
@@ -4890,6 +5952,50 @@ func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel a
 			out.Values[i] = graphql.MarshalString("DeleteTransactionPayload")
 		case "success":
 			out.Values[i] = ec._DeleteTransactionPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var expenseSummaryImplementors = []string{"ExpenseSummary"}
+
+func (ec *executionContext) _ExpenseSummary(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, expenseSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExpenseSummary")
+		case "totalAmount":
+			out.Values[i] = ec._ExpenseSummary_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "byAccount":
+			out.Values[i] = ec._ExpenseSummary_byAccount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5341,6 +6447,65 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var periodAggregationImplementors = []string{"PeriodAggregation"}
+
+func (ec *executionContext) _PeriodAggregation(ctx context.Context, sel ast.SelectionSet, obj *model.PeriodAggregation) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, periodAggregationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PeriodAggregation")
+		case "startDate":
+			out.Values[i] = ec._PeriodAggregation_startDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endDate":
+			out.Values[i] = ec._PeriodAggregation_endDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expenses":
+			out.Values[i] = ec._PeriodAggregation_expenses(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "revenue":
+			out.Values[i] = ec._PeriodAggregation_revenue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netAmount":
+			out.Values[i] = ec._PeriodAggregation_netAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -5392,6 +6557,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_node(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "periodAggregation":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_periodAggregation(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "childAccountBreakdown":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_childAccountBreakdown(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -5491,6 +6700,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var revenueSummaryImplementors = []string{"RevenueSummary"}
+
+func (ec *executionContext) _RevenueSummary(ctx context.Context, sel ast.SelectionSet, obj *model.RevenueSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, revenueSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RevenueSummary")
+		case "totalAmount":
+			out.Values[i] = ec._RevenueSummary_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "byAccount":
+			out.Values[i] = ec._RevenueSummary_byAccount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6005,6 +7258,60 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAccountAmountSummary2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐAccountAmountSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AccountAmountSummary) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAccountAmountSummary2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐAccountAmountSummary(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAccountAmountSummary2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐAccountAmountSummary(ctx context.Context, sel ast.SelectionSet, v *model.AccountAmountSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AccountAmountSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6019,6 +7326,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNChildAccountBreakdown2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐChildAccountBreakdown(ctx context.Context, sel ast.SelectionSet, v model.ChildAccountBreakdown) graphql.Marshaler {
+	return ec._ChildAccountBreakdown(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChildAccountBreakdown2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐChildAccountBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.ChildAccountBreakdown) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChildAccountBreakdown(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCreateLedgerAccountInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCreateLedgerAccountInput(ctx context.Context, v any) (model.CreateLedgerAccountInput, error) {
@@ -6069,6 +7390,32 @@ func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖgithubᚗcomᚋs
 		return graphql.Null
 	}
 	return ec._DeleteTransactionPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExpenseSummary2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐExpenseSummary(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExpenseSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx context.Context, v any) (pulid.ID, error) {
@@ -6227,6 +7574,30 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkb
 		return graphql.Null
 	}
 	return ec._PageInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPeriodAggregation2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregation(ctx context.Context, sel ast.SelectionSet, v model.PeriodAggregation) graphql.Marshaler {
+	return ec._PeriodAggregation(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPeriodAggregation2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregation(ctx context.Context, sel ast.SelectionSet, v *model.PeriodAggregation) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PeriodAggregation(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRevenueSummary2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐRevenueSummary(ctx context.Context, sel ast.SelectionSet, v *model.RevenueSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RevenueSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {

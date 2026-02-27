@@ -40,21 +40,7 @@ func init() {
 	// journalentryDescAmount is the schema descriptor for amount field.
 	journalentryDescAmount := journalentryFields[1].Descriptor()
 	// journalentry.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
-	journalentry.AmountValidator = func() func([]byte) error {
-		validators := journalentryDescAmount.Validators
-		fns := [...]func([]byte) error{
-			validators[0].(func([]byte) error),
-			validators[1].(func([]byte) error),
-		}
-		return func(amount []byte) error {
-			for _, fn := range fns {
-				if err := fn(amount); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
+	journalentry.AmountValidator = journalentryDescAmount.Validators[0].(func(int32) error)
 	// journalentryDescCreatedAt is the schema descriptor for created_at field.
 	journalentryDescCreatedAt := journalentryFields[3].Descriptor()
 	// journalentry.DefaultCreatedAt holds the default value on creation for the created_at field.

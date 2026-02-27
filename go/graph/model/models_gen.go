@@ -18,6 +18,20 @@ type Node interface {
 	GetID() pulid.ID
 }
 
+type AccountAmountSummary struct {
+	LedgerAccount *LedgerAccount `json:"ledgerAccount"`
+	TotalAmount   int32          `json:"totalAmount"`
+	Ratio         float64        `json:"ratio"`
+}
+
+type ChildAccountBreakdown struct {
+	Parent      *LedgerAccount          `json:"parent"`
+	StartDate   date.Date               `json:"startDate"`
+	EndDate     date.Date               `json:"endDate"`
+	TotalAmount int32                   `json:"totalAmount"`
+	Children    []*AccountAmountSummary `json:"children"`
+}
+
 type CreateLedgerAccountInput struct {
 	ParentID *pulid.ID         `json:"parentId,omitempty"`
 	Name     string            `json:"name"`
@@ -33,6 +47,11 @@ type CreateTransactionInput struct {
 
 type DeleteTransactionPayload struct {
 	Success bool `json:"success"`
+}
+
+type ExpenseSummary struct {
+	TotalAmount int32                   `json:"totalAmount"`
+	ByAccount   []*AccountAmountSummary `json:"byAccount"`
 }
 
 type JournalEntryInput struct {
@@ -63,7 +82,20 @@ type PageInfo struct {
 	HasNextPage     bool      `json:"hasNextPage"`
 }
 
+type PeriodAggregation struct {
+	StartDate date.Date       `json:"startDate"`
+	EndDate   date.Date       `json:"endDate"`
+	Expenses  *ExpenseSummary `json:"expenses"`
+	Revenue   *RevenueSummary `json:"revenue"`
+	NetAmount int32           `json:"netAmount"`
+}
+
 type Query struct {
+}
+
+type RevenueSummary struct {
+	TotalAmount int32                   `json:"totalAmount"`
+	ByAccount   []*AccountAmountSummary `json:"byAccount"`
 }
 
 type TransactionConnection struct {

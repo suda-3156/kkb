@@ -67,20 +67,10 @@ func (m *TransactionManager) Update(
 		}
 	}
 
-	// Encrypt entry amounts if entries are provided, using the same effective key.
-	var encAmounts [][]byte
-	for _, entry := range input.Entries {
-		payload, err := m.em.Encrypt(ctx, strconv.FormatInt(int64(entry.Amount), 10))
-		if err != nil {
-			return nil, fmt.Errorf("update: encrypt amount: %w", err)
-		}
-		encAmounts = append(encAmounts, payload.Ciphertext)
-	}
-
 	var txn *graph.Transaction
 	var errTx error
 	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
-		txn, errTx = m.updateTx(ctx, client, input, encDesc, encAmounts)
+		txn, errTx = m.updateTx(ctx, client, input, encDesc)
 		return errTx
 	}); err != nil {
 		return nil, err
@@ -100,7 +90,6 @@ func (m *TransactionManager) updateTx(
 	client *ent.Client,
 	input graph.UpdateTransactionInput, //nolint:gocritic // To follow the generated code pattern.
 	encDesc *encryption.EncryptionPayload,
-	encAmounts [][]byte,
 ) (*graph.Transaction, error) {
 	// Get the existing transaction.
 	existing, err := client.Transaction.Query().
@@ -149,7 +138,7 @@ func (m *TransactionManager) updateTx(
 
 		// Create new journal entries.
 		createdEntries := make([]*ent.JournalEntry, 0, len(input.Entries))
-		for i, entryInput := range input.Entries {
+		for _, entryInput := range input.Entries {
 			lac, err := client.LedgerAccount.Query().
 				Where(ledgeraccount.PublicID(entryInput.LedgerAccountID)).
 				Only(ctx)
@@ -172,7 +161,7 @@ func (m *TransactionManager) updateTx(
 
 			entry, err := client.JournalEntry.Create().
 				SetPublicID(entryPublicID).
-				SetAmount(encAmounts[i]).
+				SetAmount(entryInput.Amount).
 				SetKind(m.convertKindToEnt(entryInput.Kind)).
 				SetTransactionID(updated.ID).
 				SetLedgerAccountID(lac.ID).

@@ -43,7 +43,8 @@ type JournalEntryMutation struct {
 	typ                   string
 	id                    *int
 	public_id             *pulid.ID
-	amount                *[]byte
+	amount                *int32
+	addamount             *int32
 	kind                  *schema.JournalEntryKind
 	created_at            *time.Time
 	updated_at            *time.Time
@@ -192,12 +193,13 @@ func (m *JournalEntryMutation) ResetPublicID() {
 }
 
 // SetAmount sets the "amount" field.
-func (m *JournalEntryMutation) SetAmount(b []byte) {
-	m.amount = &b
+func (m *JournalEntryMutation) SetAmount(i int32) {
+	m.amount = &i
+	m.addamount = nil
 }
 
 // Amount returns the value of the "amount" field in the mutation.
-func (m *JournalEntryMutation) Amount() (r []byte, exists bool) {
+func (m *JournalEntryMutation) Amount() (r int32, exists bool) {
 	v := m.amount
 	if v == nil {
 		return
@@ -208,7 +210,7 @@ func (m *JournalEntryMutation) Amount() (r []byte, exists bool) {
 // OldAmount returns the old "amount" field's value of the JournalEntry entity.
 // If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JournalEntryMutation) OldAmount(ctx context.Context) (v []byte, err error) {
+func (m *JournalEntryMutation) OldAmount(ctx context.Context) (v int32, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAmount is only allowed on UpdateOne operations")
 	}
@@ -222,9 +224,28 @@ func (m *JournalEntryMutation) OldAmount(ctx context.Context) (v []byte, err err
 	return oldValue.Amount, nil
 }
 
+// AddAmount adds i to the "amount" field.
+func (m *JournalEntryMutation) AddAmount(i int32) {
+	if m.addamount != nil {
+		*m.addamount += i
+	} else {
+		m.addamount = &i
+	}
+}
+
+// AddedAmount returns the value that was added to the "amount" field in this mutation.
+func (m *JournalEntryMutation) AddedAmount() (r int32, exists bool) {
+	v := m.addamount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // ResetAmount resets all changes to the "amount" field.
 func (m *JournalEntryMutation) ResetAmount() {
 	m.amount = nil
+	m.addamount = nil
 }
 
 // SetKind sets the "kind" field.
@@ -517,7 +538,7 @@ func (m *JournalEntryMutation) SetField(name string, value ent.Value) error {
 		m.SetPublicID(v)
 		return nil
 	case journalentry.FieldAmount:
-		v, ok := value.([]byte)
+		v, ok := value.(int32)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -551,13 +572,21 @@ func (m *JournalEntryMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *JournalEntryMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addamount != nil {
+		fields = append(fields, journalentry.FieldAmount)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *JournalEntryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case journalentry.FieldAmount:
+		return m.AddedAmount()
+	}
 	return nil, false
 }
 
@@ -566,6 +595,13 @@ func (m *JournalEntryMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *JournalEntryMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case journalentry.FieldAmount:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAmount(v)
+		return nil
 	}
 	return fmt.Errorf("unknown JournalEntry numeric field %s", name)
 }

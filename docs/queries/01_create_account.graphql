@@ -2,8 +2,8 @@ mutation {
   createLedgerAccount(input: { name: "test1", kind: ASSET, isGroup: false }) {
     id
     parent {
-      name,
-    },
+      name
+    }
     name
     kind
     isGroup

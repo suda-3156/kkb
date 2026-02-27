@@ -12,7 +12,7 @@ var (
 	JournalEntriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
-		{Name: "amount", Type: field.TypeBytes, Size: 256},
+		{Name: "amount", Type: field.TypeInt32},
 		{Name: "kind", Type: field.TypeEnum, Enums: []string{"DEBIT", "CREDIT"}},
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},

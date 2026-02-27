@@ -3,7 +3,6 @@ package transaction
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/schema"
@@ -33,16 +32,6 @@ func (m *TransactionManager) convertKindToGraph(kind schema.JournalEntryKind) gr
 }
 
 func (m *TransactionManager) convertEntryToGraph(ctx context.Context, entry *ent.JournalEntry, keyID int) (*graph.JournalEntry, error) {
-	amountStr, err := m.em.Decrypt(ctx, entry.Amount, keyID)
-	if err != nil {
-		return nil, fmt.Errorf("convertEntryToGraph: decrypt amount: %w", err)
-	}
-
-	amount, err := strconv.ParseInt(amountStr, 10, 32)
-	if err != nil {
-		return nil, fmt.Errorf("convertEntryToGraph: parse amount: %w", err)
-	}
-
 	var ledgerAccount *graph.LedgerAccount
 	if entry.Edges.LedgerAccount != nil {
 		ledgerAccount = &graph.LedgerAccount{
@@ -53,7 +42,7 @@ func (m *TransactionManager) convertEntryToGraph(ctx context.Context, entry *ent
 	return &graph.JournalEntry{
 		ID:            entry.PublicID,
 		LedgerAccount: ledgerAccount,
-		Amount:        int32(amount),
+		Amount:        entry.Amount,
 		Kind:          m.convertKindToGraph(entry.Kind),
 		CreatedAt:     entry.CreatedAt,
 		UpdatedAt:     entry.UpdatedAt,
