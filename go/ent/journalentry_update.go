@@ -32,8 +32,23 @@ func (_u *JournalEntryUpdate) Where(ps ...predicate.JournalEntry) *JournalEntryU
 }
 
 // SetAmount sets the "amount" field.
-func (_u *JournalEntryUpdate) SetAmount(v []byte) *JournalEntryUpdate {
+func (_u *JournalEntryUpdate) SetAmount(v int32) *JournalEntryUpdate {
+	_u.mutation.ResetAmount()
 	_u.mutation.SetAmount(v)
+	return _u
+}
+
+// SetNillableAmount sets the "amount" field if the given value is not nil.
+func (_u *JournalEntryUpdate) SetNillableAmount(v *int32) *JournalEntryUpdate {
+	if v != nil {
+		_u.SetAmount(*v)
+	}
+	return _u
+}
+
+// AddAmount adds value to the "amount" field.
+func (_u *JournalEntryUpdate) AddAmount(v int32) *JournalEntryUpdate {
+	_u.mutation.AddAmount(v)
 	return _u
 }
 
@@ -166,7 +181,10 @@ func (_u *JournalEntryUpdate) sqlSave(ctx context.Context) (_node int, err error
 		}
 	}
 	if value, ok := _u.mutation.Amount(); ok {
-		_spec.SetField(journalentry.FieldAmount, field.TypeBytes, value)
+		_spec.SetField(journalentry.FieldAmount, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.AddedAmount(); ok {
+		_spec.AddField(journalentry.FieldAmount, field.TypeInt32, value)
 	}
 	if value, ok := _u.mutation.Kind(); ok {
 		_spec.SetField(journalentry.FieldKind, field.TypeEnum, value)
@@ -253,8 +271,23 @@ type JournalEntryUpdateOne struct {
 }
 
 // SetAmount sets the "amount" field.
-func (_u *JournalEntryUpdateOne) SetAmount(v []byte) *JournalEntryUpdateOne {
+func (_u *JournalEntryUpdateOne) SetAmount(v int32) *JournalEntryUpdateOne {
+	_u.mutation.ResetAmount()
 	_u.mutation.SetAmount(v)
+	return _u
+}
+
+// SetNillableAmount sets the "amount" field if the given value is not nil.
+func (_u *JournalEntryUpdateOne) SetNillableAmount(v *int32) *JournalEntryUpdateOne {
+	if v != nil {
+		_u.SetAmount(*v)
+	}
+	return _u
+}
+
+// AddAmount adds value to the "amount" field.
+func (_u *JournalEntryUpdateOne) AddAmount(v int32) *JournalEntryUpdateOne {
+	_u.mutation.AddAmount(v)
 	return _u
 }
 
@@ -417,7 +450,10 @@ func (_u *JournalEntryUpdateOne) sqlSave(ctx context.Context) (_node *JournalEnt
 		}
 	}
 	if value, ok := _u.mutation.Amount(); ok {
-		_spec.SetField(journalentry.FieldAmount, field.TypeBytes, value)
+		_spec.SetField(journalentry.FieldAmount, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.AddedAmount(); ok {
+		_spec.AddField(journalentry.FieldAmount, field.TypeInt32, value)
 	}
 	if value, ok := _u.mutation.Kind(); ok {
 		_spec.SetField(journalentry.FieldKind, field.TypeEnum, value)

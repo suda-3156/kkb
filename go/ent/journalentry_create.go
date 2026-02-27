@@ -31,7 +31,7 @@ func (_c *JournalEntryCreate) SetPublicID(v pulid.ID) *JournalEntryCreate {
 }
 
 // SetAmount sets the "amount" field.
-func (_c *JournalEntryCreate) SetAmount(v []byte) *JournalEntryCreate {
+func (_c *JournalEntryCreate) SetAmount(v int32) *JournalEntryCreate {
 	_c.mutation.SetAmount(v)
 	return _c
 }
@@ -206,7 +206,7 @@ func (_c *JournalEntryCreate) createSpec() (*JournalEntry, *sqlgraph.CreateSpec)
 		_node.PublicID = value
 	}
 	if value, ok := _c.mutation.Amount(); ok {
-		_spec.SetField(journalentry.FieldAmount, field.TypeBytes, value)
+		_spec.SetField(journalentry.FieldAmount, field.TypeInt32, value)
 		_node.Amount = value
 	}
 	if value, ok := _c.mutation.Kind(); ok {

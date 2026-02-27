@@ -22,12 +22,12 @@ func (r *accountAmountSummaryResolver) LedgerAccount(ctx context.Context, obj *m
 
 // PeriodAggregation is the resolver for the periodAggregation field.
 func (r *queryResolver) PeriodAggregation(ctx context.Context, startDate date.Date, endDate date.Date) (*model.PeriodAggregation, error) {
-	return r.agg.PeriodAggregation(ctx, startDate, endDate)
+	panic("not implemented: PeriodAggregation - periodAggregation")
 }
 
 // ChildAccountBreakdown is the resolver for the childAccountBreakdown field.
 func (r *queryResolver) ChildAccountBreakdown(ctx context.Context, parentID pulid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error) {
-	return r.agg.ChildAccountBreakdown(ctx, parentID, startDate, endDate)
+	panic("not implemented: ChildAccountBreakdown - childAccountBreakdown")
 }
 
 // AccountAmountSummary returns graph.AccountAmountSummaryResolver implementation.

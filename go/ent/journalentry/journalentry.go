@@ -84,7 +84,7 @@ var (
 	// PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
 	PublicIDValidator func(string) error
 	// AmountValidator is a validator for the "amount" field. It is called by the builders before save.
-	AmountValidator func([]byte) error
+	AmountValidator func(int32) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -114,6 +114,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByPublicID orders the results by the public_id field.
 func ByPublicID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPublicID, opts...).ToFunc()
+}
+
+// ByAmount orders the results by the amount field.
+func ByAmount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAmount, opts...).ToFunc()
 }
 
 // ByKind orders the results by the kind field.

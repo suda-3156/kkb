@@ -63,7 +63,7 @@ func PublicID(v pulid.ID) predicate.JournalEntry {
 }
 
 // Amount applies equality check predicate on the "amount" field. It's identical to AmountEQ.
-func Amount(v []byte) predicate.JournalEntry {
+func Amount(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldEQ(FieldAmount, v))
 }
 
@@ -148,42 +148,42 @@ func PublicIDContainsFold(v pulid.ID) predicate.JournalEntry {
 }
 
 // AmountEQ applies the EQ predicate on the "amount" field.
-func AmountEQ(v []byte) predicate.JournalEntry {
+func AmountEQ(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldEQ(FieldAmount, v))
 }
 
 // AmountNEQ applies the NEQ predicate on the "amount" field.
-func AmountNEQ(v []byte) predicate.JournalEntry {
+func AmountNEQ(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldNEQ(FieldAmount, v))
 }
 
 // AmountIn applies the In predicate on the "amount" field.
-func AmountIn(vs ...[]byte) predicate.JournalEntry {
+func AmountIn(vs ...int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldIn(FieldAmount, vs...))
 }
 
 // AmountNotIn applies the NotIn predicate on the "amount" field.
-func AmountNotIn(vs ...[]byte) predicate.JournalEntry {
+func AmountNotIn(vs ...int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldNotIn(FieldAmount, vs...))
 }
 
 // AmountGT applies the GT predicate on the "amount" field.
-func AmountGT(v []byte) predicate.JournalEntry {
+func AmountGT(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldGT(FieldAmount, v))
 }
 
 // AmountGTE applies the GTE predicate on the "amount" field.
-func AmountGTE(v []byte) predicate.JournalEntry {
+func AmountGTE(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldGTE(FieldAmount, v))
 }
 
 // AmountLT applies the LT predicate on the "amount" field.
-func AmountLT(v []byte) predicate.JournalEntry {
+func AmountLT(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldLT(FieldAmount, v))
 }
 
 // AmountLTE applies the LTE predicate on the "amount" field.
-func AmountLTE(v []byte) predicate.JournalEntry {
+func AmountLTE(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldLTE(FieldAmount, v))
 }
 

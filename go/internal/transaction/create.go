@@ -46,6 +46,10 @@ func (m *TransactionManager) Create(
 			return nil, ErrAmountMustBePositive
 		}
 
+		if entry.Amount > 999_999_999 {
+			return nil, ErrAmountTooLarge
+		}
+
 		if len(strconv.FormatInt(int64(entry.Amount), 10)) > 9 {
 			return nil, ErrAmountTooLarge
 		}
@@ -65,20 +69,10 @@ func (m *TransactionManager) Create(
 		return nil, fmt.Errorf("create: encrypt description: %w", err)
 	}
 
-	// Encrypt all entry amounts upfront using the same effective key.
-	encAmounts := make([][]byte, len(input.Entries))
-	for i, entry := range input.Entries {
-		payload, err := m.em.Encrypt(ctx, strconv.FormatInt(int64(entry.Amount), 10))
-		if err != nil {
-			return nil, fmt.Errorf("create: encrypt amount: %w", err)
-		}
-		encAmounts[i] = payload.Ciphertext
-	}
-
 	var txn *graph.Transaction
 	var errTx error
 	if err := m.db.Client.WithTx(ctx, func(ctx context.Context, client *ent.Client) error {
-		txn, errTx = m.createTx(ctx, client, input, encDesc, encAmounts)
+		txn, errTx = m.createTx(ctx, client, input, encDesc)
 		return errTx
 	}); err != nil {
 		return nil, fmt.Errorf("create: %w", err)
@@ -92,7 +86,6 @@ func (m *TransactionManager) createTx(
 	client *ent.Client,
 	input graph.CreateTransactionInput,
 	encDesc *encryption.EncryptionPayload,
-	encAmounts [][]byte,
 ) (*graph.Transaction, error) {
 	publicID := pulid.MustNew("txn_")
 
@@ -107,7 +100,7 @@ func (m *TransactionManager) createTx(
 	}
 
 	createdEntries := make([]*ent.JournalEntry, 0, len(input.Entries))
-	for i, entryInput := range input.Entries {
+	for _, entryInput := range input.Entries {
 		lac, err := client.LedgerAccount.Query().
 			Where(ledgeraccount.PublicID(entryInput.LedgerAccountID)).
 			Only(ctx)
@@ -130,7 +123,7 @@ func (m *TransactionManager) createTx(
 
 		entry, err := client.JournalEntry.Create().
 			SetPublicID(entryPublicID).
-			SetAmount(encAmounts[i]).
+			SetAmount(entryInput.Amount).
 			SetKind(m.convertKindToEnt(entryInput.Kind)).
 			SetTransactionID(created.ID).
 			SetLedgerAccountID(lac.ID).

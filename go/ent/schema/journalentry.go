@@ -46,10 +46,8 @@ func (JournalEntry) Fields() []ent.Field {
 			NotEmpty().
 			Unique().
 			Immutable(),
-		field.Bytes("amount").
-			// Encrypted field.
-			MaxLen(256). // 10 chars in UTF8mb4 (~ 40 bytes) + overhead for encryption (e.g. 28 bytes for AES-GCM)
-			NotEmpty(),
+		field.Int32("amount").
+			NonNegative(),
 		field.Enum("kind").
 			GoType(JournalEntryKind("")),
 		field.Time("created_at").
