@@ -33,6 +33,10 @@ func (JournalEntryKind) Values() (kinds []string) {
 	return
 }
 
+func (k JournalEntryKind) String() string {
+	return string(k)
+}
+
 // Fields of the JournalEntry.
 func (JournalEntry) Fields() []ent.Field {
 	return []ent.Field{

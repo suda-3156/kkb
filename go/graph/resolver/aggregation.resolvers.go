@@ -17,12 +17,17 @@ import (
 // LedgerAccount is the resolver for the ledgerAccount field.
 // The LedgerAccount is already fully populated during aggregation; return it directly.
 func (r *accountAmountSummaryResolver) LedgerAccount(ctx context.Context, obj *model.AccountAmountSummary) (*model.LedgerAccount, error) {
-	return obj.LedgerAccount, nil
+	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.LedgerAccount.IntID)
+	lac, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	return lac, nil
 }
 
 // PeriodAggregation is the resolver for the periodAggregation field.
 func (r *queryResolver) PeriodAggregation(ctx context.Context, startDate date.Date, endDate date.Date) (*model.PeriodAggregation, error) {
-	panic("not implemented: PeriodAggregation - periodAggregation")
+	return r.agg.GetPeriodAggregation(ctx, startDate, endDate)
 }
 
 // ChildAccountBreakdown is the resolver for the childAccountBreakdown field.
