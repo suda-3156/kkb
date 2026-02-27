@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/suda-3156/kkb/go/graph"
+	"github.com/suda-3156/kkb/go/internal/date"
 	lac "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	txn "github.com/suda-3156/kkb/go/internal/transaction"
@@ -16,6 +17,15 @@ func ErrorPresenter(ctx context.Context, err error) *gqlerror.Error {
 	logging.Error(ctx, "error in GraphQL resolver", slog.Any("error", err))
 
 	switch {
+	// Date scalar validation
+	case errors.Is(err, date.ErrInvalidDateFormat), errors.Is(err, date.ErrInvalidDate):
+		return &gqlerror.Error{
+			Message: err.Error(),
+			Extensions: map[string]interface{}{
+				"code": "INVALID_DATE",
+			},
+		}
+
 	// graphql layer
 	case errors.Is(err, graph.ErrInvalidRequest):
 		return &gqlerror.Error{
