@@ -52,3 +52,7 @@ export const getYearStr = (date: Date) => {
 
   return { start: startStr, end: endStr }
 }
+
+export const dateStr = (date: Date) => {
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`
+}

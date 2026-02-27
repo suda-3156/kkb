@@ -67,7 +67,7 @@ export const ExpensesCard = () => {
         <Reveal index={0}>
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">今週</p>
-            <p className="text-right font-bold text-6xl tabular-nums">
+            <p className="text-right font-bold text-5xl tabular-nums md:text-6xl">
               {formatYen(data?.thisWeek.expenses.totalAmount ?? 0)}
             </p>
           </div>
