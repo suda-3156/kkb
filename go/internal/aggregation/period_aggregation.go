@@ -101,7 +101,6 @@ func (m *AggregationManager) GetPeriodAggregation(
 
 	// Populate the response with expense data
 	for lacID, amount := range expenseMap {
-		response.Expenses.TotalAmount += amount
 		response.Expenses.ByAccount = append(
 			response.Expenses.ByAccount,
 			&graph.AccountAmountSummary{
@@ -135,7 +134,6 @@ func (m *AggregationManager) GetPeriodAggregation(
 
 	// Populate the response with revenue data
 	for lacID, amount := range revenueMap {
-		response.Revenue.TotalAmount += amount
 		response.Revenue.ByAccount = append(
 			response.Revenue.ByAccount,
 			&graph.AccountAmountSummary{

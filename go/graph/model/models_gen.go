@@ -24,6 +24,12 @@ type AccountAmountSummary struct {
 	Ratio         float64        `json:"ratio"`
 }
 
+type AccountBalance struct {
+	LedgerAccount *LedgerAccount `json:"ledgerAccount"`
+	Balance       int32          `json:"balance"`
+	AsOf          date.Date      `json:"asOf"`
+}
+
 type ChildAccountBreakdown struct {
 	Parent      *LedgerAccount          `json:"parent"`
 	StartDate   date.Date               `json:"startDate"`
@@ -90,6 +96,11 @@ type PeriodAggregation struct {
 	NetAmount int32           `json:"netAmount"`
 }
 
+type PeriodAggregationSeries struct {
+	Granularity Granularity          `json:"granularity"`
+	DataPoints  []*PeriodAggregation `json:"dataPoints"`
+}
+
 type Query struct {
 }
 
@@ -110,6 +121,12 @@ type TransactionEdge struct {
 	Node   *Transaction `json:"node"`
 }
 
+type TrialBalance struct {
+	AsOf     date.Date         `json:"asOf"`
+	Accounts []*AccountBalance `json:"accounts"`
+	NetWorth int32             `json:"netWorth"`
+}
+
 type UpdateLedgerAccountInput struct {
 	ID          pulid.ID  `json:"id"`
 	ParentID    *pulid.ID `json:"parentId,omitempty"`
@@ -125,6 +142,63 @@ type UpdateTransactionInput struct {
 	Date        *date.Date           `json:"date,omitempty"`
 	Description *string              `json:"description,omitempty"`
 	UpdatedAt   time.Time            `json:"updatedAt"`
+}
+
+type Granularity string
+
+const (
+	GranularityDaily   Granularity = "DAILY"
+	GranularityWeekly  Granularity = "WEEKLY"
+	GranularityMonthly Granularity = "MONTHLY"
+)
+
+var AllGranularity = []Granularity{
+	GranularityDaily,
+	GranularityWeekly,
+	GranularityMonthly,
+}
+
+func (e Granularity) IsValid() bool {
+	switch e {
+	case GranularityDaily, GranularityWeekly, GranularityMonthly:
+		return true
+	}
+	return false
+}
+
+func (e Granularity) String() string {
+	return string(e)
+}
+
+func (e *Granularity) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Granularity(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Granularity", str)
+	}
+	return nil
+}
+
+func (e Granularity) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *Granularity) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e Granularity) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type JournalEntryKind string

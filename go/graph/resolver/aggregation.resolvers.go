@@ -25,14 +25,30 @@ func (r *accountAmountSummaryResolver) LedgerAccount(ctx context.Context, obj *m
 	return lac, nil
 }
 
+// LedgerAccount is the resolver for the ledgerAccount field.
+// AccountBalance always carries a fully-populated LedgerAccount set by GetTrialBalance.
+func (r *accountBalanceResolver) LedgerAccount(ctx context.Context, obj *model.AccountBalance) (*model.LedgerAccount, error) {
+	return obj.LedgerAccount, nil
+}
+
 // PeriodAggregation is the resolver for the periodAggregation field.
 func (r *queryResolver) PeriodAggregation(ctx context.Context, startDate date.Date, endDate date.Date) (*model.PeriodAggregation, error) {
 	return r.agg.GetPeriodAggregation(ctx, startDate, endDate)
 }
 
+// PeriodAggregationSeries is the resolver for the periodAggregationSeries field.
+func (r *queryResolver) PeriodAggregationSeries(ctx context.Context, startDate date.Date, endDate date.Date, granularity model.Granularity) (*model.PeriodAggregationSeries, error) {
+	return r.agg.GetPeriodAggregationSeries(ctx, startDate, endDate, granularity)
+}
+
+// TrialBalance is the resolver for the trialBalance field.
+func (r *queryResolver) TrialBalance(ctx context.Context, asOf date.Date) (*model.TrialBalance, error) {
+	return r.agg.GetTrialBalance(ctx, asOf)
+}
+
 // ChildAccountBreakdown is the resolver for the childAccountBreakdown field.
 func (r *queryResolver) ChildAccountBreakdown(ctx context.Context, parentID pulid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error) {
-	panic("not implemented: ChildAccountBreakdown - childAccountBreakdown")
+	return r.agg.GetChildAccountBreakdown(ctx, parentID, startDate, endDate)
 }
 
 // AccountAmountSummary returns graph.AccountAmountSummaryResolver implementation.
@@ -40,4 +56,8 @@ func (r *Resolver) AccountAmountSummary() graph.AccountAmountSummaryResolver {
 	return &accountAmountSummaryResolver{r}
 }
 
+// AccountBalance returns graph.AccountBalanceResolver implementation.
+func (r *Resolver) AccountBalance() graph.AccountBalanceResolver { return &accountBalanceResolver{r} }
+
 type accountAmountSummaryResolver struct{ *Resolver }
+type accountBalanceResolver struct{ *Resolver }
