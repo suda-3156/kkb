@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Montserrat, Open_Sans } from "next/font/google"
+import { Montserrat, Open_Sans, Prata, Shippori_Mincho } from "next/font/google"
 import { Providers } from "@/components/providers"
 import "./globals.css"
 import { ThemeHeader } from "@/components/theme/header"
@@ -28,6 +28,20 @@ const openSans = Open_Sans({
   weight: ["400", "500", "600"],
 })
 
+const prata = Prata({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-prata",
+  weight: ["400"],
+})
+
+const shipporiMincho = Shippori_Mincho({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-shippori-mincho",
+  weight: ["400", "500", "600", "700", "800"],
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,7 +49,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={cn("antialiased", montserrat.variable, openSans.variable)}>
+      <body
+        className={cn(
+          "font-shippori-mincho antialiased",
+          montserrat.variable,
+          openSans.variable,
+          prata.variable,
+          shipporiMincho.variable,
+        )}
+      >
         <Providers>
           <main className="relative flex h-screen w-full flex-col overflow-hidden bg-background">
             <ThemeHeader />

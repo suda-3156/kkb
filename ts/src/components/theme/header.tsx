@@ -15,7 +15,7 @@ export function ThemeHeader() {
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
-      <div className="container pointer-events-auto mx-auto flex items-center justify-end pt-1 pr-1">
+      <div className="container pointer-events-auto mx-auto flex items-center justify-end pt-5 pr-5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="relative">
             <Button variant="outline" size="icon" className="overflow-clip">
