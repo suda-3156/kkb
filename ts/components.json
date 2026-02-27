@@ -6,7 +6,7 @@
   "tailwind": {
     "config": "",
     "css": "src/app/globals.css",
-    "baseColor": "zinc",
+    "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
@@ -20,6 +20,8 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@abui": "https://abui.io/r/{name}.json"
+    "@abui": "https://abui.io/r/{name}.json",
+    "@eldoraui": "https://eldoraui.site/r/{name}.json",
+    "@intentui": "https://intentui.com/r/{name}"
   }
 }
