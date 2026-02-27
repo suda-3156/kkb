@@ -15,12 +15,12 @@ import * as types from "./graphql"
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-  "\n  query ListTransactions($first: Int!, $startDate: Date!, $endDate: Date!) {\n    transactions(first: $first , startDate: $startDate, endDate: $endDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      totalCount\n    }\n  }\n": typeof types.ListTransactionsDocument
+  "\n  query ListTransactions($first: Int!, $after: ID, $startDate: Date!) {\n    transactions(first: $first, after: $after, startDate: $startDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n": typeof types.ListTransactionsDocument
   "\n  query GetLedgerAccounts {\n    ledgerAccounts(first: 100) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n    }\n  }\n": typeof types.GetLedgerAccountsDocument
   "\n  mutation CreateTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n      date\n      description\n      entries {\n        id\n        amount\n        kind\n        ledgerAccount {\n          id\n          name\n        }\n      }\n    }\n  }\n": typeof types.CreateTransactionDocument
 }
 const documents: Documents = {
-  "\n  query ListTransactions($first: Int!, $startDate: Date!, $endDate: Date!) {\n    transactions(first: $first , startDate: $startDate, endDate: $endDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      totalCount\n    }\n  }\n":
+  "\n  query ListTransactions($first: Int!, $after: ID, $startDate: Date!) {\n    transactions(first: $first, after: $after, startDate: $startDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n":
     types.ListTransactionsDocument,
   "\n  query GetLedgerAccounts {\n    ledgerAccounts(first: 100) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n    }\n  }\n":
     types.GetLedgerAccountsDocument,
@@ -46,8 +46,8 @@ export function graphql(source: string): unknown
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "\n  query ListTransactions($first: Int!, $startDate: Date!, $endDate: Date!) {\n    transactions(first: $first , startDate: $startDate, endDate: $endDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      totalCount\n    }\n  }\n",
-): (typeof documents)["\n  query ListTransactions($first: Int!, $startDate: Date!, $endDate: Date!) {\n    transactions(first: $first , startDate: $startDate, endDate: $endDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      totalCount\n    }\n  }\n"]
+  source: "\n  query ListTransactions($first: Int!, $after: ID, $startDate: Date!) {\n    transactions(first: $first, after: $after, startDate: $startDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n",
+): (typeof documents)["\n  query ListTransactions($first: Int!, $after: ID, $startDate: Date!) {\n    transactions(first: $first, after: $after, startDate: $startDate) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          id\n          amount\n          kind\n          ledgerAccount {\n            id\n            name\n            kind\n          }\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n"]
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

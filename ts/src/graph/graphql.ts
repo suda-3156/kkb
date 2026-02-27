@@ -229,15 +229,14 @@ export type UpdateTransactionInput = {
 
 export type ListTransactionsQueryVariables = Exact<{
   first: Scalars["Int"]["input"]
+  after?: InputMaybe<Scalars["ID"]["input"]>
   startDate: Scalars["Date"]["input"]
-  endDate: Scalars["Date"]["input"]
 }>
 
 export type ListTransactionsQuery = {
   __typename?: "Query"
   transactions: {
     __typename?: "TransactionConnection"
-    totalCount: number
     nodes?: Array<{
       __typename?: "Transaction"
       id: string
@@ -256,6 +255,7 @@ export type ListTransactionsQuery = {
         }
       }>
     } | null> | null
+    pageInfo: { __typename?: "PageInfo"; endCursor?: string | null; hasNextPage: boolean }
   }
 }
 
@@ -314,15 +314,12 @@ export const ListTransactionsDocument = {
         },
         {
           kind: "VariableDefinition",
-          variable: { kind: "Variable", name: { kind: "Name", value: "startDate" } },
-          type: {
-            kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "Date" } },
-          },
+          variable: { kind: "Variable", name: { kind: "Name", value: "after" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
         },
         {
           kind: "VariableDefinition",
-          variable: { kind: "Variable", name: { kind: "Name", value: "endDate" } },
+          variable: { kind: "Variable", name: { kind: "Name", value: "startDate" } },
           type: {
             kind: "NonNullType",
             type: { kind: "NamedType", name: { kind: "Name", value: "Date" } },
@@ -343,13 +340,13 @@ export const ListTransactionsDocument = {
               },
               {
                 kind: "Argument",
-                name: { kind: "Name", value: "startDate" },
-                value: { kind: "Variable", name: { kind: "Name", value: "startDate" } },
+                name: { kind: "Name", value: "after" },
+                value: { kind: "Variable", name: { kind: "Name", value: "after" } },
               },
               {
                 kind: "Argument",
-                name: { kind: "Name", value: "endDate" },
-                value: { kind: "Variable", name: { kind: "Name", value: "endDate" } },
+                name: { kind: "Name", value: "startDate" },
+                value: { kind: "Variable", name: { kind: "Name", value: "startDate" } },
               },
             ],
             selectionSet: {
@@ -391,7 +388,17 @@ export const ListTransactionsDocument = {
                     ],
                   },
                 },
-                { kind: "Field", name: { kind: "Name", value: "totalCount" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pageInfo" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "endCursor" } },
+                      { kind: "Field", name: { kind: "Name", value: "hasNextPage" } },
+                    ],
+                  },
+                },
               ],
             },
           },

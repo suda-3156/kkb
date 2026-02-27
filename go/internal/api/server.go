@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -84,6 +86,12 @@ func (s *Server) ServeMux(ctx context.Context) http.Handler {
 
 	srv.SetErrorPresenter(ErrorPresenter)
 	srv.SetRecoverFunc(Recover)
+
+	srv.AroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+		// sleep 10 seconds to simulate a long-running request
+		time.Sleep(5 * time.Second)
+		return next(ctx)
+	})
 
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))

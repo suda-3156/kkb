@@ -16,7 +16,7 @@ const config: CodegenConfig = {
       },
     },
   },
-  hooks: { afterAllFileWrite: ["biome check --write"] },
+  // hooks: { afterAllFileWrite: ["biome check --write"] },
 }
 
 export default config

@@ -8,6 +8,23 @@ const link = new HttpLink({
 export function makeClient() {
   return new ApolloClient({
     link: link,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            transactions: {
+              // `after` と `first` を除いた引数でキャッシュキーを区別する
+              keyArgs: ["startDate"],
+              merge(existing, incoming) {
+                return {
+                  ...incoming,
+                  nodes: [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])],
+                }
+              },
+            },
+          },
+        },
+      },
+    }),
   })
 }

@@ -1,12 +1,22 @@
 "use client"
 
 import { useQuery } from "@apollo/client/react"
+import { useSetAtom } from "jotai"
+import { useEffect } from "react"
+import { Loading } from "@/components/loading"
 import { graphql } from "@/graph"
 import type { ListTransactionsQuery } from "@/graph/graphql"
+import {
+  ExpensesByCategoryCard,
+  ExpensesCard,
+  ExpenseTransitionsCard,
+  RecentTransactionsCard,
+} from "./_components/summary-cards"
+import { transactionsAtom } from "./store"
 
 const ListTransactions = graphql(/* GraphQL */ `
-  query ListTransactions($first: Int!, $startDate: Date!, $endDate: Date!) {
-    transactions(first: $first , startDate: $startDate, endDate: $endDate) {
+  query ListTransactions($first: Int!, $after: ID, $startDate: Date!) {
+    transactions(first: $first, after: $after, startDate: $startDate) {
       nodes {
         id
         date
@@ -22,27 +32,59 @@ const ListTransactions = graphql(/* GraphQL */ `
           }
         }
       }
-      totalCount
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
     }
   }
 `)
 
-export default function Dashboard() {
-  const start = "2025-12-01"
-  const end = "2026-02-28"
+const getStartDateStr = (): string => {
+  const today = new Date()
+  const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1)
+  const beginningOfTheYear = new Date(today.getFullYear(), 0, 1)
 
-  const { data, loading, error } = useQuery<ListTransactionsQuery>(ListTransactions, {
-    variables: { first: 100, startDate: start, endDate: end },
+  if (sixMonthsAgo < beginningOfTheYear) {
+    return `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, "0")}-01`
+  }
+
+  return `${beginningOfTheYear.getFullYear()}-01-01`
+}
+
+export default function Dashboard() {
+  const start = getStartDateStr()
+
+  const { data, loading, error, fetchMore } = useQuery<ListTransactionsQuery>(ListTransactions, {
+    variables: { first: 30, startDate: start },
   })
 
-  const firstTransaction = data?.transactions.nodes ? data?.transactions.nodes[0] : "undefined"
+  useEffect(() => {
+    if (loading || error || !data) {
+      return
+    }
 
-  console.log("first transaction in the data", firstTransaction)
+    const { endCursor, hasNextPage } = data.transactions.pageInfo
 
-  if (loading) return <div>Loading...</div>
-  if (error) {
-    console.error("Error fetching user data:", error)
-    return <div>Error</div>
+    if (hasNextPage) {
+      fetchMore({
+        variables: {
+          after: endCursor,
+        },
+      })
+    }
+  }, [data, loading, error, fetchMore])
+
+  const setTransactions = useSetAtom(transactionsAtom)
+
+  useEffect(() => {
+    if (data) {
+      setTransactions(data)
+    }
+  }, [data, setTransactions])
+
+  if (loading) {
+    return <Loading />
   }
 
   return (
@@ -56,6 +98,12 @@ export default function Dashboard() {
         </div>
 
         {/* Dashboard */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <ExpensesCard />
+          <ExpensesByCategoryCard />
+        </div>
+        <ExpenseTransitionsCard />
+        <RecentTransactionsCard />
       </div>
     </main>
   )
