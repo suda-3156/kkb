@@ -91,7 +91,7 @@ export const RecentTransactionsCard = () => {
         <CardTitle className="font-medium text-sm">最近の取引</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-80" scrollFade>
+        <ScrollArea className="h-80">
           <div className="space-y-1 px-6 pb-6">
             {transactions.length === 0 && (
               <p className="py-4 text-center text-muted-foreground text-sm">取引がありません</p>
