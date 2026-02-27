@@ -35,8 +35,45 @@ type ChildAccountBreakdown {
   children: [AccountAmountSummary!]!
 }
 
+# Balance of a single ledger account as of a given date
+type AccountBalance {
+  ledgerAccount: LedgerAccount!
+  balance: Int!
+  asOf: Date!
+}
+
+# Trial balance: balances of all ledger accounts as of a given date
+type TrialBalance {
+  asOf: Date!
+  accounts: [AccountBalance!]!
+  # Net worth: total assets - total liabilities
+  netWorth: Int!
+}
+
+enum Granularity {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+# Time-series of PeriodAggregation data points
+type PeriodAggregationSeries {
+  granularity: Granularity!
+  dataPoints: [PeriodAggregation!]!
+}
+
 extend type Query {
   periodAggregation(startDate: Date!, endDate: Date!): PeriodAggregation!
+
+  # Time-series aggregation (e.g. monthly expense trend over a year)
+  periodAggregationSeries(
+    startDate: Date!
+    endDate: Date!
+    granularity: Granularity!
+  ): PeriodAggregationSeries!
+
+  # Trial balance: all account balances as of a given date
+  trialBalance(asOf: Date!): TrialBalance!
 
   childAccountBreakdown(
     parentId: ID!
