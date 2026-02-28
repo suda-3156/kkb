@@ -1,0 +1,72 @@
+name: TypeScript CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  files-changed:
+    uses: ./.github/workflows/files-changed.yaml
+    permissions:
+      contents: read
+      pull-requests: read
+
+  build:
+    name: Build
+    needs: files-changed
+    if: needs.files-changed.outputs.ts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run build
+
+  lint:
+    name: Lint
+    needs: files-changed
+    if: needs.files-changed.outputs.ts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run lint
+
+  generate:
+    name: Generate
+    needs: files-changed
+    if: needs.files-changed.outputs.ts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      # run generation scripts adn check if there are any changes in the generated files
+      - run: |
+          bun run generate
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "Generated files are not up to date. Please run 'bun run generate' and commit the changes."
+            git status
+            exit 1
+          fi

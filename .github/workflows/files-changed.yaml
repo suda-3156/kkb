@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
-      go: ${{ steps.changes.outputs.go_any_modified }}
-      ts: ${{ steps.changes.outputs.ts_any_modified }}
+      go: ${{ steps.changes.outputs.go_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
+      ts: ${{ steps.changes.outputs.ts_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
     steps:
       - uses: actions/checkout@v6.0.0
         with:
@@ -29,7 +29,10 @@ jobs:
         with:
           files_yaml: |
             go:
-              - go/**
+              - go/**/*
 
             ts:
-              - ts/**
+              - ts/**/*
+
+            ci:
+              - .github/workflows/**/*
