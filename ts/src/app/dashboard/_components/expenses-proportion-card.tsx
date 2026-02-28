@@ -77,17 +77,17 @@ export const ExpensesProportionCard = () => {
       <CardHeader>
         <CardTitle className="font-medium text-sm">今月の支出割合</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0">
         {chartData.length === 0 ? (
-          <p className="py-4 text-center text-muted-foreground text-sm">支出がありません</p>
+          <p className="px-6 py-4 text-center text-muted-foreground text-sm">支出がありません</p>
         ) : (
           <div className="flex flex-col gap-4">
             {/* pi chart */}
             <Chart chartConfig={chartConfig} chartData={chartData} />
 
             {/* list */}
-            <div className="max-h-48 overflow-y-auto">
-              <ul className="space-y-1.5">
+            <div className="max-h-48 overflow-y-auto pl-6">
+              <ul className="mr-4 space-y-1.5">
                 {chartData.map((item) => (
                   <li key={item.name} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export const ExpensesProportionCard = () => {
                 ))}
               </ul>
             </div>
-            <div className="flex items-center justify-between border-t pt-1.5 pr-3 text-sm">
+            <div className="flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm">
               <span className="text-muted-foreground">合計</span>
               <span className="font-semibold tabular-nums">{formatYen(totalAmount)}</span>
             </div>
@@ -129,7 +129,7 @@ const Chart = ({
     fill: string
   }[]
 }) => (
-  <ChartContainer config={chartConfig} className="mx-auto h-48 w-full">
+  <ChartContainer config={chartConfig} className="mx-auto h-48 w-full px-6">
     <PieChart>
       <ChartTooltip
         content={({ active, payload }) => {
