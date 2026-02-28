@@ -23,7 +23,7 @@ export default function DashboardPage() {
         <div className="order-2 md:order-0">
           <ExpensesProportionCard />
         </div>
-        <div className="order-4 md:order-0">
+        <div className="order-4 hidden sm:block">
           <MonthlyExpensesBarCard />
         </div>
       </div>

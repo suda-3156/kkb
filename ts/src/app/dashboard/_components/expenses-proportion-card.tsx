@@ -70,7 +70,7 @@ export const ExpensesProportionCard = () => {
     chartData.map((item) => [item.name, { label: item.name, color: item.fill }]),
   ) satisfies ChartConfig
 
-  const _totalAmount = data?.periodAggregation.expenses.totalAmount ?? 0
+  const totalAmount = data?.periodAggregation.expenses.totalAmount ?? 0
 
   return (
     <Card className="w-full">
@@ -86,7 +86,7 @@ export const ExpensesProportionCard = () => {
             <Chart chartConfig={chartConfig} chartData={chartData} />
 
             {/* list */}
-            {/* <List chartData={chartData} totalAmount={totalAmount} /> */}
+            <List chartData={chartData} totalAmount={totalAmount} />
           </div>
         )}
       </CardContent>
@@ -139,7 +139,7 @@ const Chart = ({
   </ChartContainer>
 )
 
-const _List = ({
+const List = ({
   chartData,
   totalAmount,
 }: {
@@ -147,7 +147,7 @@ const _List = ({
   totalAmount: number
 }) => (
   <>
-    <div className="max-h-32 overflow-y-auto pl-6">
+    <div className="block max-h-32 space-y-2 overflow-y-auto pl-6 sm:hidden">
       <ul className="mr-4 space-y-1.5">
         {chartData.map((item) => (
           <li key={item.name} className="flex items-center justify-between text-sm">
@@ -168,7 +168,7 @@ const _List = ({
         ))}
       </ul>
     </div>
-    <div className="flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm">
+    <div className="block flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm sm:hidden">
       <span className="text-muted-foreground">合計</span>
       <span className="font-semibold tabular-nums">{formatYen(totalAmount)}</span>
     </div>
@@ -180,9 +180,9 @@ const Loading = () => (
     <CardHeader>
       <CardTitle className="font-medium text-sm">今月の支出割合</CardTitle>
     </CardHeader>
-    <CardContent className="mx-auto flex h-48 w-full px-6 md:h-60 lg:h-64">
-      <Skeleton className="mx-auto h-60 w-60 rounded-full" />
-      {/* <div className="space-y-2">
+    <CardContent className="mx-auto flex h-48 w-full flex-col px-6 md:h-60 lg:h-64">
+      <Skeleton className="mx-auto h-48 w-48 shrink-0 rounded-full sm:h-60 sm:w-60" />
+      <div className="space-y-2 sm:hidden">
         {Array.from({ length: 3 }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholder
           <div key={i} className="flex items-center justify-between">
@@ -193,7 +193,7 @@ const Loading = () => (
             <Skeleton className="h-4 w-20" />
           </div>
         ))}
-      </div> */}
+      </div>
     </CardContent>
   </Card>
 )
