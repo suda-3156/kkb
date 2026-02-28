@@ -34,8 +34,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@v6.2.0
         with:
-          go-version-file: "./go.mod"
-          cache-dependency-path: "./go.sum"
+          go-version-file: "./go/go.mod"
+          cache-dependency-path: "./go/go.sum"
           check-latest: true
           cache: true
 
@@ -58,13 +58,13 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@v6.2.0
         with:
-          go-version-file: "./go.mod"
-          cache-dependency-path: "./go.sum"
+          go-version-file: "./go/go.mod"
+          cache-dependency-path: "./go/go.sum"
           check-latest: true
           cache: true
 
       - run: go mod download
-      - uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v9.2.0
       - run: go clean -modcache
 
   generate:
@@ -82,8 +82,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@v6.2.0
         with:
-          go-version-file: "./go.mod"
-          cache-dependency-path: "./go.sum"
+          go-version-file: "./go/go.mod"
+          cache-dependency-path: "./go/go.sum"
           check-latest: true
           cache: true
 
@@ -115,8 +115,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@v6.2.0
         with:
-          go-version-file: "./go.mod"
-          cache-dependency-path: "./go.sum"
+          go-version-file: "./go/go.mod"
+          cache-dependency-path: "./go/go.sum"
           check-latest: true
           cache: true
 
