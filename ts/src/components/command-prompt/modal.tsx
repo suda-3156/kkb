@@ -41,7 +41,7 @@ function getGhostSuffix(page: CmdPage, inputValue: string): string {
   return match ? match.slice(inputValue.length) : ""
 }
 
-export const CommandModal = () => {
+export const CommandPrompt = () => {
   const page = useAtomValue(cmdPageAtom)
   const [inputValue, setInputValue] = useAtom(inputValueAtom)
   const enterHandler = useAtomValue(enterHandlerAtom)

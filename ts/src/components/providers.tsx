@@ -1,7 +1,7 @@
 "use client"
 
 import { Provider as JotaiProvider } from "jotai"
-import { ThemeProvider } from "@/components/theme/provider"
+import { ThemeProvider } from "@/components/theme-provider"
 import { ApolloWrapper } from "@/lib/apollo-wrapper"
 
 export function Providers({ children }: { children: React.ReactNode }) {

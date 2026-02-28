@@ -1,19 +1,31 @@
 "use client"
 
-import { Moon, Sun } from "lucide-react"
+import { useSetAtom } from "jotai"
+import { Moon, PiggyBank, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
+import { openCreateTransactionModalAtom } from "./input-modal/transaction/state"
 
 export function ThemeHeader() {
   const { theme, setTheme } = useTheme()
 
+  const open = useSetAtom(openCreateTransactionModalAtom)
+
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
-      <div className="container pointer-events-auto mx-auto flex items-center justify-end pt-5 pr-5">
+      <div className="container pointer-events-auto mx-auto flex items-center justify-end space-x-2 pt-5 pr-5">
+        <Button
+          onClick={() => open("expense")}
+          variant="ghost"
+          size="icon"
+          className="mr-2 overflow-clip bg-background shadow-sm"
+        >
+          <PiggyBank />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="mr-2 overflow-clip bg-background/50"
+          className="mr-2 overflow-clip bg-background shadow-sm"
           aria-label="Toggle theme"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >

@@ -1,8 +1,8 @@
 "use client"
 
 import { TriangleAlert } from "lucide-react"
-import { BlurIn } from "../ui/blur-in"
-import { Card, CardContent, CardHeader } from "../ui/card"
+import { BlurIn } from "./ui/blur-in"
+import { Card, CardContent, CardHeader } from "./ui/card"
 
 type ErrorCardProps = {
   message: string

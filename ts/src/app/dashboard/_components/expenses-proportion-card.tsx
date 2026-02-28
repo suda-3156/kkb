@@ -2,7 +2,7 @@
 
 import { useQuery } from "@apollo/client/react/compiled"
 import { Cell, Pie, PieChart } from "recharts"
-import { ErrorCard } from "@/components/cards/error-card"
+import { ErrorCard } from "@/components/error-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -168,7 +168,7 @@ const List = ({
         ))}
       </ul>
     </div>
-    <div className="block flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm sm:hidden">
+    <div className="flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm sm:hidden">
       <span className="text-muted-foreground">合計</span>
       <span className="font-semibold tabular-nums">{formatYen(totalAmount)}</span>
     </div>

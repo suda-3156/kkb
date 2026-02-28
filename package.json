@@ -4,8 +4,8 @@
     "@biomejs/biome": "2.4.4"
   },
   "scripts": {
-    "biome:check": "biome check",
-    "biome:format": "biome format --write",
-    "biome:check:write": "biome check --write . --unsafe"
+    "lint": "biome check",
+    "check": "biome check --write . --unsafe",
+    "dev": "cd ts && bun run dev"
   }
 }
