@@ -9,6 +9,7 @@ import { InputRevenueCmdPage } from "./pages/input_revenue"
 import { InputTransactionCmdPage } from "./pages/input_transaction"
 import { SelectLedgerAccountCmdPage } from "./pages/select_ledger_account"
 import {
+  type CmdPage,
   cmdContextAtom,
   cmdEnterHandlerAtom,
   cmdPageAtom,
@@ -19,6 +20,21 @@ import {
   resetAtom,
 } from "./state"
 
+/** ページごとに補完候補とするコマンド文字列 */
+const COMMANDS_BY_PAGE: Partial<Record<CmdPage, string[]>> = {
+  initial: ["/expense", "/revenue", "/transaction"],
+  inputExpense: ["/amount ", "/payment", "/category", "/date ", "/memo "],
+}
+
+/** 現在の入力値に対してゴーストサフィックス（補完の残り部分）を返す */
+function getGhostSuffix(page: CmdPage, inputValue: string): string {
+  if (!inputValue) return ""
+  const commands = COMMANDS_BY_PAGE[page]
+  if (!commands) return ""
+  const match = commands.find((cmd) => cmd.startsWith(inputValue) && cmd !== inputValue)
+  return match ? match.slice(inputValue.length) : ""
+}
+
 export const CommandModal = () => {
   const page = useAtomValue(cmdPageAtom)
   const [inputValue, setInputValue] = useAtom(inputValueAtom)
@@ -27,6 +43,8 @@ export const CommandModal = () => {
   const setContext = useSetAtom(cmdContextAtom)
   const goBack = useSetAtom(goBackAtom)
   const reset = useSetAtom(resetAtom)
+
+  const ghostSuffix = getGhostSuffix(page, inputValue)
 
   const openModal = React.useCallback(() => {
     setContext({ ...defaultCmdContext, page: "initial" })
@@ -53,8 +71,13 @@ export const CommandModal = () => {
   }, [page, openModal, reset, goBack])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return
     if (e.nativeEvent.isComposing) return
+    if (e.key === "Tab" && ghostSuffix) {
+      e.preventDefault()
+      setInputValue(inputValue + ghostSuffix)
+      return
+    }
+    if (e.key !== "Enter") return
     if ((e.metaKey || e.ctrlKey) && cmdEnterHandler) {
       e.preventDefault()
       cmdEnterHandler()
@@ -83,6 +106,7 @@ export const CommandModal = () => {
           value={inputValue}
           onValueChange={setInputValue}
           onKeyDown={handleKeyDown}
+          ghostSuffix={ghostSuffix}
         />
         <CommandList>
           {page === "initial" && <InitialCmdPage />}
