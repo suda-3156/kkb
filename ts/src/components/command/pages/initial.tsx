@@ -9,7 +9,9 @@ const page: CmdPage = "initial"
 export const InitialCmdPage = () => {
   const navigate = useSetAtom(navigateAtom)
 
-  const handleSelect = (nextPage: "inputExpense" | "inputRevenue" | "inputTransaction") => {
+  const handleSelect = (
+    nextPage: "inputExpense" | "inputRevenue" | "inputTransfer" | "inputTransaction",
+  ) => {
     navigate(nextPage)
   }
 
@@ -22,6 +24,9 @@ export const InitialCmdPage = () => {
         </CommandItem>
         <CommandItem value="/revenue" onSelect={() => handleSelect("inputRevenue")}>
           収入を入力<span className="ml-auto text-muted-foreground text-xs">/revenue</span>
+        </CommandItem>
+        <CommandItem value="/transfer" onSelect={() => handleSelect("inputTransfer")}>
+          振替を入力<span className="ml-auto text-muted-foreground text-xs">/transfer</span>
         </CommandItem>
         <CommandItem value="/transaction" onSelect={() => handleSelect("inputTransaction")}>
           取引を入力

@@ -6,6 +6,7 @@ export type CmdPage =
   | "initial"
   | "inputExpense"
   | "inputRevenue"
+  | "inputTransfer"
   | "inputTransaction"
   | "selectLedgerAccount"
   | "committing"
@@ -15,6 +16,7 @@ export const pageLabels: Record<CmdPage, string> = {
   initial: "Initial",
   inputExpense: "Input Expense",
   inputRevenue: "Input Revenue",
+  inputTransfer: "Input Transfer",
   inputTransaction: "Input Transaction",
   selectLedgerAccount: "勘定科目を選択",
   committing: "Committing",
@@ -43,6 +45,18 @@ export type RevenueInput = {
 }
 
 export type RevenueInputField = keyof RevenueInput
+
+export type TransferInput = {
+  amount: number
+  fromAccount: string
+  fromAccountId: string
+  toAccount: string
+  toAccountId: string
+  description: string
+  date: string
+}
+
+export type TransferInputField = keyof TransferInput
 
 export type SelectLedgerAccountContext = {
   /** フィルターする勘定科目の種類。undefined の場合は全種類を表示 */
@@ -73,6 +87,10 @@ export type CmdContext = {
   revenueInput: RevenueInput
   /** 収入フォームのバリデーションエラーフィールド */
   revenueValidationErrors: ReadonlySet<RevenueInputField>
+  /** 振替入力フォームのデータ */
+  transferInput: TransferInput
+  /** 振替フォームのバリデーションエラーフィールド */
+  transferValidationErrors: ReadonlySet<TransferInputField>
   /** selectLedgerAccount ページ用のコールバック */
   selectLedgerAccountContext: SelectLedgerAccountContext | null
 }
@@ -97,6 +115,16 @@ const defaultRevenueInput: RevenueInput = {
   date: "",
 }
 
+const defaultTransferInput: TransferInput = {
+  amount: 0,
+  fromAccount: "",
+  fromAccountId: "",
+  toAccount: "",
+  toAccountId: "",
+  description: "",
+  date: "",
+}
+
 export const defaultCmdContext: CmdContext = {
   page: "closed",
   pageHistory: [],
@@ -105,6 +133,8 @@ export const defaultCmdContext: CmdContext = {
   expenseValidationErrors: new Set<ExpenseInputField>(),
   revenueInput: defaultRevenueInput,
   revenueValidationErrors: new Set<RevenueInputField>(),
+  transferInput: defaultTransferInput,
+  transferValidationErrors: new Set<TransferInputField>(),
   selectLedgerAccountContext: null,
 }
 
@@ -153,6 +183,21 @@ export const revenueValidationErrorsAtom = atom(
   (get) => get(cmdContextAtom).revenueValidationErrors,
   (_get, set, errors: ReadonlySet<RevenueInputField>) =>
     set(cmdContextAtom, (ctx) => ({ ...ctx, revenueValidationErrors: errors })),
+)
+
+export const transferInputAtom = atom(
+  (get) => get(cmdContextAtom).transferInput,
+  (_get, set, update: Partial<TransferInput>) =>
+    set(cmdContextAtom, (ctx) => ({
+      ...ctx,
+      transferInput: { ...ctx.transferInput, ...update },
+    })),
+)
+
+export const transferValidationErrorsAtom = atom(
+  (get) => get(cmdContextAtom).transferValidationErrors,
+  (_get, set, errors: ReadonlySet<TransferInputField>) =>
+    set(cmdContextAtom, (ctx) => ({ ...ctx, transferValidationErrors: errors })),
 )
 
 export const selectLedgerAccountContextAtom = atom(

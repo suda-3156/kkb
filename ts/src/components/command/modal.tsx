@@ -7,6 +7,7 @@ import { InitialCmdPage } from "./pages/initial"
 import { InputExpenseCmdPage } from "./pages/input_expense"
 import { InputRevenueCmdPage } from "./pages/input_revenue"
 import { InputTransactionCmdPage } from "./pages/input_transaction"
+import { InputTransferCmdPage } from "./pages/input_transfer"
 import { SelectLedgerAccountCmdPage } from "./pages/select_ledger_account"
 import {
   type CmdPage,
@@ -22,9 +23,10 @@ import {
 
 /** ページごとに補完候補とするコマンド文字列 */
 const COMMANDS_BY_PAGE: Partial<Record<CmdPage, string[]>> = {
-  initial: ["/expense", "/revenue", "/transaction"],
+  initial: ["/expense", "/revenue", "/transfer", "/transaction"],
   inputExpense: ["/amount ", "/payment", "/category", "/date ", "/memo "],
   inputRevenue: ["/amount ", "/deposit", "/source", "/date ", "/memo "],
+  inputTransfer: ["/amount ", "/from", "/to", "/date ", "/memo "],
 }
 
 /** 現在の入力値に対してゴーストサフィックス（補完の残り部分）を返す */
@@ -118,6 +120,8 @@ export const CommandModal = () => {
           {page === "inputExpense" && <InputExpenseCmdPage />}
 
           {page === "inputRevenue" && <InputRevenueCmdPage />}
+
+          {page === "inputTransfer" && <InputTransferCmdPage />}
 
           {page === "inputTransaction" && <InputTransactionCmdPage />}
 
