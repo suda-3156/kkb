@@ -41,7 +41,7 @@ tasks:
     cmds:
       - |
         cd ts
-        pnpm dev
+        bun dev
     silent: true
 
   init:
