@@ -180,9 +180,9 @@ const Loading = () => (
     <CardHeader>
       <CardTitle className="font-medium text-sm">今月の支出割合</CardTitle>
     </CardHeader>
-    <CardContent className="flex flex-col gap-4">
-      <Skeleton className="mx-auto h-48 w-48 rounded-full" />
-      <div className="space-y-2">
+    <CardContent className="mx-auto flex h-48 w-full px-6 md:h-60 lg:h-64">
+      <Skeleton className="mx-auto h-60 w-60 rounded-full" />
+      {/* <div className="space-y-2">
         {Array.from({ length: 3 }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholder
           <div key={i} className="flex items-center justify-between">
@@ -193,7 +193,7 @@ const Loading = () => (
             <Skeleton className="h-4 w-20" />
           </div>
         ))}
-      </div>
+      </div> */}
     </CardContent>
   </Card>
 )
