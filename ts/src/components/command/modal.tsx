@@ -1,28 +1,78 @@
 "use client"
 
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import * as React from "react"
-import { CommandDialog } from "../ui/command"
+import { Command, CommandDialog, CommandInput, CommandList } from "../ui/command"
+import { InitialCmdPage } from "./pages/initial"
+import { InputExpenseCmdPage } from "./pages/input_expense"
+import { InputRevenueCmdPage } from "./pages/input_revenue"
+import { InputTransactionCmdPage } from "./pages/input_transaction"
+import { SelectLedgerAccountCmdPage } from "./pages/select_ledger_account"
+import { cmdPageAtom, enterHandlerAtom, inputValueAtom, resetAtom } from "./state"
 
 export const CommandModal = () => {
-  const [open, setOpen] = React.useState(false)
+  const [page, setPage] = useAtom(cmdPageAtom)
+  const [inputValue, setInputValue] = useAtom(inputValueAtom)
+  const enterHandler = useAtomValue(enterHandlerAtom)
+  const reset = useSetAtom(resetAtom)
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setOpen((open) => !open)
+        setPage((p) => (p === "closed" ? "initial" : "closed"))
       }
     }
 
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [])
+  }, [setPage])
+
+  React.useEffect(() => {
+    if (page === "closed") {
+      reset()
+    }
+  }, [page, reset])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return
+    if (e.nativeEvent.isComposing) return
+    if (enterHandler?.(inputValue)) {
+      e.preventDefault()
+    }
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      reset()
+    }
+  }
 
   return (
     <CommandDialog
       className="max-w-sm rounded-lg border"
-      open={open}
-      onOpenChange={setOpen}
-    ></CommandDialog>
+      open={page !== "closed"}
+      onOpenChange={handleOpenChange}
+    >
+      <Command>
+        <CommandInput
+          placeholder="Type a command or search..."
+          value={inputValue}
+          onValueChange={setInputValue}
+          onKeyDown={handleKeyDown}
+        />
+        <CommandList>
+          {page === "initial" && <InitialCmdPage />}
+
+          {page === "inputExpense" && <InputExpenseCmdPage />}
+
+          {page === "inputRevenue" && <InputRevenueCmdPage />}
+
+          {page === "inputTransaction" && <InputTransactionCmdPage />}
+
+          {page === "selectLedgerAccount" && <SelectLedgerAccountCmdPage />}
+        </CommandList>
+      </Command>
+    </CommandDialog>
   )
 }
