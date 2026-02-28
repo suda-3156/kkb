@@ -52,7 +52,7 @@ export const ExpensesProportionCard = () => {
   }
 
   if (error) {
-    return <ErrorCard message={error.message} className="w-full max-w-100" />
+    return <ErrorCard message={error.message} className="w-full" />
   }
 
   const byAccount = data?.periodAggregation.expenses.byAccount ?? []
@@ -70,10 +70,10 @@ export const ExpensesProportionCard = () => {
     chartData.map((item) => [item.name, { label: item.name, color: item.fill }]),
   ) satisfies ChartConfig
 
-  const totalAmount = data?.periodAggregation.expenses.totalAmount ?? 0
+  const _totalAmount = data?.periodAggregation.expenses.totalAmount ?? 0
 
   return (
-    <Card className="w-full max-w-100">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="font-medium text-sm">今月の支出割合</CardTitle>
       </CardHeader>
@@ -86,31 +86,7 @@ export const ExpensesProportionCard = () => {
             <Chart chartConfig={chartConfig} chartData={chartData} />
 
             {/* list */}
-            <div className="max-h-48 overflow-y-auto pl-6">
-              <ul className="mr-4 space-y-1.5">
-                {chartData.map((item) => (
-                  <li key={item.name} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
-                        style={{ backgroundColor: item.fill }}
-                      />
-                      <span className="truncate text-muted-foreground">{item.name}</span>
-                    </div>
-                    <div className="ml-4 flex shrink-0 items-center gap-2 tabular-nums">
-                      <span className="text-muted-foreground text-xs">
-                        {(item.ratio * 100).toFixed(1)}%
-                      </span>
-                      <span className="font-medium">{formatYen(item.value)}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm">
-              <span className="text-muted-foreground">合計</span>
-              <span className="font-semibold tabular-nums">{formatYen(totalAmount)}</span>
-            </div>
+            {/* <List chartData={chartData} totalAmount={totalAmount} /> */}
           </div>
         )}
       </CardContent>
@@ -129,7 +105,7 @@ const Chart = ({
     fill: string
   }[]
 }) => (
-  <ChartContainer config={chartConfig} className="mx-auto h-48 w-full px-6">
+  <ChartContainer config={chartConfig} className="mx-auto h-48 w-full px-6 md:h-60 lg:h-64">
     <PieChart>
       <ChartTooltip
         content={({ active, payload }) => {
@@ -163,8 +139,44 @@ const Chart = ({
   </ChartContainer>
 )
 
+const _List = ({
+  chartData,
+  totalAmount,
+}: {
+  chartData: { name: string; value: number; ratio: number; fill: string }[]
+  totalAmount: number
+}) => (
+  <>
+    <div className="max-h-32 overflow-y-auto pl-6">
+      <ul className="mr-4 space-y-1.5">
+        {chartData.map((item) => (
+          <li key={item.name} className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                style={{ backgroundColor: item.fill }}
+              />
+              <span className="truncate text-muted-foreground">{item.name}</span>
+            </div>
+            <div className="ml-4 flex shrink-0 items-center gap-2 tabular-nums">
+              <span className="text-muted-foreground text-xs">
+                {(item.ratio * 100).toFixed(1)}%
+              </span>
+              <span className="font-medium">{formatYen(item.value)}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div className="flex items-center justify-between border-t px-6 pt-1.5 pr-3 text-sm">
+      <span className="text-muted-foreground">合計</span>
+      <span className="font-semibold tabular-nums">{formatYen(totalAmount)}</span>
+    </div>
+  </>
+)
+
 const Loading = () => (
-  <Card className="w-full max-w-100">
+  <Card className="w-full">
     <CardHeader>
       <CardTitle className="font-medium text-sm">今月の支出割合</CardTitle>
     </CardHeader>

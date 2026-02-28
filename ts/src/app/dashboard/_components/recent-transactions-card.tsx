@@ -80,18 +80,18 @@ export const RecentTransactionsCard = () => {
 
   if (error) {
     console.log(error)
-    return <ErrorCard message={error.message} className="w-full max-w-100" />
+    return <ErrorCard message={error.message} className="w-full" />
   }
 
   const transactions = data?.transactions.nodes?.filter(Boolean) ?? []
 
   return (
-    <Card className="w-full max-w-100">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="font-medium text-sm">最近の取引</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-80">
+        <ScrollArea className="h-100">
           <div className="space-y-1 px-6 pb-6">
             {transactions.length === 0 && (
               <p className="py-4 text-center text-muted-foreground text-sm">取引がありません</p>
@@ -128,7 +128,7 @@ export const RecentTransactionsCard = () => {
 }
 
 const Loading = () => (
-  <Card className="w-full max-w-100">
+  <Card className="w-full">
     <CardHeader>
       <CardTitle className="font-medium text-sm">最近の取引</CardTitle>
     </CardHeader>

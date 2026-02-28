@@ -37,7 +37,7 @@ export const ExpensesCard = () => {
 
   if (loading) {
     return (
-      <Card className="h-53.5 w-full max-w-100">
+      <Card className="h-53.5 w-full">
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-10" />
@@ -58,11 +58,11 @@ export const ExpensesCard = () => {
 
   if (error) {
     console.log(error)
-    return <ErrorCard message={error.message} className="h-53.5 w-full max-w-100" />
+    return <ErrorCard message={error.message} className="h-53.5 w-full" />
   }
 
   return (
-    <Card className="w-full max-w-100">
+    <Card className="w-full">
       <CardContent className="space-y-4">
         <Reveal index={0}>
           <div className="flex items-center justify-between">

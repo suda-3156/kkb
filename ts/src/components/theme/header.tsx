@@ -13,7 +13,7 @@ export function ThemeHeader() {
         <Button
           variant="ghost"
           size="icon"
-          className="mr-2 overflow-clip"
+          className="mr-2 overflow-clip bg-background/50"
           aria-label="Toggle theme"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >

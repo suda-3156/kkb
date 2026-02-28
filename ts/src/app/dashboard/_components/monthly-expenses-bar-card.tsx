@@ -59,7 +59,7 @@ export const MonthlyExpensesBarCard = () => {
   }
 
   if (error) {
-    return <ErrorCard message={error.message} className="w-full max-w-100" />
+    return <ErrorCard message={error.message} className="w-full" />
   }
 
   const dataPoints = data?.periodAggregationSeries.dataPoints ?? []
@@ -94,7 +94,7 @@ export const MonthlyExpensesBarCard = () => {
   })
 
   return (
-    <Card className="w-full max-w-100">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="font-medium text-sm">{label}の月別支出</CardTitle>
       </CardHeader>
@@ -171,7 +171,7 @@ export const MonthlyExpensesBarCard = () => {
 }
 
 const Loading = () => (
-  <Card className="w-full max-w-100">
+  <Card className="w-full">
     <CardHeader>
       <CardTitle className="font-medium text-sm">月別支出</CardTitle>
     </CardHeader>
