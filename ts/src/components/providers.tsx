@@ -2,7 +2,6 @@
 
 import { Provider as JotaiProvider } from "jotai"
 import { ThemeProvider } from "@/components/theme/provider"
-import { Toaster } from "@/components/ui/sonner"
 import { ApolloWrapper } from "@/lib/apollo-wrapper"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -16,7 +15,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ApolloWrapper>
         <JotaiProvider>{children}</JotaiProvider>
       </ApolloWrapper>
-      <Toaster />
     </ThemeProvider>
   )
 }

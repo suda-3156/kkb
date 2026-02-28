@@ -2,8 +2,10 @@ import type { Metadata } from "next"
 import { Montserrat, Open_Sans, Prata, Shippori_Mincho } from "next/font/google"
 import { Providers } from "@/components/providers"
 import "./globals.css"
+import { CommandModal } from "@/components/command/modal"
 import { ThemeHeader } from "@/components/theme/header"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = {
@@ -64,6 +66,8 @@ export default function RootLayout({
             <ScrollArea className="container relative mx-auto flex h-screen flex-1 flex-col overflow-y-auto">
               {children}
             </ScrollArea>
+            <CommandModal />
+            <Toaster />
           </main>
         </Providers>
       </body>
