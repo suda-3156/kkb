@@ -8,11 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { graphql } from "@/graph"
 import { JournalEntryKind, LedgerAccountKind, type RecentTransactionsQuery } from "@/graph/graphql"
 import { formatYen } from "@/lib/numutils"
-import { dateStr } from "@/lib/timeutils"
 
 const RecentTransactions = graphql(/* GraphQL */ `
-  query RecentTransactions($today: Date!, $limit: Int!) {
-    transactions(last: $limit, endDate: $today) {
+  query RecentTransactions($last: Int!) {
+    transactions(last: $last) {
       nodes {
         id
         date
@@ -66,11 +65,9 @@ const categoryColorClass: Record<TransactionCategory, string> = {
 }
 
 export const RecentTransactionsCard = () => {
-  const now = new Date()
   const { data, loading, error } = useQuery<RecentTransactionsQuery>(RecentTransactions, {
     variables: {
-      today: dateStr(now),
-      limit: 10,
+      last: 10,
     },
   })
 

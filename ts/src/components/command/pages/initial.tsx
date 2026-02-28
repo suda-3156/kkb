@@ -2,17 +2,15 @@
 
 import { useSetAtom } from "jotai"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
-import { type CmdPage, cmdPageAtom, inputValueAtom, pageLabels } from "../state"
+import { type CmdPage, navigateAtom, pageLabels } from "../state"
 
 const page: CmdPage = "initial"
 
 export const InitialCmdPage = () => {
-  const setPage = useSetAtom(cmdPageAtom)
-  const setInputValue = useSetAtom(inputValueAtom)
+  const navigate = useSetAtom(navigateAtom)
 
   const handleSelect = (nextPage: "inputExpense" | "inputRevenue" | "inputTransaction") => {
-    setPage(nextPage)
-    setInputValue("")
+    navigate(nextPage)
   }
 
   return (

@@ -7,13 +7,7 @@ import { InlineLoading } from "@/components/loading"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { graphql } from "@/graph"
 import type { GetLedgerAccountsQuery } from "@/graph/graphql"
-import {
-  type CmdPage,
-  cmdPageAtom,
-  inputValueAtom,
-  pageLabels,
-  selectLedgerAccountContextAtom,
-} from "../state"
+import { type CmdPage, goBackAtom, pageLabels, selectLedgerAccountContextAtom } from "../state"
 
 const page: CmdPage = "selectLedgerAccount"
 
@@ -36,8 +30,7 @@ const GetLedgerAccounts = graphql(/* GraphQL */ `
 
 export const SelectLedgerAccountCmdPage = () => {
   const context = useAtomValue(selectLedgerAccountContextAtom)
-  const setPage = useSetAtom(cmdPageAtom)
-  const setInputValue = useSetAtom(inputValueAtom)
+  const goBack = useSetAtom(goBackAtom)
   const setContext = useSetAtom(selectLedgerAccountContextAtom)
 
   const { data, loading, error, fetchMore } = useQuery<GetLedgerAccountsQuery>(GetLedgerAccounts, {
@@ -70,8 +63,7 @@ export const SelectLedgerAccountCmdPage = () => {
   const handleSelect = (account: { id: string; name: string }) => {
     context?.onSelect(account)
     setContext(null)
-    setPage(context?.returnPage ?? "initial")
-    setInputValue("")
+    goBack()
   }
 
   return (

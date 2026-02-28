@@ -11,12 +11,12 @@ import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
 import {
   type CmdPage,
   cmdEnterHandlerAtom,
-  cmdPageAtom,
   type ExpenseInputField,
   enterHandlerAtom,
   expenseInputAtom,
   expenseValidationErrorsAtom,
   inputValueAtom,
+  navigateAtom,
   pageLabels,
   resetAtom,
   selectLedgerAccountContextAtom,
@@ -37,7 +37,7 @@ export const InputExpenseCmdPage = () => {
   const setInputValue = useSetAtom(inputValueAtom)
   const setEnterHandler = useSetAtom(enterHandlerAtom)
   const setCmdEnterHandler = useSetAtom(cmdEnterHandlerAtom)
-  const setPage = useSetAtom(cmdPageAtom)
+  const navigate = useSetAtom(navigateAtom)
   const setSelectContext = useSetAtom(selectLedgerAccountContextAtom)
   const [validationErrors, setValidationErrors] = useAtom(expenseValidationErrorsAtom)
   const reset = useSetAtom(resetAtom)
@@ -48,7 +48,6 @@ export const InputExpenseCmdPage = () => {
     (field: "paymentMethod" | "category", kind: LedgerAccountKind) => {
       setSelectContext({
         kind,
-        returnPage: "inputExpense",
         onSelect: (account) => {
           if (field === "paymentMethod") {
             setInput({ paymentMethod: account.name, paymentMethodId: account.id })
@@ -57,10 +56,9 @@ export const InputExpenseCmdPage = () => {
           }
         },
       })
-      setPage("selectLedgerAccount")
-      setInputValue("")
+      navigate("selectLedgerAccount")
     },
-    [setSelectContext, setPage, setInputValue, setInput],
+    [setSelectContext, navigate, setInput],
   )
 
   React.useEffect(() => {
@@ -99,10 +97,18 @@ export const InputExpenseCmdPage = () => {
   React.useEffect(() => {
     setCmdEnterHandler(() => async () => {
       const errors = new Set<ExpenseInputField>()
-      if (input.amount === 0) errors.add("amount")
+      // amount must be greater than 0
+      if (input.amount <= 0) errors.add("amount")
+      // paymentMethod is required
       if (!input.paymentMethod) errors.add("paymentMethod")
+      // category is required)
       if (!input.category) errors.add("category")
+      // date is required and must be a valid date string and of the format YYYY-MM-DD
       if (!input.date) errors.add("date")
+      if (Number.isNaN(new Date(input.date).getTime())) errors.add("date")
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) errors.add("date")
+      // description is required
+      if (!input.description) errors.add("description")
 
       if (errors.size > 0) {
         setValidationErrors(errors)
@@ -151,11 +157,12 @@ export const InputExpenseCmdPage = () => {
 
   return (
     <CommandGroup forceMount heading={pageLabels[page]}>
-      <CommandItem onSelect={() => setInputValue("/amount ")}>
+      <CommandItem value="/amount" onSelect={() => setInputValue("/amount ")}>
         <StatusIcon done={input.amount !== 0} hasError={validationErrors.has("amount")} />
         金額: {input.amount} <span className="ml-auto text-muted-foreground text-xs">/amount</span>
       </CommandItem>
       <CommandItem
+        value="/payment"
         onSelect={() => goToSelectLedgerAccount("paymentMethod", LedgerAccountKind.Asset)}
       >
         <StatusIcon
@@ -165,17 +172,23 @@ export const InputExpenseCmdPage = () => {
         支払い方法: {input.paymentMethod}
         <span className="ml-auto text-muted-foreground text-xs">/payment</span>
       </CommandItem>
-      <CommandItem onSelect={() => goToSelectLedgerAccount("category", LedgerAccountKind.Expense)}>
+      <CommandItem
+        value="/category"
+        onSelect={() => goToSelectLedgerAccount("category", LedgerAccountKind.Expense)}
+      >
         <StatusIcon done={input.category !== ""} hasError={validationErrors.has("category")} />
         カテゴリ: {input.category}{" "}
         <span className="ml-auto text-muted-foreground text-xs">/category</span>
       </CommandItem>
-      <CommandItem onSelect={() => setInputValue("/date ")}>
+      <CommandItem value="/date" onSelect={() => setInputValue("/date ")}>
         <StatusIcon done={input.date !== ""} hasError={validationErrors.has("date")} />
         日付: {input.date} <span className="ml-auto text-muted-foreground text-xs">/date</span>
       </CommandItem>
-      <CommandItem onSelect={() => setInputValue("/memo ")}>
-        <StatusIcon done={input.description !== ""} hasError={false} />
+      <CommandItem value="/memo" onSelect={() => setInputValue("/memo ")}>
+        <StatusIcon
+          done={input.description !== ""}
+          hasError={validationErrors.has("description")}
+        />
         メモ: {input.description}{" "}
         <span className="ml-auto text-muted-foreground text-xs">/memo</span>
       </CommandItem>

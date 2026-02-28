@@ -9,37 +9,48 @@ import { InputRevenueCmdPage } from "./pages/input_revenue"
 import { InputTransactionCmdPage } from "./pages/input_transaction"
 import { SelectLedgerAccountCmdPage } from "./pages/select_ledger_account"
 import {
+  cmdContextAtom,
   cmdEnterHandlerAtom,
   cmdPageAtom,
+  defaultCmdContext,
   enterHandlerAtom,
+  goBackAtom,
   inputValueAtom,
   resetAtom,
 } from "./state"
 
 export const CommandModal = () => {
-  const [page, setPage] = useAtom(cmdPageAtom)
+  const page = useAtomValue(cmdPageAtom)
   const [inputValue, setInputValue] = useAtom(inputValueAtom)
   const enterHandler = useAtomValue(enterHandlerAtom)
   const cmdEnterHandler = useAtomValue(cmdEnterHandlerAtom)
+  const setContext = useSetAtom(cmdContextAtom)
+  const goBack = useSetAtom(goBackAtom)
   const reset = useSetAtom(resetAtom)
+
+  const openModal = React.useCallback(() => {
+    setContext({ ...defaultCmdContext, page: "initial" })
+  }, [setContext])
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setPage((p) => (p === "closed" ? "initial" : "closed"))
+        if (page === "closed") {
+          openModal()
+        } else {
+          reset()
+        }
+      }
+      if (e.key === "h" && (e.metaKey || e.ctrlKey) && page !== "closed") {
+        e.preventDefault()
+        goBack()
       }
     }
 
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [setPage])
-
-  React.useEffect(() => {
-    if (page === "closed") {
-      reset()
-    }
-  }, [page, reset])
+  }, [page, openModal, reset, goBack])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return
