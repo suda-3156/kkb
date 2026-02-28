@@ -45,6 +45,7 @@ export const CommandModal = () => {
   const reset = useSetAtom(resetAtom)
 
   const ghostSuffix = getGhostSuffix(page, inputValue)
+  const [isComposing, setIsComposing] = React.useState(false)
 
   const openModal = React.useCallback(() => {
     setContext({ ...defaultCmdContext, page: "initial" })
@@ -60,7 +61,7 @@ export const CommandModal = () => {
           reset()
         }
       }
-      if (e.key === "h" && (e.metaKey || e.ctrlKey) && page !== "closed") {
+      if (e.key === "b" && (e.metaKey || e.ctrlKey) && page !== "closed") {
         e.preventDefault()
         goBack()
       }
@@ -100,12 +101,14 @@ export const CommandModal = () => {
       open={page !== "closed"}
       onOpenChange={handleOpenChange}
     >
-      <Command>
+      <Command shouldFilter={!isComposing}>
         <CommandInput
           placeholder="Type a command or search..."
           value={inputValue}
           onValueChange={setInputValue}
           onKeyDown={handleKeyDown}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
           ghostSuffix={ghostSuffix}
         />
         <CommandList>

@@ -132,7 +132,7 @@ export const navigateAtom = atom(null, (get, set, nextPage: CmdPage) => {
 })
 
 /**
- * 一つ前のページに戻る（Cmd+H）。
+ * 一つ前のページに戻る（Cmd+B）。
  * 履歴がなければ何もしない。
  */
 export const goBackAtom = atom(null, (get, set) => {
