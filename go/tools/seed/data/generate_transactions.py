@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate seed transactions for kkb.
-Period : 2025-08-01 – 2026-02-28
+Period : 2025-01-01 – 2026-02-28
 Target : ~1000 transactions
 
 Leaf accounts (non-group) from ledgeraccounts.json
@@ -18,6 +18,7 @@ import random
 import string
 from datetime import date
 from pathlib import Path
+import calendar
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ def txn(d: date, desc: str, debit_acc: str, credit_acc: str, amt: int) -> dict:
 
 # ── date helpers ──────────────────────────────────────────────────────────────
 
-START = date(2025, 8, 1)
+START = date(2025, 1, 1)
 END = date(2026, 2, 28)
 
 MONTHS: list[date] = []
@@ -101,6 +102,14 @@ def card_or_bank() -> str:
     return random.choice(CREDIT_CARDS + [BANK])
 
 
+def prepaid_card() -> str:
+    return random.choice(CASH_ASSETS)
+
+
+def bank() -> str:
+    return BANK
+
+
 # ── transaction generators ────────────────────────────────────────────────────
 
 transactions: list[dict] = []
@@ -122,21 +131,12 @@ for mo in MONTHS:
         bonus = amount(200_000, 600_000, 10_000)
         transactions.append(txn(d_b, f"賞与振込（{m}月分）", BANK, "賞与", bonus))
 
-    # クレジットカード引き落とし (8th)
-    d_cc = clamp(date(y, m, 8))
-    for cc in CREDIT_CARDS:
-        cc_pay = amount(20_000, 120_000, 1_000)
-        prev_m = m - 1 if m > 1 else 12
-        transactions.append(
-            txn(d_cc, f"{cc}引き落とし（{prev_m}月利用分）{rs(4)}", cc, BANK, cc_pay)
-        )
-
     # 電気代 (10th)
     elec = amount(4_000, 12_000, 500)
     transactions.append(
         txn(
             clamp(date(y, m, 10)),
-            f"電力会社 電気代（{m}月分）{rs(4)}",
+            f"電力会社 電気代（{m}月分）",
             "水道光熱費",
             BANK,
             elec,
@@ -148,7 +148,7 @@ for mo in MONTHS:
     transactions.append(
         txn(
             clamp(date(y, m, 12)),
-            f"ガス代引き落とし（{m}月分）{rs(4)}",
+            f"ガス代引き落とし（{m}月分）",
             "水道光熱費",
             BANK,
             gas,
@@ -161,7 +161,7 @@ for mo in MONTHS:
         transactions.append(
             txn(
                 clamp(date(y, m, 16)),
-                f"水道代（{m}月分）{rs(4)}",
+                f"水道代（{m}月分）",
                 "水道光熱費",
                 BANK,
                 water,
@@ -173,7 +173,7 @@ for mo in MONTHS:
     transactions.append(
         txn(
             clamp(date(y, m, 10)),
-            f"スマートフォン料金（{m}月分）{rs(4)}",
+            f"スマートフォン料金（{m}月分）",
             "通信費",
             BANK,
             phone,
@@ -185,7 +185,7 @@ for mo in MONTHS:
     transactions.append(
         txn(
             clamp(date(y, m, 11)),
-            f"インターネット回線料金（{m}月分）{rs(4)}",
+            f"インターネット回線料金（{m}月分）",
             "通信費",
             BANK,
             net,
@@ -193,8 +193,6 @@ for mo in MONTHS:
     )
 
     # 普通預金利息 (last day)
-    import calendar
-
     last_day = calendar.monthrange(y, m)[1]
     interest = amount(100, 500, 10)
     transactions.append(
@@ -217,7 +215,7 @@ for mo in MONTHS:
         amt_ = amount(10_000, 50_000, 5_000)
         transactions.append(txn(d, f"ATM現金引き出し{rs(4)}", "現金", BANK, amt_))
 
-# Food purchases – ~80/month
+# Food purchases – ~30/month
 FOOD_DESCS = [
     "スーパーで食品購入",
     "コンビニで食品購入",
@@ -236,7 +234,7 @@ FOOD_DESCS = [
     "パン屋で購入",
 ]
 for mo in MONTHS:
-    for _ in range(random.randint(55, 65)):
+    for _ in range(random.randint(20, 35)):
         d = rand_day(mo)
         desc = random.choice(FOOD_DESCS) + rs(5)
         amt_ = amount(400, 8_000, 100)
@@ -349,8 +347,6 @@ OTHER_DESCS = [
     "ペット用品購入",
     "文具購入",
     "衣料品購入",
-    "靴購入",
-    "傘購入",
 ]
 for mo in MONTHS:
     for _ in range(random.randint(5, 10)):
@@ -362,13 +358,10 @@ for mo in MONTHS:
 
 # Side income / その他収入 – ~4/month
 INCOME_DESCS = [
-    "副収入（フリーランス案件）",
-    "メルカリ売上入金",
+    "副収入",
     "ポイント還元",
     "キャッシュバック入金",
     "雑収入",
-    "アフィリエイト収入",
-    "ネットオークション売上",
 ]
 for mo in MONTHS:
     for _ in range(random.randint(2, 5)):
@@ -378,111 +371,6 @@ for mo in MONTHS:
         acc = random.choice(["雑収入", "その他"])
         transactions.append(txn(d, desc, BANK, acc, amt_))
 
-# Seasonal / special events
-special = [
-    # Summer
-    (
-        date(2025, 8, 11),
-        "お盆帰省新幹線チケット" + rs(4),
-        "交通費",
-        BANK,
-        amount(15_000, 40_000, 1_000),
-    ),
-    (
-        date(2025, 8, 13),
-        "お盆土産購入" + rs(4),
-        "その他費用",
-        "現金",
-        amount(2_000, 8_000, 500),
-    ),
-    (
-        date(2025, 9, 22),
-        "秋の旅行宿泊費" + rs(4),
-        "娯楽費",
-        credit_card(),
-        amount(20_000, 80_000, 5_000),
-    ),
-    (
-        date(2025, 10, 31),
-        "ハロウィン仮装グッズ" + rs(4),
-        "娯楽費",
-        credit_card(),
-        amount(1_000, 5_000, 500),
-    ),
-    (
-        date(2025, 11, 3),
-        "文化の日 家族外食" + rs(4),
-        "食費",
-        credit_card(),
-        amount(5_000, 15_000, 500),
-    ),
-    (
-        date(2025, 12, 24),
-        "クリスマスディナー外食" + rs(4),
-        "食費",
-        credit_card(),
-        amount(8_000, 20_000, 500),
-    ),
-    (
-        date(2025, 12, 25),
-        "クリスマスプレゼント購入" + rs(4),
-        "娯楽費",
-        credit_card(),
-        amount(5_000, 30_000, 1_000),
-    ),
-    (
-        date(2025, 12, 28),
-        "年末大掃除用品購入" + rs(4),
-        "日用品A",
-        credit_card(),
-        amount(3_000, 10_000, 500),
-    ),
-    (
-        date(2025, 12, 29),
-        "お歳暮送付" + rs(4),
-        "その他費用",
-        BANK,
-        amount(5_000, 15_000, 1_000),
-    ),
-    (
-        date(2026, 1, 1),
-        "初詣お賽銭・参拝グッズ" + rs(4),
-        "その他費用",
-        "現金",
-        amount(500, 3_000, 100),
-    ),
-    (
-        date(2026, 1, 3),
-        "初売りセール購入" + rs(4),
-        "娯楽費",
-        credit_card(),
-        amount(3_000, 20_000, 1_000),
-    ),
-    (
-        date(2026, 1, 7),
-        "七草粥食材購入" + rs(4),
-        "食費",
-        "現金",
-        amount(500, 1_500, 100),
-    ),
-    (date(2026, 2, 3), "節分豆購入" + rs(4), "食費", "現金", amount(300, 1_000, 100)),
-    (
-        date(2026, 2, 11),
-        "バレンタインチョコ購入" + rs(4),
-        "食費",
-        credit_card(),
-        amount(1_000, 5_000, 500),
-    ),
-    (
-        date(2026, 2, 14),
-        "バレンタインディナー" + rs(4),
-        "娯楽費",
-        credit_card(),
-        amount(8_000, 20_000, 1_000),
-    ),
-]
-for d, desc, debit, credit, amt_ in special:
-    transactions.append(txn(clamp(d), desc, debit, credit, amt_))
 
 # ── sort by date ──────────────────────────────────────────────────────────────
 
