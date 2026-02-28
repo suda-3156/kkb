@@ -24,6 +24,7 @@ import {
 const COMMANDS_BY_PAGE: Partial<Record<CmdPage, string[]>> = {
   initial: ["/expense", "/revenue", "/transaction"],
   inputExpense: ["/amount ", "/payment", "/category", "/date ", "/memo "],
+  inputRevenue: ["/amount ", "/deposit", "/source", "/date ", "/memo "],
 }
 
 /** 現在の入力値に対してゴーストサフィックス（補完の残り部分）を返す */

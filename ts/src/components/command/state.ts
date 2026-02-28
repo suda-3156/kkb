@@ -32,6 +32,18 @@ export type ExpenseInput = {
 
 export type ExpenseInputField = keyof ExpenseInput
 
+export type RevenueInput = {
+  amount: number
+  depositAccount: string
+  depositAccountId: string
+  source: string
+  sourceId: string
+  description: string
+  date: string
+}
+
+export type RevenueInputField = keyof RevenueInput
+
 export type SelectLedgerAccountContext = {
   /** フィルターする勘定科目の種類。undefined の場合は全種類を表示 */
   kind?: LedgerAccountKind
@@ -57,6 +69,10 @@ export type CmdContext = {
   expenseInput: ExpenseInput
   /** 支出フォームのバリデーションエラーフィールド */
   expenseValidationErrors: ReadonlySet<ExpenseInputField>
+  /** 収入入力フォームのデータ */
+  revenueInput: RevenueInput
+  /** 収入フォームのバリデーションエラーフィールド */
+  revenueValidationErrors: ReadonlySet<RevenueInputField>
   /** selectLedgerAccount ページ用のコールバック */
   selectLedgerAccountContext: SelectLedgerAccountContext | null
 }
@@ -71,12 +87,24 @@ const defaultExpenseInput: ExpenseInput = {
   date: "",
 }
 
+const defaultRevenueInput: RevenueInput = {
+  amount: 0,
+  depositAccount: "",
+  depositAccountId: "",
+  source: "",
+  sourceId: "",
+  description: "",
+  date: "",
+}
+
 export const defaultCmdContext: CmdContext = {
   page: "closed",
   pageHistory: [],
   inputValue: "",
   expenseInput: defaultExpenseInput,
   expenseValidationErrors: new Set<ExpenseInputField>(),
+  revenueInput: defaultRevenueInput,
+  revenueValidationErrors: new Set<RevenueInputField>(),
   selectLedgerAccountContext: null,
 }
 
@@ -110,6 +138,21 @@ export const expenseValidationErrorsAtom = atom(
   (get) => get(cmdContextAtom).expenseValidationErrors,
   (_get, set, errors: ReadonlySet<ExpenseInputField>) =>
     set(cmdContextAtom, (ctx) => ({ ...ctx, expenseValidationErrors: errors })),
+)
+
+export const revenueInputAtom = atom(
+  (get) => get(cmdContextAtom).revenueInput,
+  (_get, set, update: Partial<RevenueInput>) =>
+    set(cmdContextAtom, (ctx) => ({
+      ...ctx,
+      revenueInput: { ...ctx.revenueInput, ...update },
+    })),
+)
+
+export const revenueValidationErrorsAtom = atom(
+  (get) => get(cmdContextAtom).revenueValidationErrors,
+  (_get, set, errors: ReadonlySet<RevenueInputField>) =>
+    set(cmdContextAtom, (ctx) => ({ ...ctx, revenueValidationErrors: errors })),
 )
 
 export const selectLedgerAccountContextAtom = atom(
