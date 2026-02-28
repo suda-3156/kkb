@@ -85,6 +85,8 @@ export const RecentTransactionsCard = () => {
 
   const transactions = data?.transactions.nodes?.filter(Boolean) ?? []
 
+  transactions.sort((a, b) => (new Date(b?.date) < new Date(a?.date) ? 1 : -1))
+
   return (
     <Card className="w-full">
       <CardHeader>

@@ -18,6 +18,7 @@ type Documents = {
     "\n  query ExpensesProportion($start: Date!, $end: Date!) {\n    periodAggregation(startDate: $start, endDate: $end) {\n        expenses {\n            totalAmount\n            byAccount {\n                totalAmount\n                ratio\n                ledgerAccount {\n                    name\n                    id\n                }\n            }\n        }\n    }\n  }\n": typeof types.ExpensesProportionDocument,
     "\n  query MonthlyExpensesSeries($start: Date!, $end: Date!) {\n    periodAggregationSeries(startDate: $start, endDate: $end, granularity: MONTHLY) {\n      dataPoints {\n        startDate\n        expenses {\n          totalAmount\n          byAccount {\n            totalAmount\n            ledgerAccount {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.MonthlyExpensesSeriesDocument,
     "\n  query RecentTransactions($today: Date!, $limit: Int!) {\n    transactions(last: $limit, endDate: $today) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n      }\n    }\n  }\n": typeof types.RecentTransactionsDocument,
+    "\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateExpenseTransactionDocument,
     "\n  query GetLedgerAccounts ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": typeof types.GetLedgerAccountsDocument,
 };
 const documents: Documents = {
@@ -25,6 +26,7 @@ const documents: Documents = {
     "\n  query ExpensesProportion($start: Date!, $end: Date!) {\n    periodAggregation(startDate: $start, endDate: $end) {\n        expenses {\n            totalAmount\n            byAccount {\n                totalAmount\n                ratio\n                ledgerAccount {\n                    name\n                    id\n                }\n            }\n        }\n    }\n  }\n": types.ExpensesProportionDocument,
     "\n  query MonthlyExpensesSeries($start: Date!, $end: Date!) {\n    periodAggregationSeries(startDate: $start, endDate: $end, granularity: MONTHLY) {\n      dataPoints {\n        startDate\n        expenses {\n          totalAmount\n          byAccount {\n            totalAmount\n            ledgerAccount {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": types.MonthlyExpensesSeriesDocument,
     "\n  query RecentTransactions($today: Date!, $limit: Int!) {\n    transactions(last: $limit, endDate: $today) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n      }\n    }\n  }\n": types.RecentTransactionsDocument,
+    "\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": types.CreateExpenseTransactionDocument,
     "\n  query GetLedgerAccounts ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": types.GetLedgerAccountsDocument,
 };
 
@@ -58,6 +60,10 @@ export function graphql(source: "\n  query MonthlyExpensesSeries($start: Date!, 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query RecentTransactions($today: Date!, $limit: Int!) {\n    transactions(last: $limit, endDate: $today) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query RecentTransactions($today: Date!, $limit: Int!) {\n    transactions(last: $limit, endDate: $today) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

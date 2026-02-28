@@ -8,12 +8,19 @@ import { InputExpenseCmdPage } from "./pages/input_expense"
 import { InputRevenueCmdPage } from "./pages/input_revenue"
 import { InputTransactionCmdPage } from "./pages/input_transaction"
 import { SelectLedgerAccountCmdPage } from "./pages/select_ledger_account"
-import { cmdPageAtom, enterHandlerAtom, inputValueAtom, resetAtom } from "./state"
+import {
+  cmdEnterHandlerAtom,
+  cmdPageAtom,
+  enterHandlerAtom,
+  inputValueAtom,
+  resetAtom,
+} from "./state"
 
 export const CommandModal = () => {
   const [page, setPage] = useAtom(cmdPageAtom)
   const [inputValue, setInputValue] = useAtom(inputValueAtom)
   const enterHandler = useAtomValue(enterHandlerAtom)
+  const cmdEnterHandler = useAtomValue(cmdEnterHandlerAtom)
   const reset = useSetAtom(resetAtom)
 
   React.useEffect(() => {
@@ -37,6 +44,11 @@ export const CommandModal = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return
     if (e.nativeEvent.isComposing) return
+    if ((e.metaKey || e.ctrlKey) && cmdEnterHandler) {
+      e.preventDefault()
+      cmdEnterHandler()
+      return
+    }
     if (enterHandler?.(inputValue)) {
       e.preventDefault()
     }

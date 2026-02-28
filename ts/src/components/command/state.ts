@@ -30,19 +30,36 @@ export const inputValueAtom = atom<string>("")
  */
 export const enterHandlerAtom = atom<((value: string) => boolean) | null>(null)
 
+/**
+ * 現在表示中のページが登録する Cmd+Enter キーハンドラー。
+ * 非同期処理（バリデーション・ミューテーション等）に対応。
+ */
+export const cmdEnterHandlerAtom = atom<(() => Promise<void>) | null>(null)
+
 export type ExpenseInput = {
   amount: number
   paymentMethod: string
+  paymentMethodId: string
   description: string
   category: string
+  categoryId: string
   date: string
 }
+
+export type ExpenseInputField = keyof ExpenseInput
+
+/** バリデーションエラーがあるフィールドのセット */
+export const expenseValidationErrorsAtom = atom<ReadonlySet<ExpenseInputField>>(
+  new Set<ExpenseInputField>(),
+)
 
 const expenseInputData = atom<ExpenseInput>({
   amount: 0,
   paymentMethod: "",
+  paymentMethodId: "",
   description: "",
   category: "",
+  categoryId: "",
   date: "",
 })
 
@@ -70,11 +87,15 @@ export const resetAtom = atom(null, (_, set) => {
   set(cmdPageAtom, "closed")
   set(inputValueAtom, "")
   set(selectLedgerAccountContextAtom, null)
+  set(cmdEnterHandlerAtom, null)
+  set(expenseValidationErrorsAtom, new Set<ExpenseInputField>())
   set(expenseInputAtom, {
     amount: 0,
     paymentMethod: "",
+    paymentMethodId: "",
     description: "",
     category: "",
+    categoryId: "",
     date: "",
   })
 })
