@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
-      go: ${{ steps.changes.outputs.go_any_changed }}
-      ts: ${{ steps.changes.outputs.ts_any_changed }}
+      go: ${{ steps.changes.outputs.go_any_modified }}
+      ts: ${{ steps.changes.outputs.ts_any_modified }}
     steps:
       - uses: actions/checkout@v6.0.0
         with:
@@ -27,17 +27,9 @@ jobs:
       - uses: tj-actions/changed-files@v47
         id: changes
         with:
-          files: |
+          files_yaml: |
             go:
-              - "go/**/*.go"
-              - "go/go.mod"
-              - "go/go.sum"
+              - go/**
 
             ts:
-              - "ts/src/**"
-              - "ts/biome.json"
-              - "ts/next.config.ts"
-              - "ts/package.json"
-              - "ts/pnpm-*.yaml"
-              - "ts/postcss.config.mjs"
-              - "ts/tsconfig.json"
+              - ts/**

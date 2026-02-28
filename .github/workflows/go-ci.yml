@@ -67,6 +67,39 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
       - run: go clean -modcache
 
+  generate:
+    name: Generate
+    needs: files-changed
+    if: needs.files-changed.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6.2.0
+        with:
+          go-version-file: "./go.mod"
+          cache-dependency-path: "./go.sum"
+          check-latest: true
+          cache: true
+
+      - run: go mod download
+
+      # run go generate ./... and check if there are any changes in the generated files
+      - run: |
+          go generate ./...
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated files are not up to date. Please run 'go generate ./...' and commit the changes."
+            git --no-pager diff
+            exit 1
+          fi
+
+      - run: go clean -modcache
+
   test:
     name: Test
     needs: files-changed
