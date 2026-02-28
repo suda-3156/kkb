@@ -3,6 +3,7 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import * as React from "react"
 import { Command, CommandDialog, CommandInput, CommandList } from "../ui/command"
+import { EditJournalEntryCmdPage } from "./pages/edit_journal_entry"
 import { InitialCmdPage } from "./pages/initial"
 import { InputExpenseCmdPage } from "./pages/input_expense"
 import { InputRevenueCmdPage } from "./pages/input_revenue"
@@ -27,6 +28,8 @@ const COMMANDS_BY_PAGE: Partial<Record<CmdPage, string[]>> = {
   inputExpense: ["/amount ", "/payment", "/category", "/date ", "/memo "],
   inputRevenue: ["/amount ", "/deposit", "/source", "/date ", "/memo "],
   inputTransfer: ["/amount ", "/from", "/to", "/date ", "/memo "],
+  inputTransaction: ["/date ", "/memo ", "/addentry", "/delete "],
+  editJournalEntry: ["/account", "/amount ", "/debit", "/credit"],
 }
 
 /** 現在の入力値に対してゴーストサフィックス（補完の残り部分）を返す */
@@ -103,6 +106,7 @@ export const CommandModal = () => {
       className="max-w-sm rounded-lg border"
       open={page !== "closed"}
       onOpenChange={handleOpenChange}
+      showCloseButton={false}
     >
       <Command shouldFilter={!isComposing}>
         <CommandInput
@@ -114,7 +118,13 @@ export const CommandModal = () => {
           onCompositionEnd={() => setIsComposing(false)}
           ghostSuffix={ghostSuffix}
         />
-        <CommandList>
+        <CommandList
+          className={
+            page === "inputTransaction"
+              ? "flex max-h-[min(75vh,600px)] flex-col overflow-hidden"
+              : undefined
+          }
+        >
           {page === "initial" && <InitialCmdPage />}
 
           {page === "inputExpense" && <InputExpenseCmdPage />}
@@ -124,6 +134,8 @@ export const CommandModal = () => {
           {page === "inputTransfer" && <InputTransferCmdPage />}
 
           {page === "inputTransaction" && <InputTransactionCmdPage />}
+
+          {page === "editJournalEntry" && <EditJournalEntryCmdPage />}
 
           {page === "selectLedgerAccount" && <SelectLedgerAccountCmdPage />}
         </CommandList>

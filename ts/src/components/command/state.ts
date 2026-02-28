@@ -1,5 +1,5 @@
 import { atom } from "jotai"
-import type { LedgerAccountKind } from "@/graph/graphql"
+import { JournalEntryKind, type LedgerAccountKind } from "@/graph/graphql"
 
 export type CmdPage =
   | "closed"
@@ -8,6 +8,7 @@ export type CmdPage =
   | "inputRevenue"
   | "inputTransfer"
   | "inputTransaction"
+  | "editJournalEntry"
   | "selectLedgerAccount"
   | "committing"
 
@@ -18,6 +19,7 @@ export const pageLabels: Record<CmdPage, string> = {
   inputRevenue: "Input Revenue",
   inputTransfer: "Input Transfer",
   inputTransaction: "Input Transaction",
+  editJournalEntry: "仕訳を編集",
   selectLedgerAccount: "勘定科目を選択",
   committing: "Committing",
 }
@@ -58,6 +60,35 @@ export type TransferInput = {
 
 export type TransferInputField = keyof TransferInput
 
+export type JournalEntryDraft = {
+  ledgerAccountId: string
+  ledgerAccountName: string
+  amount: number
+  kind: JournalEntryKind
+}
+
+export type JournalEntryDraftField = "ledgerAccount" | "amount"
+
+export const defaultJournalEntryDraft = (kind: JournalEntryKind): JournalEntryDraft => ({
+  ledgerAccountId: "",
+  ledgerAccountName: "",
+  amount: 0,
+  kind,
+})
+
+export type TransactionInput = {
+  date: string
+  description: string
+  entries: JournalEntryDraft[]
+}
+
+export type TransactionValidationErrors = {
+  /** date / description / balance (借方合計 ≠ 貸方合計) */
+  fields: ReadonlySet<"date" | "description" | "balance">
+  /** entry index → エラーフィールド */
+  entries: ReadonlyMap<number, ReadonlySet<JournalEntryDraftField>>
+}
+
 export type SelectLedgerAccountContext = {
   /** フィルターする勘定科目の種類。undefined の場合は全種類を表示 */
   kind?: LedgerAccountKind
@@ -91,6 +122,12 @@ export type CmdContext = {
   transferInput: TransferInput
   /** 振替フォームのバリデーションエラーフィールド */
   transferValidationErrors: ReadonlySet<TransferInputField>
+  /** 取引入力フォームのデータ */
+  transactionInput: TransactionInput
+  /** 取引フォームのバリデーションエラー */
+  transactionValidationErrors: TransactionValidationErrors
+  /** editJournalEntry ページで編集中の仕訳インデックス */
+  editingEntryIndex: number
   /** selectLedgerAccount ページ用のコールバック */
   selectLedgerAccountContext: SelectLedgerAccountContext | null
 }
@@ -125,6 +162,20 @@ const defaultTransferInput: TransferInput = {
   date: "",
 }
 
+const defaultTransactionInput = (): TransactionInput => ({
+  date: "",
+  description: "",
+  entries: [
+    defaultJournalEntryDraft(JournalEntryKind.Debit),
+    defaultJournalEntryDraft(JournalEntryKind.Credit),
+  ],
+})
+
+const defaultTransactionValidationErrors = (): TransactionValidationErrors => ({
+  fields: new Set(),
+  entries: new Map(),
+})
+
 export const defaultCmdContext: CmdContext = {
   page: "closed",
   pageHistory: [],
@@ -135,6 +186,9 @@ export const defaultCmdContext: CmdContext = {
   revenueValidationErrors: new Set<RevenueInputField>(),
   transferInput: defaultTransferInput,
   transferValidationErrors: new Set<TransferInputField>(),
+  transactionInput: defaultTransactionInput(),
+  transactionValidationErrors: defaultTransactionValidationErrors(),
+  editingEntryIndex: 0,
   selectLedgerAccountContext: null,
 }
 
@@ -198,6 +252,27 @@ export const transferValidationErrorsAtom = atom(
   (get) => get(cmdContextAtom).transferValidationErrors,
   (_get, set, errors: ReadonlySet<TransferInputField>) =>
     set(cmdContextAtom, (ctx) => ({ ...ctx, transferValidationErrors: errors })),
+)
+
+export const transactionInputAtom = atom(
+  (get) => get(cmdContextAtom).transactionInput,
+  (_get, set, update: Partial<TransactionInput>) =>
+    set(cmdContextAtom, (ctx) => ({
+      ...ctx,
+      transactionInput: { ...ctx.transactionInput, ...update },
+    })),
+)
+
+export const transactionValidationErrorsAtom = atom(
+  (get) => get(cmdContextAtom).transactionValidationErrors,
+  (_get, set, errors: TransactionValidationErrors) =>
+    set(cmdContextAtom, (ctx) => ({ ...ctx, transactionValidationErrors: errors })),
+)
+
+export const editingEntryIndexAtom = atom(
+  (get) => get(cmdContextAtom).editingEntryIndex,
+  (_get, set, editingEntryIndex: number) =>
+    set(cmdContextAtom, (ctx) => ({ ...ctx, editingEntryIndex })),
 )
 
 export const selectLedgerAccountContextAtom = atom(
