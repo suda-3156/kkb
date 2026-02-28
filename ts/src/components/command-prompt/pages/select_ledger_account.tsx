@@ -3,7 +3,7 @@
 import { useQuery } from "@apollo/client/react"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
-import { InlineLoading } from "@/components/loading"
+import { LoadingInline } from "@/components/loading"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { graphql } from "@/graph"
 import type { GetLedgerAccountsQuery } from "@/graph/graphql"
@@ -68,7 +68,7 @@ export const SelectLedgerAccountCmdPage = () => {
 
   return (
     <CommandGroup heading={pageLabels[page]}>
-      <CommandEmpty>{loading ? <InlineLoading /> : "No results found."}</CommandEmpty>
+      <CommandEmpty>{loading ? <LoadingInline /> : "No results found."}</CommandEmpty>
       {accounts.map(
         (a) =>
           a && (

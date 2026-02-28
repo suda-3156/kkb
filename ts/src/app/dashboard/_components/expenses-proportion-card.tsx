@@ -2,7 +2,7 @@
 
 import { useQuery } from "@apollo/client/react/compiled"
 import { Cell, Pie, PieChart } from "recharts"
-import { ErrorCard } from "@/components/error-card"
+import { ErrorCard } from "@/components/error"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"

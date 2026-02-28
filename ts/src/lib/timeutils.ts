@@ -56,3 +56,11 @@ export const getYearStr = (date: Date) => {
 export const dateStr = (date: Date) => {
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`
 }
+
+export const todayStr = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
+    .getDate()
+    .toString()
+    .padStart(2, "0")}`
+}

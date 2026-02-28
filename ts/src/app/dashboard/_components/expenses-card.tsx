@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@apollo/client/react"
-import { ErrorCard } from "@/components/error-card"
+import { ErrorCard } from "@/components/error"
 import { Card, CardContent } from "@/components/ui/card"
 import Reveal from "@/components/ui/reveal"
 import { Skeleton } from "@/components/ui/skeleton"

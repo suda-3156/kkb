@@ -35,11 +35,12 @@
   - go test
   - lint
 
-## Phase 2: Frontend
+## Phase 2: Frontend, Aggregation
 
 ## Phase 3: DB Migration system (and terraform)
 
 - migration job
+- Cloud KMS client
 - dev project
 
 ## Phase 4: CI/CD pipeline
@@ -49,7 +50,7 @@
 
 ---
 
-## Phase 5: Aggregation, Complexity
+## Phase 5: Complexity
 
 ## Phase 6: Implement tests
 
@@ -58,4 +59,7 @@
 - Key rotation
   - requires: lock control in DB -> lock table
 - Backup
-- CSV export
+  - CSV export
+- DB periodic down/boot
+- DB down/boot from frontend
+- Periodic payment, income
