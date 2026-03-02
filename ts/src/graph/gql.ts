@@ -18,10 +18,6 @@ type Documents = {
     "\n  query ExpensesProportion($start: Date!, $end: Date!) {\n    periodAggregation(startDate: $start, endDate: $end) {\n        expenses {\n            totalAmount\n            byAccount {\n                totalAmount\n                ratio\n                ledgerAccount {\n                    name\n                    id\n                }\n            }\n        }\n    }\n  }\n": typeof types.ExpensesProportionDocument,
     "\n  query MonthlyExpensesSeries($start: Date!, $end: Date!) {\n    periodAggregationSeries(startDate: $start, endDate: $end, granularity: MONTHLY) {\n      dataPoints {\n        startDate\n        expenses {\n          totalAmount\n          byAccount {\n            totalAmount\n            ledgerAccount {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.MonthlyExpensesSeriesDocument,
     "\n  query RecentTransactions($last: Int!) {\n    transactions(last: $last) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n        updatedAt\n      }\n    }\n  }\n": typeof types.RecentTransactionsDocument,
-    "\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateExpenseTransactionDocument,
-    "\n  mutation CreateRevenueTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateRevenueTransactionDocument,
-    "\n  mutation CreateManualTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateManualTransactionDocument,
-    "\n  mutation CreateTransferTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateTransferTransactionDocument,
     "\n  query GetLedgerAccountsForCmd ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": typeof types.GetLedgerAccountsForCmdDocument,
     "\n  query GetLedgerAccountsForCombobox($first: Int!, $after: ID, $kind: LedgerAccountKind) {\n    ledgerAccounts(first: $first, after: $after, kind: $kind) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": typeof types.GetLedgerAccountsForComboboxDocument,
     "\n  query GetTransactionForModal($id: ID!) {\n    transaction(id: $id) {\n      id\n      date\n      description\n      updatedAt\n      entries {\n        id\n        ledgerAccount {\n          id\n          name\n          kind\n        }\n        amount\n        kind\n      }\n    }\n  }\n": typeof types.GetTransactionForModalDocument,
@@ -33,10 +29,6 @@ const documents: Documents = {
     "\n  query ExpensesProportion($start: Date!, $end: Date!) {\n    periodAggregation(startDate: $start, endDate: $end) {\n        expenses {\n            totalAmount\n            byAccount {\n                totalAmount\n                ratio\n                ledgerAccount {\n                    name\n                    id\n                }\n            }\n        }\n    }\n  }\n": types.ExpensesProportionDocument,
     "\n  query MonthlyExpensesSeries($start: Date!, $end: Date!) {\n    periodAggregationSeries(startDate: $start, endDate: $end, granularity: MONTHLY) {\n      dataPoints {\n        startDate\n        expenses {\n          totalAmount\n          byAccount {\n            totalAmount\n            ledgerAccount {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": types.MonthlyExpensesSeriesDocument,
     "\n  query RecentTransactions($last: Int!) {\n    transactions(last: $last) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n        updatedAt\n      }\n    }\n  }\n": types.RecentTransactionsDocument,
-    "\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": types.CreateExpenseTransactionDocument,
-    "\n  mutation CreateRevenueTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": types.CreateRevenueTransactionDocument,
-    "\n  mutation CreateManualTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": types.CreateManualTransactionDocument,
-    "\n  mutation CreateTransferTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n": types.CreateTransferTransactionDocument,
     "\n  query GetLedgerAccountsForCmd ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": types.GetLedgerAccountsForCmdDocument,
     "\n  query GetLedgerAccountsForCombobox($first: Int!, $after: ID, $kind: LedgerAccountKind) {\n    ledgerAccounts(first: $first, after: $after, kind: $kind) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": types.GetLedgerAccountsForComboboxDocument,
     "\n  query GetTransactionForModal($id: ID!) {\n    transaction(id: $id) {\n      id\n      date\n      description\n      updatedAt\n      entries {\n        id\n        ledgerAccount {\n          id\n          name\n          kind\n        }\n        amount\n        kind\n      }\n    }\n  }\n": types.GetTransactionForModalDocument,
@@ -74,22 +66,6 @@ export function graphql(source: "\n  query MonthlyExpensesSeries($start: Date!, 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query RecentTransactions($last: Int!) {\n    transactions(last: $last) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query RecentTransactions($last: Int!) {\n    transactions(last: $last) {\n      nodes {\n        id\n        date\n        description\n        entries {\n          amount\n          kind\n          ledgerAccount {\n            kind\n          }\n        }\n        updatedAt\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreateRevenueTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateRevenueTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreateManualTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateManualTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreateTransferTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateTransferTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

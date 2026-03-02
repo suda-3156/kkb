@@ -95,7 +95,7 @@ var (
 
 // KindValidator is a validator for the "kind" field enum values. It is called by the builders before save.
 func KindValidator(k schema.JournalEntryKind) error {
-	switch k {
+	switch k.String() {
 	case "DEBIT", "CREDIT":
 		return nil
 	default:
