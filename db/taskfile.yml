@@ -1,8 +1,8 @@
 version: "3"
 
 tasks:
-  create-schema:
-    desc: "Create schema migration file \t usage: task <prefix>:create-schema NAME=<migration_name>"
+  schema:create:
+    desc: "Create schema migration file \t usage: task <prefix>:schema:create NAME=<migration_name>"
     vars:
       NAME: "{{ .NAME }}"
     dir: ../go

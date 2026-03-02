@@ -58,8 +58,9 @@
 
 - Key rotation
   - requires: lock control in DB -> lock table
+  - -> lock db when migrating
 - Backup
   - CSV export
 - DB periodic down/boot
 - DB down/boot from frontend
-- Periodic payment, income
+- Periodic transaction
