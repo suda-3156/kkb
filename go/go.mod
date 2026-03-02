@@ -3,6 +3,7 @@ module github.com/suda-3156/kkb/go
 go 1.25.0
 
 require (
+	ariga.io/atlas v1.1.0
 	cloud.google.com/go/cloudsqlconn v1.20.1
 	cloud.google.com/go/kms v1.26.0
 	entgo.io/ent v0.14.5
@@ -17,7 +18,6 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.18.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
@@ -77,6 +77,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260203192932-546029d2fa20 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/grpc v1.79.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 tool (

@@ -18,7 +18,7 @@ func main() {
 	defer func() {
 		stop()
 		if r := recover(); r != nil {
-			logging.Error(ctx, "application panicked", slog.Any("error", r))
+			logging.Critical(ctx, "application panicked", slog.Any("error", r))
 		}
 	}()
 
@@ -28,7 +28,7 @@ func main() {
 	stop()
 
 	if err != nil {
-		logging.Error(ctx, "application error", slog.Any("error", err))
+		logging.Critical(ctx, "application error", slog.Any("error", err))
 	}
 
 	logging.Info(ctx, "successful shutdown")
