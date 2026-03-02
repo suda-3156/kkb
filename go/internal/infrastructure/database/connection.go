@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
 
+	"cloud.google.com/go/cloudsqlconn"
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/internal/logging"
 )
@@ -19,7 +21,11 @@ type DB struct {
 func New(ctx context.Context, cfg *Config) (*DB, error) {
 	logging.Info(ctx, "initializing database connection")
 
-	pool, err := sql.Open("mysql", cfg.ConnectionURL())
+	if cfg.ConnectionMode == "cloudsqlconn" && cfg.ConnectionName == "" {
+		return nil, fmt.Errorf("connection name is required with Cloud SQL Connector")
+	}
+
+	pool, err := connect(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
@@ -46,4 +52,30 @@ func New(ctx context.Context, cfg *Config) (*DB, error) {
 func (db *DB) Close(ctx context.Context) error {
 	logging.Info(ctx, "closing database connection")
 	return db.Client.Close()
+}
+
+func connect(ctx context.Context, cfg *Config) (*sql.DB, error) {
+	if cfg.ConnectionMode != "cloudsqlconn" {
+		logging.Info(ctx, "connecting to database via TCP")
+		return sql.Open("mysql", cfg.ConnectionURL())
+	}
+
+	logging.Info(ctx, "connecting to database via Cloud SQL Connector")
+	dialer, err := cloudsqlconn.NewDialer(
+		ctx,
+		cloudsqlconn.WithLazyRefresh(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Cloud SQL Connector dialer: %w", err)
+	}
+
+	var opts []cloudsqlconn.DialOption
+	opts = append(opts, cloudsqlconn.WithPrivateIP())
+
+	mysql.RegisterDialContext("cloudsqlconn",
+		func(ctx context.Context, addr string) (net.Conn, error) {
+			return dialer.Dial(ctx, cfg.ConnectionName, opts...)
+		})
+
+	return sql.Open("cloudsqlconn", cfg.ConnectionURL())
 }
