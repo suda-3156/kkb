@@ -6,8 +6,9 @@ import { Circle, CircleCheck, CircleX } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import { CommandGroup, CommandItem } from "@/components/ui/command"
-import { graphql } from "@/graph"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
+import { CreateTransactionDoc } from "@/lib/mutation/query"
+import { revenueSchema } from "@/lib/mutation/schema"
 import {
   type CmdPage,
   cmdEnterHandlerAtom,
@@ -22,14 +23,6 @@ import {
   selectLedgerAccountContextAtom,
 } from "../state"
 
-const CreateRevenueTransaction = graphql(/* GraphQL */ `
-  mutation CreateRevenueTransaction($input: CreateTransactionInput!) {
-    createTransaction(input: $input) {
-      id
-    }
-  }
-`)
-
 const page: CmdPage = "inputRevenue"
 
 export const InputRevenueCmdPage = () => {
@@ -42,7 +35,7 @@ export const InputRevenueCmdPage = () => {
   const [validationErrors, setValidationErrors] = useAtom(revenueValidationErrorsAtom)
   const reset = useSetAtom(resetAtom)
 
-  const [createTransaction] = useMutation(CreateRevenueTransaction)
+  const [createTransaction] = useMutation(CreateTransactionDoc)
 
   const goToSelectLedgerAccount = React.useCallback(
     (field: "depositAccount" | "source", kind: LedgerAccountKind) => {
@@ -96,21 +89,24 @@ export const InputRevenueCmdPage = () => {
 
   React.useEffect(() => {
     setCmdEnterHandler(() => async () => {
-      const errors = new Set<RevenueInputField>()
-      // amount must be greater than 0
-      if (input.amount <= 0) errors.add("amount")
-      // depositAccount is required
-      if (!input.depositAccount) errors.add("depositAccount")
-      // source is required
-      if (!input.source) errors.add("source")
-      // date is required and must be a valid date string of the format YYYY-MM-DD
-      if (!input.date) errors.add("date")
-      if (Number.isNaN(new Date(input.date).getTime())) errors.add("date")
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) errors.add("date")
-      // description is required
-      if (!input.description) errors.add("description")
+      const result = revenueSchema.safeParse({
+        date: input.date,
+        description: input.description,
+        amount: input.amount,
+        depositAccountId: input.depositAccountId,
+        sourceId: input.sourceId,
+      })
 
-      if (errors.size > 0) {
+      if (!result.success) {
+        const errors = new Set<RevenueInputField>()
+        for (const issue of result.error.issues) {
+          const field = issue.path[0]
+          if (field === "amount") errors.add("amount")
+          if (field === "depositAccountId") errors.add("depositAccount")
+          if (field === "sourceId") errors.add("source")
+          if (field === "date") errors.add("date")
+          if (field === "description") errors.add("description")
+        }
         setValidationErrors(errors)
         return
       }

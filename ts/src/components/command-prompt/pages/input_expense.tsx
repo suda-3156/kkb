@@ -6,8 +6,9 @@ import { Circle, CircleCheck, CircleX } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import { CommandGroup, CommandItem } from "@/components/ui/command"
-import { graphql } from "@/graph"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
+import { CreateTransactionDoc } from "@/lib/mutation/query"
+import { expenseSchema } from "@/lib/mutation/schema"
 import {
   type CmdPage,
   cmdEnterHandlerAtom,
@@ -22,14 +23,6 @@ import {
   selectLedgerAccountContextAtom,
 } from "../state"
 
-const CreateExpenseTransaction = graphql(/* GraphQL */ `
-  mutation CreateExpenseTransaction($input: CreateTransactionInput!) {
-    createTransaction(input: $input) {
-      id
-    }
-  }
-`)
-
 const page: CmdPage = "inputExpense"
 
 export const InputExpenseCmdPage = () => {
@@ -42,7 +35,7 @@ export const InputExpenseCmdPage = () => {
   const [validationErrors, setValidationErrors] = useAtom(expenseValidationErrorsAtom)
   const reset = useSetAtom(resetAtom)
 
-  const [createTransaction] = useMutation(CreateExpenseTransaction)
+  const [createTransaction] = useMutation(CreateTransactionDoc)
 
   const goToSelectLedgerAccount = React.useCallback(
     (field: "paymentMethod" | "category", kind: LedgerAccountKind) => {
@@ -96,21 +89,24 @@ export const InputExpenseCmdPage = () => {
 
   React.useEffect(() => {
     setCmdEnterHandler(() => async () => {
-      const errors = new Set<ExpenseInputField>()
-      // amount must be greater than 0
-      if (input.amount <= 0) errors.add("amount")
-      // paymentMethod is required
-      if (!input.paymentMethod) errors.add("paymentMethod")
-      // category is required)
-      if (!input.category) errors.add("category")
-      // date is required and must be a valid date string and of the format YYYY-MM-DD
-      if (!input.date) errors.add("date")
-      if (Number.isNaN(new Date(input.date).getTime())) errors.add("date")
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) errors.add("date")
-      // description is required
-      if (!input.description) errors.add("description")
+      const result = expenseSchema.safeParse({
+        date: input.date,
+        description: input.description,
+        amount: input.amount,
+        paymentMethodId: input.paymentMethodId,
+        categoryId: input.categoryId,
+      })
 
-      if (errors.size > 0) {
+      if (!result.success) {
+        const errors = new Set<ExpenseInputField>()
+        for (const issue of result.error.issues) {
+          const field = issue.path[0]
+          if (field === "amount") errors.add("amount")
+          if (field === "paymentMethodId") errors.add("paymentMethod")
+          if (field === "categoryId") errors.add("category")
+          if (field === "date") errors.add("date")
+          if (field === "description") errors.add("description")
+        }
         setValidationErrors(errors)
         return
       }

@@ -34,7 +34,6 @@ export const ExpenseForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   const onSubmit = async (values: ExpenseFormValues) => {
     try {
-      console.log(values)
       await createTransaction({
         variables: {
           input: {

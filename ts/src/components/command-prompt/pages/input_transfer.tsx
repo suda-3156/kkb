@@ -6,8 +6,9 @@ import { Circle, CircleCheck, CircleX } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import { CommandGroup, CommandItem } from "@/components/ui/command"
-import { graphql } from "@/graph"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
+import { CreateTransactionDoc } from "@/lib/mutation/query"
+import { transferSchema } from "@/lib/mutation/schema"
 import {
   type CmdPage,
   cmdEnterHandlerAtom,
@@ -22,14 +23,6 @@ import {
   transferValidationErrorsAtom,
 } from "../state"
 
-const CreateTransferTransaction = graphql(/* GraphQL */ `
-  mutation CreateTransferTransaction($input: CreateTransactionInput!) {
-    createTransaction(input: $input) {
-      id
-    }
-  }
-`)
-
 const page: CmdPage = "inputTransfer"
 
 export const InputTransferCmdPage = () => {
@@ -42,7 +35,7 @@ export const InputTransferCmdPage = () => {
   const [validationErrors, setValidationErrors] = useAtom(transferValidationErrorsAtom)
   const reset = useSetAtom(resetAtom)
 
-  const [createTransaction] = useMutation(CreateTransferTransaction)
+  const [createTransaction] = useMutation(CreateTransactionDoc)
 
   const goToSelectLedgerAccount = React.useCallback(
     (field: "fromAccount" | "toAccount") => {
@@ -96,21 +89,24 @@ export const InputTransferCmdPage = () => {
 
   React.useEffect(() => {
     setCmdEnterHandler(() => async () => {
-      const errors = new Set<TransferInputField>()
-      // amount must be greater than 0
-      if (input.amount <= 0) errors.add("amount")
-      // fromAccount is required
-      if (!input.fromAccount) errors.add("fromAccount")
-      // toAccount is required
-      if (!input.toAccount) errors.add("toAccount")
-      // date is required and must be a valid date of format YYYY-MM-DD
-      if (!input.date) errors.add("date")
-      if (Number.isNaN(new Date(input.date).getTime())) errors.add("date")
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) errors.add("date")
-      // description is required
-      if (!input.description) errors.add("description")
+      const result = transferSchema.safeParse({
+        date: input.date,
+        description: input.description,
+        amount: input.amount,
+        fromAccountId: input.fromAccountId,
+        toAccountId: input.toAccountId,
+      })
 
-      if (errors.size > 0) {
+      if (!result.success) {
+        const errors = new Set<TransferInputField>()
+        for (const issue of result.error.issues) {
+          const field = issue.path[0]
+          if (field === "amount") errors.add("amount")
+          if (field === "fromAccountId") errors.add("fromAccount")
+          if (field === "toAccountId") errors.add("toAccount")
+          if (field === "date") errors.add("date")
+          if (field === "description") errors.add("description")
+        }
         setValidationErrors(errors)
         return
       }

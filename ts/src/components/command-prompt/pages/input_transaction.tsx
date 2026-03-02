@@ -6,8 +6,9 @@ import { Circle, CircleCheck, CircleX, Plus, Trash2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import { CommandGroup, CommandItem } from "@/components/ui/command"
-import { graphql } from "@/graph"
 import { JournalEntryKind } from "@/graph/graphql"
+import { CreateTransactionDoc } from "@/lib/mutation/query"
+import { transactionSchema } from "@/lib/mutation/schema"
 import {
   type CmdPage,
   cmdEnterHandlerAtom,
@@ -22,14 +23,6 @@ import {
   transactionValidationErrorsAtom,
 } from "../state"
 
-const CreateManualTransaction = graphql(/* GraphQL */ `
-  mutation CreateManualTransaction($input: CreateTransactionInput!) {
-    createTransaction(input: $input) {
-      id
-    }
-  }
-`)
-
 const page: CmdPage = "inputTransaction"
 
 export const InputTransactionCmdPage = () => {
@@ -42,7 +35,7 @@ export const InputTransactionCmdPage = () => {
   const navigate = useSetAtom(navigateAtom)
   const reset = useSetAtom(resetAtom)
 
-  const [createTransaction] = useMutation(CreateManualTransaction)
+  const [createTransaction] = useMutation(CreateTransactionDoc)
 
   const editEntry = React.useCallback(
     (index: number) => {
@@ -93,30 +86,37 @@ export const InputTransactionCmdPage = () => {
 
   React.useEffect(() => {
     setCmdEnterHandler(() => async () => {
-      const fieldErrors = new Set<"date" | "description" | "balance">()
-      const entryErrors = new Map<number, Set<"ledgerAccount" | "amount">>()
+      const result = transactionSchema.safeParse({
+        date: input.date,
+        description: input.description,
+        entries: input.entries.map((e) => ({
+          ledgerAccountId: e.ledgerAccountId,
+          amount: e.amount,
+          kind: e.kind,
+        })),
+      })
 
-      if (!input.date || !/^\d{4}-\d{2}-\d{2}$/.test(input.date)) fieldErrors.add("date")
-      if (!input.description) fieldErrors.add("description")
-
-      let debitTotal = 0
-      let creditTotal = 0
-      for (let i = 0; i < input.entries.length; i++) {
-        const entry = input.entries[i]
-        const errs = new Set<"ledgerAccount" | "amount">()
-        if (!entry.ledgerAccountId) errs.add("ledgerAccount")
-        if (entry.amount <= 0) errs.add("amount")
-        if (errs.size > 0) entryErrors.set(i, errs)
-        if (entry.kind === JournalEntryKind.Debit) {
-          debitTotal += entry.amount
-        } else {
-          creditTotal += entry.amount
+      if (!result.success) {
+        const fieldErrors = new Set<"date" | "description" | "balance">()
+        const entryErrors = new Map<number, Set<"ledgerAccount" | "amount">>()
+        for (const issue of result.error.issues) {
+          const path0 = issue.path[0]
+          if (path0 === "date") fieldErrors.add("date")
+          else if (path0 === "description") fieldErrors.add("description")
+          else if (path0 === "entries") {
+            const path1 = issue.path[1]
+            if (typeof path1 === "number") {
+              const path2 = issue.path[2]
+              const errs = entryErrors.get(path1) ?? new Set<"ledgerAccount" | "amount">()
+              if (path2 === "ledgerAccountId") errs.add("ledgerAccount")
+              if (path2 === "amount") errs.add("amount")
+              entryErrors.set(path1, errs)
+            } else {
+              // balance error from superRefine
+              fieldErrors.add("balance")
+            }
+          }
         }
-      }
-
-      if (debitTotal !== creditTotal) fieldErrors.add("balance")
-
-      if (fieldErrors.size > 0 || entryErrors.size > 0) {
         setValidationErrors({ fields: fieldErrors, entries: entryErrors })
         return
       }

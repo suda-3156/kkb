@@ -58,19 +58,31 @@ function CommandDialog({
 
 function CommandInput({
   className,
+  ghostSuffix,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: React.ComponentProps<typeof CommandPrimitive.Input> & { ghostSuffix?: string }) {
   return (
     <div data-slot="command-input-wrapper" className="p-1 pb-0">
       <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
-        <CommandPrimitive.Input
-          data-slot="command-input"
-          className={cn(
-            "w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
-            className,
+        <div className="relative flex min-w-0 flex-1 items-center">
+          <CommandPrimitive.Input
+            data-slot="command-input"
+            className={cn(
+              "w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+              className,
+            )}
+            {...props}
+          />
+          {ghostSuffix && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre text-sm"
+            >
+              <span className="invisible">{props.value}</span>
+              <span className="text-muted-foreground/50">{ghostSuffix}</span>
+            </span>
           )}
-          {...props}
-        />
+        </div>
         <InputGroupAddon>
           <SearchIcon className="size-4 shrink-0 opacity-50" />
         </InputGroupAddon>
