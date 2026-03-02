@@ -65,6 +65,8 @@ jobs:
 
       - run: go mod download
       - uses: golangci/golangci-lint-action@v9.2.0
+        with:
+          working-directory: ./go
       - run: go clean -modcache
 
   generate:
@@ -138,5 +140,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: Unit Tests
-          path: test-report.json
+          path: go/test-report.json
           reporter: golang-json
