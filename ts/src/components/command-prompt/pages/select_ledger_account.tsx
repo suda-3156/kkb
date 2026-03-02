@@ -6,13 +6,13 @@ import { useEffect } from "react"
 import { LoadingInline } from "@/components/loading"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { graphql } from "@/graph"
-import type { GetLedgerAccountsQuery } from "@/graph/graphql"
+import type { GetLedgerAccountsForCmdQuery } from "@/graph/graphql"
 import { type CmdPage, goBackAtom, pageLabels, selectLedgerAccountContextAtom } from "../state"
 
 const page: CmdPage = "selectLedgerAccount"
 
-const GetLedgerAccounts = graphql(/* GraphQL */ `
-  query GetLedgerAccounts ($first: Int!, $after: ID) {
+const GetLedgerAccountsForCmdDoc = graphql(/* GraphQL */ `
+  query GetLedgerAccountsForCmd ($first: Int!, $after: ID) {
     ledgerAccounts(first: $first, after: $after) {
       nodes {
         id
@@ -33,11 +33,14 @@ export const SelectLedgerAccountCmdPage = () => {
   const goBack = useSetAtom(goBackAtom)
   const setContext = useSetAtom(selectLedgerAccountContextAtom)
 
-  const { data, loading, error, fetchMore } = useQuery<GetLedgerAccountsQuery>(GetLedgerAccounts, {
-    variables: {
-      first: 100,
+  const { data, loading, error, fetchMore } = useQuery<GetLedgerAccountsForCmdQuery>(
+    GetLedgerAccountsForCmdDoc,
+    {
+      variables: {
+        first: 100,
+      },
     },
-  })
+  )
 
   useEffect(() => {
     if (!loading && data?.ledgerAccounts.pageInfo.hasNextPage) {

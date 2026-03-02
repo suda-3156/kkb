@@ -16,7 +16,7 @@ import type { LedgerAccountKind } from "@/graph/graphql"
 // biome-ignore lint/suspicious/noExplicitAny: shared generic helper
 type AnyForm = ReturnType<typeof useForm<any>>
 
-const GetLedgerAccountsForCombobox = graphql(/* GraphQL */ `
+const GetLedgerAccountsForComboboxDoc = graphql(/* GraphQL */ `
   query GetLedgerAccountsForCombobox($first: Int!, $after: ID, $kind: LedgerAccountKind) {
     ledgerAccounts(first: $first, after: $after, kind: $kind) {
       nodes {
@@ -49,7 +49,7 @@ type Props = {
 }
 
 export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => {
-  const { data, loading, fetchMore } = useQuery(GetLedgerAccountsForCombobox, {
+  const { data, loading, fetchMore } = useQuery(GetLedgerAccountsForComboboxDoc, {
     variables: { first: 100, kind },
   })
 

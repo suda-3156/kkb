@@ -13,8 +13,16 @@ export function makeClient() {
         Query: {
           fields: {
             transactions: {
-              // `after` と `first` を除いた引数でキャッシュキーを区別する
               keyArgs: ["startDate"],
+              merge(existing, incoming) {
+                return {
+                  ...incoming,
+                  nodes: [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])],
+                }
+              },
+            },
+            ledgerAccounts: {
+              keyArgs: ["kind"],
               merge(existing, incoming) {
                 return {
                   ...incoming,
