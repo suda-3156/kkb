@@ -9,6 +9,7 @@ import (
 	"github.com/sethvargo/go-envconfig"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/serverenv"
 )
@@ -22,6 +23,12 @@ type DatabaseConfigProvider interface {
 // should be installed.
 type KeyManagerConfigProvider interface {
 	KeyManagerConfig() *keys.Config
+}
+
+// SecretManagerConfigProvider is a marker interface indicating the secret manager
+// should be installed.
+type SecretManagerConfigProvider interface {
+	SecretManagerConfig() *secrets.Config
 }
 
 // Setup initializes the server environment.
@@ -38,6 +45,39 @@ func SetupWith(
 	var mutators []envconfig.Mutator
 
 	var serverEnvOpts []serverenv.Option
+
+	var sm secrets.SecretManager
+	if provider, ok := config.(SecretManagerConfigProvider); ok {
+		logging.Info(
+			ctx,
+			"configuring secret manager",
+		)
+
+		smConfig := provider.SecretManagerConfig()
+		if err := envconfig.Process(ctx, &envconfig.Config{
+			Target:   smConfig,
+			Lookuper: lookuper,
+			Mutators: mutators,
+		}); err != nil {
+			return nil, fmt.Errorf("setup: process secret manager env: %w", err)
+		}
+
+		var err error
+		sm, err = secrets.SecretManagerFor(ctx, smConfig)
+		if err != nil {
+			return nil, fmt.Errorf("setup: init secret manager: %w", err)
+		}
+
+		mutators = append(mutators, secrets.Resolver(sm, smConfig))
+
+		serverEnvOpts = append(serverEnvOpts, serverenv.WithSecretManager(sm))
+
+		logging.Info(
+			ctx,
+			"secret manager configured",
+			slog.Any("config", smConfig),
+		)
+	}
 
 	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
 		Target:   config,

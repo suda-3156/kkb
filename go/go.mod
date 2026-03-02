@@ -6,6 +6,7 @@ require (
 	ariga.io/atlas v1.1.0
 	cloud.google.com/go/cloudsqlconn v1.20.1
 	cloud.google.com/go/kms v1.26.0
+	cloud.google.com/go/secretmanager v1.16.0
 	entgo.io/ent v0.14.5
 	github.com/99designs/gqlgen v0.17.86
 	github.com/go-chi/cors v1.2.2

@@ -7,12 +7,14 @@ import (
 
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
 )
 
 // ServerEnv holds the initialized components for the server, such as database connections.
 type ServerEnv struct {
-	database *database.DB
-	km       keys.KeyManager
+	database      *database.DB
+	km            keys.KeyManager
+	secretManager secrets.SecretManager
 }
 
 // Option defines a function type that modifies the ServerEnv.
@@ -45,6 +47,14 @@ func WithKeyManager(km keys.KeyManager) Option {
 	}
 }
 
+// WithSecretManager creates an Option to install a specific secret manager to use.
+func WithSecretManager(sm secrets.SecretManager) Option {
+	return func(s *ServerEnv) *ServerEnv {
+		s.secretManager = sm
+		return s
+	}
+}
+
 // Database returns the database connection from the ServerEnv.
 func (env *ServerEnv) Database() *database.DB {
 	return env.database
@@ -53,6 +63,11 @@ func (env *ServerEnv) Database() *database.DB {
 // KeyManager returns the key manager from the ServerEnv.
 func (env *ServerEnv) KeyManager() keys.KeyManager {
 	return env.km
+}
+
+// SecretManager returns the secret manager from the ServerEnv.
+func (s *ServerEnv) SecretManager() secrets.SecretManager {
+	return s.secretManager
 }
 
 // Close closes any resources held by the ServerEnv.

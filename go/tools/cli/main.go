@@ -13,6 +13,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
+	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/setup"
@@ -20,14 +21,16 @@ import (
 )
 
 var (
-	_ setup.DatabaseConfigProvider   = (*Config)(nil)
-	_ setup.KeyManagerConfigProvider = (*Config)(nil)
+	_ setup.DatabaseConfigProvider      = (*Config)(nil)
+	_ setup.KeyManagerConfigProvider    = (*Config)(nil)
+	_ setup.SecretManagerConfigProvider = (*Config)(nil)
 )
 
 type Config struct {
 	Database         database.Config
 	KeyManager       keys.Config
 	EncryptionManger encryption.Config
+	SecretManager    secrets.Config
 }
 
 func (c *Config) DatabaseConfig() *database.Config {
@@ -36,6 +39,10 @@ func (c *Config) DatabaseConfig() *database.Config {
 
 func (c *Config) KeyManagerConfig() *keys.Config {
 	return &c.KeyManager
+}
+
+func (c *Config) SecretManagerConfig() *secrets.Config {
+	return &c.SecretManager
 }
 
 func main() {
@@ -89,12 +96,16 @@ func run(ctx context.Context) error {
 
 	logging.Info(ctx, "CLI tool is set up and ready to use")
 
+	// ---↓ Execute anything you want to test here.
+
 	result, err := agg.GetPeriodAggregation(ctx, "2025-12-01", "2025-12-31")
 	if err != nil {
 		return err
 	}
 
 	logging.Info(ctx, "Period aggregation result", slog.Any("result", result))
+
+	// ---↑
 
 	return nil
 }

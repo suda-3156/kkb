@@ -50,5 +50,5 @@ func run(ctx context.Context) error {
 	//nolint: gocritic // This is intended shadow import
 	server := server.New(cfg.Port)
 
-	return server.ServeHTTP(ctx, srv.ServeMux(ctx))
+	return server.ServeHTTP(ctx, srv.Handler(ctx))
 }

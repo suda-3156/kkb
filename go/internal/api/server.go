@@ -63,7 +63,7 @@ func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, e
 	}, nil
 }
 
-func (s *Server) ServeMux(ctx context.Context) http.Handler {
+func (s *Server) Handler(ctx context.Context) http.Handler {
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
 		Resolvers: resolver.New(
 			s.env.Database(), s.em,
@@ -84,11 +84,6 @@ func (s *Server) ServeMux(ctx context.Context) http.Handler {
 
 	srv.SetErrorPresenter(ErrorPresenter)
 	srv.SetRecoverFunc(Recover)
-
-	// srv.AroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
-	// 	time.Sleep(2 * time.Second)
-	// 	return next(ctx)
-	// })
 
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
