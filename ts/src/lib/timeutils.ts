@@ -1,3 +1,20 @@
+const TZ = process.env.NEXT_PUBLIC_TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+
+export function todayString(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date())
+}
+
+export function dateToString(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(date)
+}
+
+export function stringToDate(str: string): Date {
+  const [y, m, d] = str.split("-").map(Number)
+  return new Date(y, m - 1, d)
+}
+
+// TODO: refactor funcs below
+
 export const getWeek = (date: Date) => {
   const dayOfWeek = date.getDay()
   const start = new Date(date)
