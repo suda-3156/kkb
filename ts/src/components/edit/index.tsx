@@ -1,7 +1,6 @@
 "use client"
 import type { SelectRootChangeEventDetails } from "@base-ui/react/select"
 import { useAtomValue, useSetAtom } from "jotai"
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -10,7 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { closeModalAtom, type ModalView, modalStateAtom, openModalAtom } from "./state"
-import { ExpenseForm,RevenueForm, TransferForm } from "./view"
+import { ExpenseForm, RevenueForm, TransferForm } from "./view"
+import * as EditWrapper from "./wrapper"
 
 const viewMap: Record<ModalView, React.ReactNode> = {
   fallback: <div>fallback</div>,
@@ -30,15 +30,18 @@ export const EditModal = () => {
   }
 
   return (
-    <Dialog open={state.open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" showCloseButton={false}>
-        <DialogHeader>
+    <EditWrapper.Container open={state.open} onOpenChange={handleOpenChange}>
+      <EditWrapper.Content
+        className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
+        showCloseButton={false}
+      >
+        <EditWrapper.Header>
           <SelectView />
-        </DialogHeader>
+        </EditWrapper.Header>
 
         {state.open && state.view ? viewMap[state.view] : null}
-      </DialogContent>
-    </Dialog>
+      </EditWrapper.Content>
+    </EditWrapper.Container>
   )
 }
 

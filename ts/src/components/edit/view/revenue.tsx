@@ -14,11 +14,11 @@ import {
 import { CreateTransactionDoc } from "@/components/edit/query"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
-import { DialogFooter } from "@/components/ui/dialog"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
 import { type RevenueFormValues, revenueSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
 import { closeModalAtom } from "../state"
+import { Footer } from "../wrapper"
 
 export const RevenueForm = () => {
   const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
@@ -67,7 +67,10 @@ export const RevenueForm = () => {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="relative w-full space-y-4 overflow-x-hidden"
+    >
       <div className="grid grid-cols-2 gap-4">
         <DateField name="date" form={form} />
         <AmountField name="amount" form={form} />
@@ -96,11 +99,11 @@ export const RevenueForm = () => {
         kind={LedgerAccountKind.Asset}
       />
 
-      <DialogFooter>
+      <Footer>
         <Button type="submit" disabled={loading}>
           {loading ? <LoadingInline text="送信中..." /> : "確定"}
         </Button>
-      </DialogFooter>
+      </Footer>
     </form>
   )
 }

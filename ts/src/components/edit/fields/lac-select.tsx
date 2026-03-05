@@ -111,7 +111,11 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
             onValueChange={(val: Account | null) => field.onChange(val?.id ?? null)}
             itemToStringLabel={(item) => item?.name ?? ""}
           >
-            <ComboboxInput aria-invalid={fieldState.invalid} placeholder="科目を選択" />
+            <ComboboxInput
+              className="w-[90%]"
+              aria-invalid={fieldState.invalid}
+              placeholder="科目を選択"
+            />
             <ComboboxContent>
               <ComboboxEmpty>{loading ? <LoadingInline /> : "科目が見つかりません"}</ComboboxEmpty>
               <ComboboxList>
