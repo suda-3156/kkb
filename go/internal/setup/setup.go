@@ -68,7 +68,7 @@ func SetupWith(
 			return nil, fmt.Errorf("setup: init secret manager: %w", err)
 		}
 
-		mutators = append(mutators, secrets.Resolver(sm, smConfig))
+		mutators = append(mutators, secrets.Resolver(sm))
 
 		serverEnvOpts = append(serverEnvOpts, serverenv.WithSecretManager(sm))
 

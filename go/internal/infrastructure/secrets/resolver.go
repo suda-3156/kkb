@@ -15,13 +15,13 @@ const (
 
 // Resolver returns an envconfig.MutatorFunc that resolves secrets
 // in environment variables using the provided secret manager and configuration.
-func Resolver(sm SecretManager, config *Config) envconfig.MutatorFunc {
+func Resolver(sm SecretManager) envconfig.MutatorFunc {
 	if sm == nil {
 		return nil
 	}
 
 	return func(
-		ctx context.Context, originalKey, resolvedKey, originalValue, currentValue string,
+		ctx context.Context, _, _, originalValue, _ string,
 	) (string, bool, error) {
 		// The second return value (bool) indicates whether future mutations in the stack
 		// should be applied. We want to continue applying future mutations,

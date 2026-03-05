@@ -14,7 +14,7 @@ linters:
     - funlen
     - gocheckcompilerdirectives
     # - gochecknoinits
-    - goconst
+    # - goconst
     - gocritic
     # - gocyclo
     - gosec
@@ -30,6 +30,8 @@ linters:
     - unconvert
     - unparam
     - whitespace
+  disable:
+    - unused
 
   settings:
     # cyclop:

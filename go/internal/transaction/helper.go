@@ -31,7 +31,7 @@ func (m *TransactionManager) convertKindToGraph(kind schema.JournalEntryKind) gr
 	}
 }
 
-func (m *TransactionManager) convertEntryToGraph(ctx context.Context, entry *ent.JournalEntry, keyID int) (*graph.JournalEntry, error) {
+func (m *TransactionManager) convertEntryToGraph(_ context.Context, entry *ent.JournalEntry) *graph.JournalEntry {
 	var ledgerAccount *graph.LedgerAccount
 	if entry.Edges.LedgerAccount != nil {
 		ledgerAccount = &graph.LedgerAccount{
@@ -44,7 +44,7 @@ func (m *TransactionManager) convertEntryToGraph(ctx context.Context, entry *ent
 		Amount:        entry.Amount,
 		Kind:          m.convertKindToGraph(entry.Kind),
 		IntID:         entry.ID,
-	}, nil
+	}
 }
 
 func (m *TransactionManager) convertToGraph(ctx context.Context, txn *ent.Transaction) (*graph.Transaction, error) {
@@ -61,10 +61,8 @@ func (m *TransactionManager) convertToGraph(ctx context.Context, txn *ent.Transa
 
 	var entries []*graph.JournalEntry
 	for _, entry := range txn.Edges.Entries {
-		converted, err := m.convertEntryToGraph(ctx, entry, keyID)
-		if err != nil {
-			return nil, err
-		}
+		converted := m.convertEntryToGraph(ctx, entry)
+
 		entries = append(entries, converted)
 	}
 

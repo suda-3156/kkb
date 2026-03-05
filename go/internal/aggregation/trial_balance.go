@@ -87,6 +87,7 @@ func (m *AggregationManager) GetTrialBalance(
 		})
 
 		// Net worth = total assets - total liabilities.
+		//nolint:exhaustive // We only consider Asset and Liability for net worth calculation.
 		switch lac.Kind {
 		case ents.Asset:
 			netWorth += balance

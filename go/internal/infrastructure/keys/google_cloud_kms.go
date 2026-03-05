@@ -15,14 +15,14 @@ func init() {
 }
 
 var (
-	_ KeyManager           = (*GoogleCloudKMS)(nil)
+	_ KeyManager = (*GoogleCloudKMS)(nil)
 )
 
 type GoogleCloudKMS struct {
 	client *kms.KeyManagementClient
 }
 
-func NewGoogleCloudKMS(ctx context.Context, cfg *Config) (KeyManager, error) {
+func NewGoogleCloudKMS(ctx context.Context, _ *Config) (KeyManager, error) {
 	client, err := kms.NewKeyManagementClient(ctx)
 	if err != nil {
 		return nil, err
@@ -41,9 +41,10 @@ func (k *GoogleCloudKMS) Encrypt(ctx context.Context, keyID string, plaintext, a
 	plaintextCRC32C := crc32c(plaintext)
 
 	req := &kmspb.EncryptRequest{
-		Name:            keyID,
-		Plaintext:       plaintext,
-		PlaintextCrc32C: wrapperspb.Int64(int64(plaintextCRC32C)),
+		Name:                        keyID,
+		Plaintext:                   plaintext,
+		PlaintextCrc32C:             wrapperspb.Int64(int64(plaintextCRC32C)),
+		AdditionalAuthenticatedData: aad,
 	}
 
 	result, err := k.client.Encrypt(ctx, req)
@@ -51,7 +52,7 @@ func (k *GoogleCloudKMS) Encrypt(ctx context.Context, keyID string, plaintext, a
 		return nil, fmt.Errorf("failed to encrypt: %w", err)
 	}
 
-	if result.VerifiedPlaintextCrc32C == false {
+	if !result.VerifiedPlaintextCrc32C {
 		return nil, fmt.Errorf("request corrupted in-transit")
 	}
 	if int64(crc32c(result.Ciphertext)) != result.CiphertextCrc32C.Value {
@@ -69,9 +70,10 @@ func (k *GoogleCloudKMS) Decrypt(ctx context.Context, keyID string, ciphertext, 
 	ciphertextCRC32C := crc32c(ciphertext)
 
 	req := &kmspb.DecryptRequest{
-		Name:             keyID,
-		Ciphertext:       ciphertext,
-		CiphertextCrc32C: wrapperspb.Int64(int64(ciphertextCRC32C)),
+		Name:                        keyID,
+		Ciphertext:                  ciphertext,
+		CiphertextCrc32C:            wrapperspb.Int64(int64(ciphertextCRC32C)),
+		AdditionalAuthenticatedData: aad,
 	}
 
 	result, err := k.client.Decrypt(ctx, req)

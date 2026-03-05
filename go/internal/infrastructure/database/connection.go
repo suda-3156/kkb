@@ -73,7 +73,7 @@ func connect(ctx context.Context, cfg *Config) (*sql.DB, error) {
 	opts = append(opts, cloudsqlconn.WithPrivateIP())
 
 	mysql.RegisterDialContext("cloudsqlconn",
-		func(ctx context.Context, addr string) (net.Conn, error) {
+		func(ctx context.Context, _ string) (net.Conn, error) {
 			return dialer.Dial(ctx, cfg.ConnectionName, opts...)
 		})
 
