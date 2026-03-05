@@ -9,7 +9,6 @@ export const CreateTransactionDoc = graphql(/* GraphQL */ `
       createdAt
       updatedAt
       entries {
-        id
         ledgerAccount {
           id
           name
@@ -30,7 +29,6 @@ export const UpdateTransactionDoc = graphql(/* GraphQL */ `
       createdAt
       updatedAt
       entries {
-        id
         ledgerAccount {
           id
           name

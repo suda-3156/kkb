@@ -21,7 +21,6 @@ const GetTransactionForModal = graphql(/* GraphQL */ `
       description
       updatedAt
       entries {
-        id
         ledgerAccount {
           id
           name
