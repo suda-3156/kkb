@@ -337,12 +337,12 @@ func (_q *JournalEntryQuery) WithLedgerAccount(opts ...func(*LedgerAccountQuery)
 // Example:
 //
 //	var v []struct {
-//		PublicID pulid.ID `json:"public_id,omitempty"`
+//		Amount int32 `json:"amount,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JournalEntry.Query().
-//		GroupBy(journalentry.FieldPublicID).
+//		GroupBy(journalentry.FieldAmount).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *JournalEntryQuery) GroupBy(field string, fields ...string) *JournalEntryGroupBy {
@@ -360,11 +360,11 @@ func (_q *JournalEntryQuery) GroupBy(field string, fields ...string) *JournalEnt
 // Example:
 //
 //	var v []struct {
-//		PublicID pulid.ID `json:"public_id,omitempty"`
+//		Amount int32 `json:"amount,omitempty"`
 //	}
 //
 //	client.JournalEntry.Query().
-//		Select(journalentry.FieldPublicID).
+//		Select(journalentry.FieldAmount).
 //		Scan(ctx, &v)
 func (_q *JournalEntryQuery) Select(fields ...string) *JournalEntrySelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

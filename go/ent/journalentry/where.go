@@ -3,13 +3,10 @@
 package journalentry
 
 import (
-	"time"
-
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/schema"
-	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // ID filters vertices based on their ID field.
@@ -57,94 +54,9 @@ func IDLTE(id int) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldLTE(FieldID, id))
 }
 
-// PublicID applies equality check predicate on the "public_id" field. It's identical to PublicIDEQ.
-func PublicID(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldEQ(FieldPublicID, v))
-}
-
 // Amount applies equality check predicate on the "amount" field. It's identical to AmountEQ.
 func Amount(v int32) predicate.JournalEntry {
 	return predicate.JournalEntry(sql.FieldEQ(FieldAmount, v))
-}
-
-// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
-func CreatedAt(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldEQ(FieldCreatedAt, v))
-}
-
-// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
-func UpdatedAt(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldEQ(FieldUpdatedAt, v))
-}
-
-// PublicIDEQ applies the EQ predicate on the "public_id" field.
-func PublicIDEQ(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldEQ(FieldPublicID, v))
-}
-
-// PublicIDNEQ applies the NEQ predicate on the "public_id" field.
-func PublicIDNEQ(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldNEQ(FieldPublicID, v))
-}
-
-// PublicIDIn applies the In predicate on the "public_id" field.
-func PublicIDIn(vs ...pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldIn(FieldPublicID, vs...))
-}
-
-// PublicIDNotIn applies the NotIn predicate on the "public_id" field.
-func PublicIDNotIn(vs ...pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldNotIn(FieldPublicID, vs...))
-}
-
-// PublicIDGT applies the GT predicate on the "public_id" field.
-func PublicIDGT(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldGT(FieldPublicID, v))
-}
-
-// PublicIDGTE applies the GTE predicate on the "public_id" field.
-func PublicIDGTE(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldGTE(FieldPublicID, v))
-}
-
-// PublicIDLT applies the LT predicate on the "public_id" field.
-func PublicIDLT(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldLT(FieldPublicID, v))
-}
-
-// PublicIDLTE applies the LTE predicate on the "public_id" field.
-func PublicIDLTE(v pulid.ID) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldLTE(FieldPublicID, v))
-}
-
-// PublicIDContains applies the Contains predicate on the "public_id" field.
-func PublicIDContains(v pulid.ID) predicate.JournalEntry {
-	vc := string(v)
-	return predicate.JournalEntry(sql.FieldContains(FieldPublicID, vc))
-}
-
-// PublicIDHasPrefix applies the HasPrefix predicate on the "public_id" field.
-func PublicIDHasPrefix(v pulid.ID) predicate.JournalEntry {
-	vc := string(v)
-	return predicate.JournalEntry(sql.FieldHasPrefix(FieldPublicID, vc))
-}
-
-// PublicIDHasSuffix applies the HasSuffix predicate on the "public_id" field.
-func PublicIDHasSuffix(v pulid.ID) predicate.JournalEntry {
-	vc := string(v)
-	return predicate.JournalEntry(sql.FieldHasSuffix(FieldPublicID, vc))
-}
-
-// PublicIDEqualFold applies the EqualFold predicate on the "public_id" field.
-func PublicIDEqualFold(v pulid.ID) predicate.JournalEntry {
-	vc := string(v)
-	return predicate.JournalEntry(sql.FieldEqualFold(FieldPublicID, vc))
-}
-
-// PublicIDContainsFold applies the ContainsFold predicate on the "public_id" field.
-func PublicIDContainsFold(v pulid.ID) predicate.JournalEntry {
-	vc := string(v)
-	return predicate.JournalEntry(sql.FieldContainsFold(FieldPublicID, vc))
 }
 
 // AmountEQ applies the EQ predicate on the "amount" field.
@@ -215,86 +127,6 @@ func KindNotIn(vs ...schema.JournalEntryKind) predicate.JournalEntry {
 		v[i] = vs[i]
 	}
 	return predicate.JournalEntry(sql.FieldNotIn(FieldKind, v...))
-}
-
-// CreatedAtEQ applies the EQ predicate on the "created_at" field.
-func CreatedAtEQ(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldEQ(FieldCreatedAt, v))
-}
-
-// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
-func CreatedAtNEQ(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldNEQ(FieldCreatedAt, v))
-}
-
-// CreatedAtIn applies the In predicate on the "created_at" field.
-func CreatedAtIn(vs ...time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldIn(FieldCreatedAt, vs...))
-}
-
-// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
-func CreatedAtNotIn(vs ...time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldNotIn(FieldCreatedAt, vs...))
-}
-
-// CreatedAtGT applies the GT predicate on the "created_at" field.
-func CreatedAtGT(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldGT(FieldCreatedAt, v))
-}
-
-// CreatedAtGTE applies the GTE predicate on the "created_at" field.
-func CreatedAtGTE(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldGTE(FieldCreatedAt, v))
-}
-
-// CreatedAtLT applies the LT predicate on the "created_at" field.
-func CreatedAtLT(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldLT(FieldCreatedAt, v))
-}
-
-// CreatedAtLTE applies the LTE predicate on the "created_at" field.
-func CreatedAtLTE(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldLTE(FieldCreatedAt, v))
-}
-
-// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
-func UpdatedAtEQ(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldEQ(FieldUpdatedAt, v))
-}
-
-// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
-func UpdatedAtNEQ(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldNEQ(FieldUpdatedAt, v))
-}
-
-// UpdatedAtIn applies the In predicate on the "updated_at" field.
-func UpdatedAtIn(vs ...time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldIn(FieldUpdatedAt, vs...))
-}
-
-// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
-func UpdatedAtNotIn(vs ...time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldNotIn(FieldUpdatedAt, vs...))
-}
-
-// UpdatedAtGT applies the GT predicate on the "updated_at" field.
-func UpdatedAtGT(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldGT(FieldUpdatedAt, v))
-}
-
-// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
-func UpdatedAtGTE(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldGTE(FieldUpdatedAt, v))
-}
-
-// UpdatedAtLT applies the LT predicate on the "updated_at" field.
-func UpdatedAtLT(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldLT(FieldUpdatedAt, v))
-}
-
-// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
-func UpdatedAtLTE(v time.Time) predicate.JournalEntry {
-	return predicate.JournalEntry(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
 // HasTransaction applies the HasEdge predicate on the "transaction" edge.

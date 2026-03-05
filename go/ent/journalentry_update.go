@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -66,12 +65,6 @@ func (_u *JournalEntryUpdate) SetNillableKind(v *schema.JournalEntryKind) *Journ
 	return _u
 }
 
-// SetUpdatedAt sets the "updated_at" field.
-func (_u *JournalEntryUpdate) SetUpdatedAt(v time.Time) *JournalEntryUpdate {
-	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
 // SetTransactionID sets the "transaction" edge to the Transaction entity by ID.
 func (_u *JournalEntryUpdate) SetTransactionID(id int) *JournalEntryUpdate {
 	_u.mutation.SetTransactionID(id)
@@ -113,7 +106,6 @@ func (_u *JournalEntryUpdate) ClearLedgerAccount() *JournalEntryUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *JournalEntryUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -136,14 +128,6 @@ func (_u *JournalEntryUpdate) Exec(ctx context.Context) error {
 func (_u *JournalEntryUpdate) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (_u *JournalEntryUpdate) defaults() {
-	if _, ok := _u.mutation.UpdatedAt(); !ok {
-		v := journalentry.UpdateDefaultUpdatedAt()
-		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -188,9 +172,6 @@ func (_u *JournalEntryUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.Kind(); ok {
 		_spec.SetField(journalentry.FieldKind, field.TypeEnum, value)
-	}
-	if value, ok := _u.mutation.UpdatedAt(); ok {
-		_spec.SetField(journalentry.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if _u.mutation.TransactionCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -305,12 +286,6 @@ func (_u *JournalEntryUpdateOne) SetNillableKind(v *schema.JournalEntryKind) *Jo
 	return _u
 }
 
-// SetUpdatedAt sets the "updated_at" field.
-func (_u *JournalEntryUpdateOne) SetUpdatedAt(v time.Time) *JournalEntryUpdateOne {
-	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
 // SetTransactionID sets the "transaction" edge to the Transaction entity by ID.
 func (_u *JournalEntryUpdateOne) SetTransactionID(id int) *JournalEntryUpdateOne {
 	_u.mutation.SetTransactionID(id)
@@ -365,7 +340,6 @@ func (_u *JournalEntryUpdateOne) Select(field string, fields ...string) *Journal
 
 // Save executes the query and returns the updated JournalEntry entity.
 func (_u *JournalEntryUpdateOne) Save(ctx context.Context) (*JournalEntry, error) {
-	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -388,14 +362,6 @@ func (_u *JournalEntryUpdateOne) Exec(ctx context.Context) error {
 func (_u *JournalEntryUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (_u *JournalEntryUpdateOne) defaults() {
-	if _, ok := _u.mutation.UpdatedAt(); !ok {
-		v := journalentry.UpdateDefaultUpdatedAt()
-		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -457,9 +423,6 @@ func (_u *JournalEntryUpdateOne) sqlSave(ctx context.Context) (_node *JournalEnt
 	}
 	if value, ok := _u.mutation.Kind(); ok {
 		_spec.SetField(journalentry.FieldKind, field.TypeEnum, value)
-	}
-	if value, ok := _u.mutation.UpdatedAt(); ok {
-		_spec.SetField(journalentry.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if _u.mutation.TransactionCleared() {
 		edge := &sqlgraph.EdgeSpec{

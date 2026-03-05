@@ -13,7 +13,6 @@ import (
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 func (m *TransactionManager) Update(
@@ -157,10 +156,7 @@ func (m *TransactionManager) updateTx(
 				return nil, ErrLedgerAccountIsGroup
 			}
 
-			entryPublicID := pulid.MustNew("jre_")
-
 			entry, err := client.JournalEntry.Create().
-				SetPublicID(entryPublicID).
 				SetAmount(entryInput.Amount).
 				SetKind(m.convertKindToEnt(entryInput.Kind)).
 				SetTransactionID(updated.ID).

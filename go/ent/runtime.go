@@ -18,39 +18,10 @@ import (
 func init() {
 	journalentryFields := schema.JournalEntry{}.Fields()
 	_ = journalentryFields
-	// journalentryDescPublicID is the schema descriptor for public_id field.
-	journalentryDescPublicID := journalentryFields[0].Descriptor()
-	// journalentry.PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
-	journalentry.PublicIDValidator = func() func(string) error {
-		validators := journalentryDescPublicID.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-			validators[2].(func(string) error),
-		}
-		return func(public_id string) error {
-			for _, fn := range fns {
-				if err := fn(public_id); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
 	// journalentryDescAmount is the schema descriptor for amount field.
-	journalentryDescAmount := journalentryFields[1].Descriptor()
+	journalentryDescAmount := journalentryFields[0].Descriptor()
 	// journalentry.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
 	journalentry.AmountValidator = journalentryDescAmount.Validators[0].(func(int32) error)
-	// journalentryDescCreatedAt is the schema descriptor for created_at field.
-	journalentryDescCreatedAt := journalentryFields[3].Descriptor()
-	// journalentry.DefaultCreatedAt holds the default value on creation for the created_at field.
-	journalentry.DefaultCreatedAt = journalentryDescCreatedAt.Default.(func() time.Time)
-	// journalentryDescUpdatedAt is the schema descriptor for updated_at field.
-	journalentryDescUpdatedAt := journalentryFields[4].Descriptor()
-	// journalentry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	journalentry.DefaultUpdatedAt = journalentryDescUpdatedAt.Default.(func() time.Time)
-	// journalentry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	journalentry.UpdateDefaultUpdatedAt = journalentryDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ledgeraccountFields := schema.LedgerAccount{}.Fields()
 	_ = ledgeraccountFields
 	// ledgeraccountDescPublicID is the schema descriptor for public_id field.

@@ -42,12 +42,9 @@ type JournalEntryMutation struct {
 	op                    Op
 	typ                   string
 	id                    *int
-	public_id             *pulid.ID
 	amount                *int32
 	addamount             *int32
 	kind                  *schema.JournalEntryKind
-	created_at            *time.Time
-	updated_at            *time.Time
 	clearedFields         map[string]struct{}
 	transaction           *int
 	clearedtransaction    bool
@@ -156,42 +153,6 @@ func (m *JournalEntryMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetPublicID sets the "public_id" field.
-func (m *JournalEntryMutation) SetPublicID(pu pulid.ID) {
-	m.public_id = &pu
-}
-
-// PublicID returns the value of the "public_id" field in the mutation.
-func (m *JournalEntryMutation) PublicID() (r pulid.ID, exists bool) {
-	v := m.public_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldPublicID returns the old "public_id" field's value of the JournalEntry entity.
-// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JournalEntryMutation) OldPublicID(ctx context.Context) (v pulid.ID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPublicID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPublicID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPublicID: %w", err)
-	}
-	return oldValue.PublicID, nil
-}
-
-// ResetPublicID resets all changes to the "public_id" field.
-func (m *JournalEntryMutation) ResetPublicID() {
-	m.public_id = nil
-}
-
 // SetAmount sets the "amount" field.
 func (m *JournalEntryMutation) SetAmount(i int32) {
 	m.amount = &i
@@ -282,78 +243,6 @@ func (m *JournalEntryMutation) OldKind(ctx context.Context) (v schema.JournalEnt
 // ResetKind resets all changes to the "kind" field.
 func (m *JournalEntryMutation) ResetKind() {
 	m.kind = nil
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (m *JournalEntryMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
-}
-
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *JournalEntryMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatedAt returns the old "created_at" field's value of the JournalEntry entity.
-// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JournalEntryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
-	}
-	return oldValue.CreatedAt, nil
-}
-
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *JournalEntryMutation) ResetCreatedAt() {
-	m.created_at = nil
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (m *JournalEntryMutation) SetUpdatedAt(t time.Time) {
-	m.updated_at = &t
-}
-
-// UpdatedAt returns the value of the "updated_at" field in the mutation.
-func (m *JournalEntryMutation) UpdatedAt() (r time.Time, exists bool) {
-	v := m.updated_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldUpdatedAt returns the old "updated_at" field's value of the JournalEntry entity.
-// If the JournalEntry object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JournalEntryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
-	}
-	return oldValue.UpdatedAt, nil
-}
-
-// ResetUpdatedAt resets all changes to the "updated_at" field.
-func (m *JournalEntryMutation) ResetUpdatedAt() {
-	m.updated_at = nil
 }
 
 // SetTransactionID sets the "transaction" edge to the Transaction entity by id.
@@ -468,21 +357,12 @@ func (m *JournalEntryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JournalEntryMutation) Fields() []string {
-	fields := make([]string, 0, 5)
-	if m.public_id != nil {
-		fields = append(fields, journalentry.FieldPublicID)
-	}
+	fields := make([]string, 0, 2)
 	if m.amount != nil {
 		fields = append(fields, journalentry.FieldAmount)
 	}
 	if m.kind != nil {
 		fields = append(fields, journalentry.FieldKind)
-	}
-	if m.created_at != nil {
-		fields = append(fields, journalentry.FieldCreatedAt)
-	}
-	if m.updated_at != nil {
-		fields = append(fields, journalentry.FieldUpdatedAt)
 	}
 	return fields
 }
@@ -492,16 +372,10 @@ func (m *JournalEntryMutation) Fields() []string {
 // schema.
 func (m *JournalEntryMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case journalentry.FieldPublicID:
-		return m.PublicID()
 	case journalentry.FieldAmount:
 		return m.Amount()
 	case journalentry.FieldKind:
 		return m.Kind()
-	case journalentry.FieldCreatedAt:
-		return m.CreatedAt()
-	case journalentry.FieldUpdatedAt:
-		return m.UpdatedAt()
 	}
 	return nil, false
 }
@@ -511,16 +385,10 @@ func (m *JournalEntryMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JournalEntryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case journalentry.FieldPublicID:
-		return m.OldPublicID(ctx)
 	case journalentry.FieldAmount:
 		return m.OldAmount(ctx)
 	case journalentry.FieldKind:
 		return m.OldKind(ctx)
-	case journalentry.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case journalentry.FieldUpdatedAt:
-		return m.OldUpdatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JournalEntry field %s", name)
 }
@@ -530,13 +398,6 @@ func (m *JournalEntryMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *JournalEntryMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case journalentry.FieldPublicID:
-		v, ok := value.(pulid.ID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetPublicID(v)
-		return nil
 	case journalentry.FieldAmount:
 		v, ok := value.(int32)
 		if !ok {
@@ -550,20 +411,6 @@ func (m *JournalEntryMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetKind(v)
-		return nil
-	case journalentry.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
-	case journalentry.FieldUpdatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetUpdatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JournalEntry field %s", name)
@@ -629,20 +476,11 @@ func (m *JournalEntryMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JournalEntryMutation) ResetField(name string) error {
 	switch name {
-	case journalentry.FieldPublicID:
-		m.ResetPublicID()
-		return nil
 	case journalentry.FieldAmount:
 		m.ResetAmount()
 		return nil
 	case journalentry.FieldKind:
 		m.ResetKind()
-		return nil
-	case journalentry.FieldCreatedAt:
-		m.ResetCreatedAt()
-		return nil
-	case journalentry.FieldUpdatedAt:
-		m.ResetUpdatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JournalEntry field %s", name)

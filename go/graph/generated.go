@@ -84,11 +84,8 @@ type ComplexityRoot struct {
 
 	JournalEntry struct {
 		Amount        func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		ID            func(childComplexity int) int
 		Kind          func(childComplexity int) int
 		LedgerAccount func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
 	}
 
 	LedgerAccount struct {
@@ -338,18 +335,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.JournalEntry.Amount(childComplexity), true
-	case "JournalEntry.createdAt":
-		if e.complexity.JournalEntry.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.JournalEntry.CreatedAt(childComplexity), true
-	case "JournalEntry.id":
-		if e.complexity.JournalEntry.ID == nil {
-			break
-		}
-
-		return e.complexity.JournalEntry.ID(childComplexity), true
 	case "JournalEntry.kind":
 		if e.complexity.JournalEntry.Kind == nil {
 			break
@@ -362,12 +347,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.JournalEntry.LedgerAccount(childComplexity), true
-	case "JournalEntry.updatedAt":
-		if e.complexity.JournalEntry.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.JournalEntry.UpdatedAt(childComplexity), true
 
 	case "LedgerAccount.archivedAt":
 		if e.complexity.LedgerAccount.ArchivedAt == nil {
@@ -1109,13 +1088,10 @@ enum JournalEntryKind {
   CREDIT
 }
 
-type JournalEntry implements Node {
-  id: ID!
+type JournalEntry {
   ledgerAccount: LedgerAccount!
   amount: Int!
   kind: JournalEntryKind!
-  createdAt: DateTime!
-  updatedAt: DateTime!
 }
 
 type Transaction implements Node {
@@ -1160,12 +1136,6 @@ extend type Mutation {
 
   deleteTransaction(id: ID!): DeleteTransactionPayload!
 
-  # recordExpense(input: RecordExpenseInput!): Transaction!
-
-  # recordRevenue(input: RecordRevenueInput!): Transaction!
-
-  # recordTransfer(input: RecordTransferInput!): Transaction!
-
   # adjustAccountBalance(input: AdjustAccountBalanceInput!): Transaction!
 }
 
@@ -1192,35 +1162,6 @@ input UpdateTransactionInput {
 type DeleteTransactionPayload {
   success: Boolean!
 }
-
-# input FromAccountWithAmount {
-#   accountId: ID!
-#   amount: Int!
-# }
-
-# input RecordExpenseInput {
-#   fromAccounts: [FromAccountWithAmount!]!
-#   expenseAccountId: ID!
-#   amount: Int!
-#   date: Date!
-#   description: String!
-# }
-
-# input RecordRevenueInput {
-#   toAccountId: ID!
-#   revenueAccountId: ID!
-#   amount: Int!
-#   date: Date!
-#   description: String!
-# }
-
-# input RecordTransferInput {
-#   fromAccountId: ID!
-#   toAccountId: ID!
-#   amount: Int!
-#   date: Date!
-#   description: String!
-# }
 
 # input AdjustAccountBalanceInput {
 #   accountId: ID!
@@ -2026,35 +1967,6 @@ func (ec *executionContext) fieldContext_ExpenseSummary_byAccount(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _JournalEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.JournalEntry) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_JournalEntry_id,
-		func(ctx context.Context) (any, error) {
-			return obj.ID, nil
-		},
-		nil,
-		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_JournalEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "JournalEntry",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _JournalEntry_ledgerAccount(ctx context.Context, field graphql.CollectedField, obj *model.JournalEntry) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2155,64 +2067,6 @@ func (ec *executionContext) fieldContext_JournalEntry_kind(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type JournalEntryKind does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _JournalEntry_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.JournalEntry) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_JournalEntry_createdAt,
-		func(ctx context.Context) (any, error) {
-			return obj.CreatedAt, nil
-		},
-		nil,
-		ec.marshalNDateTime2timeᚐTime,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_JournalEntry_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "JournalEntry",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _JournalEntry_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.JournalEntry) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_JournalEntry_updatedAt,
-		func(ctx context.Context) (any, error) {
-			return obj.UpdatedAt, nil
-		},
-		nil,
-		ec.marshalNDateTime2timeᚐTime,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_JournalEntry_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "JournalEntry",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4143,18 +3997,12 @@ func (ec *executionContext) fieldContext_Transaction_entries(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_JournalEntry_id(ctx, field)
 			case "ledgerAccount":
 				return ec.fieldContext_JournalEntry_ledgerAccount(ctx, field)
 			case "amount":
 				return ec.fieldContext_JournalEntry_amount(ctx, field)
 			case "kind":
 				return ec.fieldContext_JournalEntry_kind(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_JournalEntry_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_JournalEntry_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JournalEntry", field.Name)
 		},
@@ -6314,13 +6162,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._LedgerAccount(ctx, sel, obj)
-	case model.JournalEntry:
-		return ec._JournalEntry(ctx, sel, &obj)
-	case *model.JournalEntry:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._JournalEntry(ctx, sel, obj)
 	default:
 		if typedObj, ok := obj.(graphql.Marshaler); ok {
 			return typedObj
@@ -6636,7 +6477,7 @@ func (ec *executionContext) _ExpenseSummary(ctx context.Context, sel ast.Selecti
 	return out
 }
 
-var journalEntryImplementors = []string{"JournalEntry", "Node"}
+var journalEntryImplementors = []string{"JournalEntry"}
 
 func (ec *executionContext) _JournalEntry(ctx context.Context, sel ast.SelectionSet, obj *model.JournalEntry) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, journalEntryImplementors)
@@ -6647,11 +6488,6 @@ func (ec *executionContext) _JournalEntry(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("JournalEntry")
-		case "id":
-			out.Values[i] = ec._JournalEntry_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "ledgerAccount":
 			field := field
 
@@ -6695,16 +6531,6 @@ func (ec *executionContext) _JournalEntry(ctx context.Context, sel ast.Selection
 			}
 		case "kind":
 			out.Values[i] = ec._JournalEntry_kind(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdAt":
-			out.Values[i] = ec._JournalEntry_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._JournalEntry_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

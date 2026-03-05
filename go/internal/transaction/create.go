@@ -119,10 +119,7 @@ func (m *TransactionManager) createTx(
 			return nil, ErrLedgerAccountIsGroup
 		}
 
-		entryPublicID := pulid.MustNew("jre_")
-
 		entry, err := client.JournalEntry.Create().
-			SetPublicID(entryPublicID).
 			SetAmount(entryInput.Amount).
 			SetKind(m.convertKindToEnt(entryInput.Kind)).
 			SetTransactionID(created.ID).

@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -14,7 +13,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
-	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // JournalEntryCreate is the builder for creating a JournalEntry entity.
@@ -22,12 +20,6 @@ type JournalEntryCreate struct {
 	config
 	mutation *JournalEntryMutation
 	hooks    []Hook
-}
-
-// SetPublicID sets the "public_id" field.
-func (_c *JournalEntryCreate) SetPublicID(v pulid.ID) *JournalEntryCreate {
-	_c.mutation.SetPublicID(v)
-	return _c
 }
 
 // SetAmount sets the "amount" field.
@@ -39,34 +31,6 @@ func (_c *JournalEntryCreate) SetAmount(v int32) *JournalEntryCreate {
 // SetKind sets the "kind" field.
 func (_c *JournalEntryCreate) SetKind(v schema.JournalEntryKind) *JournalEntryCreate {
 	_c.mutation.SetKind(v)
-	return _c
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (_c *JournalEntryCreate) SetCreatedAt(v time.Time) *JournalEntryCreate {
-	_c.mutation.SetCreatedAt(v)
-	return _c
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *JournalEntryCreate) SetNillableCreatedAt(v *time.Time) *JournalEntryCreate {
-	if v != nil {
-		_c.SetCreatedAt(*v)
-	}
-	return _c
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (_c *JournalEntryCreate) SetUpdatedAt(v time.Time) *JournalEntryCreate {
-	_c.mutation.SetUpdatedAt(v)
-	return _c
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (_c *JournalEntryCreate) SetNillableUpdatedAt(v *time.Time) *JournalEntryCreate {
-	if v != nil {
-		_c.SetUpdatedAt(*v)
-	}
 	return _c
 }
 
@@ -99,7 +63,6 @@ func (_c *JournalEntryCreate) Mutation() *JournalEntryMutation {
 
 // Save creates the JournalEntry in the database.
 func (_c *JournalEntryCreate) Save(ctx context.Context) (*JournalEntry, error) {
-	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -125,28 +88,8 @@ func (_c *JournalEntryCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (_c *JournalEntryCreate) defaults() {
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := journalentry.DefaultCreatedAt()
-		_c.mutation.SetCreatedAt(v)
-	}
-	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		v := journalentry.DefaultUpdatedAt()
-		_c.mutation.SetUpdatedAt(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (_c *JournalEntryCreate) check() error {
-	if _, ok := _c.mutation.PublicID(); !ok {
-		return &ValidationError{Name: "public_id", err: errors.New(`ent: missing required field "JournalEntry.public_id"`)}
-	}
-	if v, ok := _c.mutation.PublicID(); ok {
-		if err := journalentry.PublicIDValidator(string(v)); err != nil {
-			return &ValidationError{Name: "public_id", err: fmt.Errorf(`ent: validator failed for field "JournalEntry.public_id": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.Amount(); !ok {
 		return &ValidationError{Name: "amount", err: errors.New(`ent: missing required field "JournalEntry.amount"`)}
 	}
@@ -162,12 +105,6 @@ func (_c *JournalEntryCreate) check() error {
 		if err := journalentry.KindValidator(v); err != nil {
 			return &ValidationError{Name: "kind", err: fmt.Errorf(`ent: validator failed for field "JournalEntry.kind": %w`, err)}
 		}
-	}
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "JournalEntry.created_at"`)}
-	}
-	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "JournalEntry.updated_at"`)}
 	}
 	if len(_c.mutation.TransactionIDs()) == 0 {
 		return &ValidationError{Name: "transaction", err: errors.New(`ent: missing required edge "JournalEntry.transaction"`)}
@@ -201,10 +138,6 @@ func (_c *JournalEntryCreate) createSpec() (*JournalEntry, *sqlgraph.CreateSpec)
 		_node = &JournalEntry{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(journalentry.Table, sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.PublicID(); ok {
-		_spec.SetField(journalentry.FieldPublicID, field.TypeString, value)
-		_node.PublicID = value
-	}
 	if value, ok := _c.mutation.Amount(); ok {
 		_spec.SetField(journalentry.FieldAmount, field.TypeInt32, value)
 		_node.Amount = value
@@ -212,14 +145,6 @@ func (_c *JournalEntryCreate) createSpec() (*JournalEntry, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.Kind(); ok {
 		_spec.SetField(journalentry.FieldKind, field.TypeEnum, value)
 		_node.Kind = value
-	}
-	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(journalentry.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
-	}
-	if value, ok := _c.mutation.UpdatedAt(); ok {
-		_spec.SetField(journalentry.FieldUpdatedAt, field.TypeTime, value)
-		_node.UpdatedAt = value
 	}
 	if nodes := _c.mutation.TransactionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -276,7 +201,6 @@ func (_c *JournalEntryCreateBulk) Save(ctx context.Context) ([]*JournalEntry, er
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*JournalEntryMutation)
 				if !ok {

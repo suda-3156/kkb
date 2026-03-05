@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -13,7 +12,6 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
-	"github.com/suda-3156/kkb/go/internal/pulid"
 )
 
 // JournalEntry is the model entity for the JournalEntry schema.
@@ -21,16 +19,10 @@ type JournalEntry struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// PublicID holds the value of the "public_id" field.
-	PublicID pulid.ID `json:"public_id,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount int32 `json:"amount,omitempty"`
 	// Kind holds the value of the "kind" field.
 	Kind schema.JournalEntryKind `json:"kind,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JournalEntryQuery when eager-loading is set.
 	Edges                          JournalEntryEdges `json:"edges"`
@@ -77,14 +69,10 @@ func (*JournalEntry) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case journalentry.FieldPublicID:
-			values[i] = new(pulid.ID)
 		case journalentry.FieldID, journalentry.FieldAmount:
 			values[i] = new(sql.NullInt64)
 		case journalentry.FieldKind:
 			values[i] = new(sql.NullString)
-		case journalentry.FieldCreatedAt, journalentry.FieldUpdatedAt:
-			values[i] = new(sql.NullTime)
 		case journalentry.ForeignKeys[0]: // ledger_account_journal_entries
 			values[i] = new(sql.NullInt64)
 		case journalentry.ForeignKeys[1]: // transaction_entries
@@ -110,12 +98,6 @@ func (_m *JournalEntry) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
-		case journalentry.FieldPublicID:
-			if value, ok := values[i].(*pulid.ID); !ok {
-				return fmt.Errorf("unexpected type %T for field public_id", values[i])
-			} else if value != nil {
-				_m.PublicID = *value
-			}
 		case journalentry.FieldAmount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field amount", values[i])
@@ -127,18 +109,6 @@ func (_m *JournalEntry) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field kind", values[i])
 			} else if value.Valid {
 				_m.Kind = schema.JournalEntryKind(value.String)
-			}
-		case journalentry.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				_m.CreatedAt = value.Time
-			}
-		case journalentry.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				_m.UpdatedAt = value.Time
 			}
 		case journalentry.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -200,20 +170,11 @@ func (_m *JournalEntry) String() string {
 	var builder strings.Builder
 	builder.WriteString("JournalEntry(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("public_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.PublicID))
-	builder.WriteString(", ")
 	builder.WriteString("amount=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Amount))
 	builder.WriteString(", ")
 	builder.WriteString("kind=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Kind))
-	builder.WriteString(", ")
-	builder.WriteString("created_at=")
-	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("updated_at=")
-	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

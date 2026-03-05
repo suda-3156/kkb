@@ -4,7 +4,6 @@ package journalentry
 
 import (
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -16,16 +15,10 @@ const (
 	Label = "journal_entry"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldPublicID holds the string denoting the public_id field in the database.
-	FieldPublicID = "public_id"
 	// FieldAmount holds the string denoting the amount field in the database.
 	FieldAmount = "amount"
 	// FieldKind holds the string denoting the kind field in the database.
 	FieldKind = "kind"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
-	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
-	FieldUpdatedAt = "updated_at"
 	// EdgeTransaction holds the string denoting the transaction edge name in mutations.
 	EdgeTransaction = "transaction"
 	// EdgeLedgerAccount holds the string denoting the ledger_account edge name in mutations.
@@ -51,11 +44,8 @@ const (
 // Columns holds all SQL columns for journalentry fields.
 var Columns = []string{
 	FieldID,
-	FieldPublicID,
 	FieldAmount,
 	FieldKind,
-	FieldCreatedAt,
-	FieldUpdatedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "journal_entries"
@@ -81,16 +71,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
-	PublicIDValidator func(string) error
 	// AmountValidator is a validator for the "amount" field. It is called by the builders before save.
 	AmountValidator func(int32) error
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
-	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
-	DefaultUpdatedAt func() time.Time
-	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
-	UpdateDefaultUpdatedAt func() time.Time
 )
 
 // KindValidator is a validator for the "kind" field enum values. It is called by the builders before save.
@@ -111,11 +93,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByPublicID orders the results by the public_id field.
-func ByPublicID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPublicID, opts...).ToFunc()
-}
-
 // ByAmount orders the results by the amount field.
 func ByAmount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAmount, opts...).ToFunc()
@@ -124,16 +101,6 @@ func ByAmount(opts ...sql.OrderTermOption) OrderOption {
 // ByKind orders the results by the kind field.
 func ByKind(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKind, opts...).ToFunc()
-}
-
-// ByCreatedAt orders the results by the created_at field.
-func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
-}
-
-// ByUpdatedAt orders the results by the updated_at field.
-func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByTransactionField orders the results by transaction field.

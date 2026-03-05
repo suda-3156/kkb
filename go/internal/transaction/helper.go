@@ -40,12 +40,9 @@ func (m *TransactionManager) convertEntryToGraph(ctx context.Context, entry *ent
 	}
 
 	return &graph.JournalEntry{
-		ID:            entry.PublicID,
 		LedgerAccount: ledgerAccount,
 		Amount:        entry.Amount,
 		Kind:          m.convertKindToGraph(entry.Kind),
-		CreatedAt:     entry.CreatedAt,
-		UpdatedAt:     entry.UpdatedAt,
 		IntID:         entry.ID,
 	}, nil
 }
