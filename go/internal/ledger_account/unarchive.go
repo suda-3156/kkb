@@ -9,14 +9,14 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // Unarchive unarchives a ledger account only if its parent account is not archived.
 // It does not unarchive descendant accounts.
 func (m *LedgerAccountManager) Unarchive(
 	ctx context.Context,
-	id pulid.ID,
+	id prid.ID,
 ) (*graph.LedgerAccount, error) {
 	logging.Debug(
 		ctx,
@@ -39,7 +39,7 @@ func (m *LedgerAccountManager) Unarchive(
 func (m *LedgerAccountManager) unarchiveTx(
 	ctx context.Context,
 	client *ent.Client,
-	id pulid.ID,
+	id prid.ID,
 ) (*graph.LedgerAccount, error) {
 	// Get the account to unarchive.
 	account, err := client.LedgerAccount.Query().

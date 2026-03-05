@@ -18,7 +18,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/schema"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 const (
@@ -584,7 +584,7 @@ type LedgerAccountMutation struct {
 	op                     Op
 	typ                    string
 	id                     *int
-	public_id              *pulid.ID
+	public_id              *prid.ID
 	account_name           *[]byte
 	kind                   *schema.LedgerAccountKind
 	is_group               *bool
@@ -706,12 +706,12 @@ func (m *LedgerAccountMutation) IDs(ctx context.Context) ([]int, error) {
 }
 
 // SetPublicID sets the "public_id" field.
-func (m *LedgerAccountMutation) SetPublicID(pu pulid.ID) {
-	m.public_id = &pu
+func (m *LedgerAccountMutation) SetPublicID(pr prid.ID) {
+	m.public_id = &pr
 }
 
 // PublicID returns the value of the "public_id" field in the mutation.
-func (m *LedgerAccountMutation) PublicID() (r pulid.ID, exists bool) {
+func (m *LedgerAccountMutation) PublicID() (r prid.ID, exists bool) {
 	v := m.public_id
 	if v == nil {
 		return
@@ -722,7 +722,7 @@ func (m *LedgerAccountMutation) PublicID() (r pulid.ID, exists bool) {
 // OldPublicID returns the old "public_id" field's value of the LedgerAccount entity.
 // If the LedgerAccount object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LedgerAccountMutation) OldPublicID(ctx context.Context) (v pulid.ID, err error) {
+func (m *LedgerAccountMutation) OldPublicID(ctx context.Context) (v prid.ID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPublicID is only allowed on UpdateOne operations")
 	}
@@ -1267,7 +1267,7 @@ func (m *LedgerAccountMutation) OldField(ctx context.Context, name string) (ent.
 func (m *LedgerAccountMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case ledgeraccount.FieldPublicID:
-		v, ok := value.(pulid.ID)
+		v, ok := value.(prid.ID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2268,7 +2268,7 @@ type TransactionMutation struct {
 	op                    Op
 	typ                   string
 	id                    *int
-	public_id             *pulid.ID
+	public_id             *prid.ID
 	date                  *date.Date
 	description           *[]byte
 	created_at            *time.Time
@@ -2383,12 +2383,12 @@ func (m *TransactionMutation) IDs(ctx context.Context) ([]int, error) {
 }
 
 // SetPublicID sets the "public_id" field.
-func (m *TransactionMutation) SetPublicID(pu pulid.ID) {
-	m.public_id = &pu
+func (m *TransactionMutation) SetPublicID(pr prid.ID) {
+	m.public_id = &pr
 }
 
 // PublicID returns the value of the "public_id" field in the mutation.
-func (m *TransactionMutation) PublicID() (r pulid.ID, exists bool) {
+func (m *TransactionMutation) PublicID() (r prid.ID, exists bool) {
 	v := m.public_id
 	if v == nil {
 		return
@@ -2399,7 +2399,7 @@ func (m *TransactionMutation) PublicID() (r pulid.ID, exists bool) {
 // OldPublicID returns the old "public_id" field's value of the Transaction entity.
 // If the Transaction object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TransactionMutation) OldPublicID(ctx context.Context) (v pulid.ID, err error) {
+func (m *TransactionMutation) OldPublicID(ctx context.Context) (v prid.ID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPublicID is only allowed on UpdateOne operations")
 	}
@@ -2752,7 +2752,7 @@ func (m *TransactionMutation) OldField(ctx context.Context, name string) (ent.Va
 func (m *TransactionMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case transaction.FieldPublicID:
-		v, ok := value.(pulid.ID)
+		v, ok := value.(prid.ID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

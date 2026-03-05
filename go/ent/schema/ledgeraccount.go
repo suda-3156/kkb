@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // LedgerAccount holds the schema definition for the LedgerAccount entity.
@@ -44,7 +44,7 @@ func (LedgerAccount) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("public_id").
 			// prefix: "lac_"
-			GoType(pulid.ID("")).
+			GoType(prid.ID("")).
 			SchemaType(map[string]string{
 				"mysql": "char(30)",
 			}).

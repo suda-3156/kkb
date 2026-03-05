@@ -8,18 +8,18 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 type Filter struct {
-	PublicIDs []pulid.ID
+	PublicIDs []prid.ID
 	// IDs is used for dataloader
 	IDs []int
 
 	First  *int32
-	After  *pulid.ID
+	After  *prid.ID
 	Last   *int32
-	Before *pulid.ID
+	Before *prid.ID
 
 	Kind            *graph.LedgerAccountKind
 	IncludeArchived *bool

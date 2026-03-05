@@ -10,7 +10,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/date"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
 
@@ -52,7 +52,7 @@ func insertData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, tm
 	return nil
 }
 
-func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountManager) (map[string]pulid.ID, error) {
+func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountManager) (map[string]prid.ID, error) {
 	var seeds []LedgerAccount
 	if err := json.Unmarshal(ledgeraccountsJSON, &seeds); err != nil {
 		return nil, fmt.Errorf("insertLedgerAccounts: parse JSON: %w", err)
@@ -67,7 +67,7 @@ func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountM
 		"EQUITY":    graph.LedgerAccountKindEquity,
 	}
 
-	accountMap := make(map[string]pulid.ID, len(seeds))
+	accountMap := make(map[string]prid.ID, len(seeds))
 
 	logging.Info(ctx, "inserting ledger accounts", "count", len(seeds))
 
@@ -77,7 +77,7 @@ func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountM
 			return nil, fmt.Errorf("insertLedgerAccounts[%d] %q: unknown type %q", i, s.Name, s.Type)
 		}
 
-		var parentID *pulid.ID
+		var parentID *prid.ID
 		if s.Parent != "" {
 			id, ok := accountMap[s.Parent]
 			if !ok {
@@ -99,7 +99,7 @@ func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountM
 func insertTransactions(
 	ctx context.Context,
 	tm *transaction.TransactionManager,
-	accountMap map[string]pulid.ID,
+	accountMap map[string]prid.ID,
 ) error {
 	var seeds []Transaction
 	if err := json.Unmarshal(transactionsJSON, &seeds); err != nil {

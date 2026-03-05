@@ -11,7 +11,7 @@ import (
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 func (m *TransactionManager) Create(
@@ -87,7 +87,7 @@ func (m *TransactionManager) createTx(
 	input graph.CreateTransactionInput,
 	encDesc *encryption.EncryptionPayload,
 ) (*graph.Transaction, error) {
-	publicID := pulid.MustNew("txn_")
+	publicID := prid.NewUnsafe("txn_")
 
 	created, err := client.Transaction.Create().
 		SetPublicID(publicID).

@@ -7,7 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // Transaction holds the schema definition for the Transaction entity.
@@ -19,7 +19,7 @@ type Transaction struct {
 func (Transaction) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("public_id").
-			GoType(pulid.ID("")).
+			GoType(prid.ID("")).
 			SchemaType(map[string]string{
 				"mysql": "char(30)",
 			}).

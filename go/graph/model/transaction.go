@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 type Transaction struct {
-	ID          pulid.ID        `json:"id"`
+	ID          prid.ID         `json:"id"`
 	Entries     []*JournalEntry `json:"entries"`
 	Date        date.Date       `json:"date"`
 	Description string          `json:"description"`
@@ -19,5 +19,5 @@ type Transaction struct {
 	IntID int `json:"-"`
 }
 
-func (Transaction) IsNode()              {}
-func (this Transaction) GetID() pulid.ID { return this.ID }
+func (Transaction) IsNode()             {}
+func (this Transaction) GetID() prid.ID { return this.ID }

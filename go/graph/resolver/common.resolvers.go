@@ -13,7 +13,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
-	pulid1 "github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // HealthCheck is the resolver for the healthCheck field.
@@ -22,7 +22,7 @@ func (r *queryResolver) HealthCheck(ctx context.Context) (string, error) {
 }
 
 // Node is the resolver for the node field.
-func (r *queryResolver) Node(ctx context.Context, id pulid1.ID) (model.Node, error) {
+func (r *queryResolver) Node(ctx context.Context, id prid.ID) (model.Node, error) {
 	nElems := strings.SplitN(id.String(), "_", 2)
 	nTypes, _ := nElems[0], nElems[1]
 

@@ -11,7 +11,7 @@ import (
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // LedgerAccount is the resolver for the ledgerAccount field.
@@ -47,7 +47,7 @@ func (r *queryResolver) TrialBalance(ctx context.Context, asOf date.Date) (*mode
 }
 
 // ChildAccountBreakdown is the resolver for the childAccountBreakdown field.
-func (r *queryResolver) ChildAccountBreakdown(ctx context.Context, parentID pulid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error) {
+func (r *queryResolver) ChildAccountBreakdown(ctx context.Context, parentID prid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error) {
 	return r.agg.GetChildAccountBreakdown(ctx, parentID, startDate, endDate)
 }
 

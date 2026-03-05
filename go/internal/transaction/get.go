@@ -9,12 +9,12 @@ import (
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 func (m *TransactionManager) GetByPublicID(
 	ctx context.Context,
-	publicID pulid.ID,
+	publicID prid.ID,
 ) (*graph.Transaction, error) {
 	logging.Debug(
 		ctx,

@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/schema"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // ID filters vertices based on their ID field.
@@ -58,7 +58,7 @@ func IDLTE(id int) predicate.LedgerAccount {
 }
 
 // PublicID applies equality check predicate on the "public_id" field. It's identical to PublicIDEQ.
-func PublicID(v pulid.ID) predicate.LedgerAccount {
+func PublicID(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldEQ(FieldPublicID, v))
 }
 
@@ -88,71 +88,71 @@ func UpdatedAt(v time.Time) predicate.LedgerAccount {
 }
 
 // PublicIDEQ applies the EQ predicate on the "public_id" field.
-func PublicIDEQ(v pulid.ID) predicate.LedgerAccount {
+func PublicIDEQ(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldEQ(FieldPublicID, v))
 }
 
 // PublicIDNEQ applies the NEQ predicate on the "public_id" field.
-func PublicIDNEQ(v pulid.ID) predicate.LedgerAccount {
+func PublicIDNEQ(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldNEQ(FieldPublicID, v))
 }
 
 // PublicIDIn applies the In predicate on the "public_id" field.
-func PublicIDIn(vs ...pulid.ID) predicate.LedgerAccount {
+func PublicIDIn(vs ...prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldIn(FieldPublicID, vs...))
 }
 
 // PublicIDNotIn applies the NotIn predicate on the "public_id" field.
-func PublicIDNotIn(vs ...pulid.ID) predicate.LedgerAccount {
+func PublicIDNotIn(vs ...prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldNotIn(FieldPublicID, vs...))
 }
 
 // PublicIDGT applies the GT predicate on the "public_id" field.
-func PublicIDGT(v pulid.ID) predicate.LedgerAccount {
+func PublicIDGT(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldGT(FieldPublicID, v))
 }
 
 // PublicIDGTE applies the GTE predicate on the "public_id" field.
-func PublicIDGTE(v pulid.ID) predicate.LedgerAccount {
+func PublicIDGTE(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldGTE(FieldPublicID, v))
 }
 
 // PublicIDLT applies the LT predicate on the "public_id" field.
-func PublicIDLT(v pulid.ID) predicate.LedgerAccount {
+func PublicIDLT(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldLT(FieldPublicID, v))
 }
 
 // PublicIDLTE applies the LTE predicate on the "public_id" field.
-func PublicIDLTE(v pulid.ID) predicate.LedgerAccount {
+func PublicIDLTE(v prid.ID) predicate.LedgerAccount {
 	return predicate.LedgerAccount(sql.FieldLTE(FieldPublicID, v))
 }
 
 // PublicIDContains applies the Contains predicate on the "public_id" field.
-func PublicIDContains(v pulid.ID) predicate.LedgerAccount {
+func PublicIDContains(v prid.ID) predicate.LedgerAccount {
 	vc := string(v)
 	return predicate.LedgerAccount(sql.FieldContains(FieldPublicID, vc))
 }
 
 // PublicIDHasPrefix applies the HasPrefix predicate on the "public_id" field.
-func PublicIDHasPrefix(v pulid.ID) predicate.LedgerAccount {
+func PublicIDHasPrefix(v prid.ID) predicate.LedgerAccount {
 	vc := string(v)
 	return predicate.LedgerAccount(sql.FieldHasPrefix(FieldPublicID, vc))
 }
 
 // PublicIDHasSuffix applies the HasSuffix predicate on the "public_id" field.
-func PublicIDHasSuffix(v pulid.ID) predicate.LedgerAccount {
+func PublicIDHasSuffix(v prid.ID) predicate.LedgerAccount {
 	vc := string(v)
 	return predicate.LedgerAccount(sql.FieldHasSuffix(FieldPublicID, vc))
 }
 
 // PublicIDEqualFold applies the EqualFold predicate on the "public_id" field.
-func PublicIDEqualFold(v pulid.ID) predicate.LedgerAccount {
+func PublicIDEqualFold(v prid.ID) predicate.LedgerAccount {
 	vc := string(v)
 	return predicate.LedgerAccount(sql.FieldEqualFold(FieldPublicID, vc))
 }
 
 // PublicIDContainsFold applies the ContainsFold predicate on the "public_id" field.
-func PublicIDContainsFold(v pulid.ID) predicate.LedgerAccount {
+func PublicIDContainsFold(v prid.ID) predicate.LedgerAccount {
 	vc := string(v)
 	return predicate.LedgerAccount(sql.FieldContainsFold(FieldPublicID, vc))
 }

@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // ID filters vertices based on their ID field.
@@ -58,7 +58,7 @@ func IDLTE(id int) predicate.Transaction {
 }
 
 // PublicID applies equality check predicate on the "public_id" field. It's identical to PublicIDEQ.
-func PublicID(v pulid.ID) predicate.Transaction {
+func PublicID(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldEQ(FieldPublicID, v))
 }
 
@@ -84,71 +84,71 @@ func UpdatedAt(v time.Time) predicate.Transaction {
 }
 
 // PublicIDEQ applies the EQ predicate on the "public_id" field.
-func PublicIDEQ(v pulid.ID) predicate.Transaction {
+func PublicIDEQ(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldEQ(FieldPublicID, v))
 }
 
 // PublicIDNEQ applies the NEQ predicate on the "public_id" field.
-func PublicIDNEQ(v pulid.ID) predicate.Transaction {
+func PublicIDNEQ(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldNEQ(FieldPublicID, v))
 }
 
 // PublicIDIn applies the In predicate on the "public_id" field.
-func PublicIDIn(vs ...pulid.ID) predicate.Transaction {
+func PublicIDIn(vs ...prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldIn(FieldPublicID, vs...))
 }
 
 // PublicIDNotIn applies the NotIn predicate on the "public_id" field.
-func PublicIDNotIn(vs ...pulid.ID) predicate.Transaction {
+func PublicIDNotIn(vs ...prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldNotIn(FieldPublicID, vs...))
 }
 
 // PublicIDGT applies the GT predicate on the "public_id" field.
-func PublicIDGT(v pulid.ID) predicate.Transaction {
+func PublicIDGT(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldGT(FieldPublicID, v))
 }
 
 // PublicIDGTE applies the GTE predicate on the "public_id" field.
-func PublicIDGTE(v pulid.ID) predicate.Transaction {
+func PublicIDGTE(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldGTE(FieldPublicID, v))
 }
 
 // PublicIDLT applies the LT predicate on the "public_id" field.
-func PublicIDLT(v pulid.ID) predicate.Transaction {
+func PublicIDLT(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldLT(FieldPublicID, v))
 }
 
 // PublicIDLTE applies the LTE predicate on the "public_id" field.
-func PublicIDLTE(v pulid.ID) predicate.Transaction {
+func PublicIDLTE(v prid.ID) predicate.Transaction {
 	return predicate.Transaction(sql.FieldLTE(FieldPublicID, v))
 }
 
 // PublicIDContains applies the Contains predicate on the "public_id" field.
-func PublicIDContains(v pulid.ID) predicate.Transaction {
+func PublicIDContains(v prid.ID) predicate.Transaction {
 	vc := string(v)
 	return predicate.Transaction(sql.FieldContains(FieldPublicID, vc))
 }
 
 // PublicIDHasPrefix applies the HasPrefix predicate on the "public_id" field.
-func PublicIDHasPrefix(v pulid.ID) predicate.Transaction {
+func PublicIDHasPrefix(v prid.ID) predicate.Transaction {
 	vc := string(v)
 	return predicate.Transaction(sql.FieldHasPrefix(FieldPublicID, vc))
 }
 
 // PublicIDHasSuffix applies the HasSuffix predicate on the "public_id" field.
-func PublicIDHasSuffix(v pulid.ID) predicate.Transaction {
+func PublicIDHasSuffix(v prid.ID) predicate.Transaction {
 	vc := string(v)
 	return predicate.Transaction(sql.FieldHasSuffix(FieldPublicID, vc))
 }
 
 // PublicIDEqualFold applies the EqualFold predicate on the "public_id" field.
-func PublicIDEqualFold(v pulid.ID) predicate.Transaction {
+func PublicIDEqualFold(v prid.ID) predicate.Transaction {
 	vc := string(v)
 	return predicate.Transaction(sql.FieldEqualFold(FieldPublicID, vc))
 }
 
 // PublicIDContainsFold applies the ContainsFold predicate on the "public_id" field.
-func PublicIDContainsFold(v pulid.ID) predicate.Transaction {
+func PublicIDContainsFold(v prid.ID) predicate.Transaction {
 	vc := string(v)
 	return predicate.Transaction(sql.FieldContainsFold(FieldPublicID, vc))
 }

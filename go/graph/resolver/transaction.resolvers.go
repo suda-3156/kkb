@@ -11,7 +11,7 @@ import (
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
-	pulid1 "github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 	"github.com/suda-3156/kkb/go/internal/transaction"
 )
 
@@ -36,17 +36,17 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.Up
 }
 
 // DeleteTransaction is the resolver for the deleteTransaction field.
-func (r *mutationResolver) DeleteTransaction(ctx context.Context, id pulid1.ID) (*model.DeleteTransactionPayload, error) {
+func (r *mutationResolver) DeleteTransaction(ctx context.Context, id prid.ID) (*model.DeleteTransactionPayload, error) {
 	return r.tnx.Delete(ctx, id)
 }
 
 // Transaction is the resolver for the transaction field.
-func (r *queryResolver) Transaction(ctx context.Context, id pulid1.ID) (*model.Transaction, error) {
+func (r *queryResolver) Transaction(ctx context.Context, id prid.ID) (*model.Transaction, error) {
 	return r.tnx.GetByPublicID(ctx, id)
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *pulid1.ID, last *int32, before *pulid1.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error) {
+func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error) {
 	filter := &transaction.Filter{
 		First:     first,
 		After:     after,

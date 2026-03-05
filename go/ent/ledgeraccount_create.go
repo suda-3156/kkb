@@ -14,7 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // LedgerAccountCreate is the builder for creating a LedgerAccount entity.
@@ -25,7 +25,7 @@ type LedgerAccountCreate struct {
 }
 
 // SetPublicID sets the "public_id" field.
-func (_c *LedgerAccountCreate) SetPublicID(v pulid.ID) *LedgerAccountCreate {
+func (_c *LedgerAccountCreate) SetPublicID(v prid.ID) *LedgerAccountCreate {
 	_c.mutation.SetPublicID(v)
 	return _c
 }

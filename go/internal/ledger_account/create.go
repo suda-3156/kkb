@@ -10,7 +10,7 @@ import (
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 func (m *LedgerAccountManager) Create(
@@ -90,7 +90,7 @@ func (m *LedgerAccountManager) createTx(
 		parentID = &parent.ID
 	}
 
-	publicID := pulid.MustNew("lac_")
+	publicID := prid.NewUnsafe("lac_")
 
 	kind := m.convertKindToEnt(input.Kind)
 

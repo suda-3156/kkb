@@ -12,7 +12,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // Transaction is the model entity for the Transaction schema.
@@ -21,7 +21,7 @@ type Transaction struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// PublicID holds the value of the "public_id" field.
-	PublicID pulid.ID `json:"public_id,omitempty"`
+	PublicID prid.ID `json:"public_id,omitempty"`
 	// Date holds the value of the "date" field.
 	Date date.Date `json:"date,omitempty"`
 	// Description holds the value of the "description" field.
@@ -76,7 +76,7 @@ func (*Transaction) scanValues(columns []string) ([]any, error) {
 		case transaction.FieldDescription:
 			values[i] = new([]byte)
 		case transaction.FieldPublicID:
-			values[i] = new(pulid.ID)
+			values[i] = new(prid.ID)
 		case transaction.FieldID:
 			values[i] = new(sql.NullInt64)
 		case transaction.FieldDate:
@@ -107,7 +107,7 @@ func (_m *Transaction) assignValues(columns []string, values []any) error {
 			}
 			_m.ID = int(value.Int64)
 		case transaction.FieldPublicID:
-			if value, ok := values[i].(*pulid.ID); !ok {
+			if value, ok := values[i].(*prid.ID); !ok {
 				return fmt.Errorf("unexpected type %T for field public_id", values[i])
 			} else if value != nil {
 				_m.PublicID = *value

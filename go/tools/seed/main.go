@@ -17,7 +17,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 	"github.com/suda-3156/kkb/go/internal/setup"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
@@ -114,7 +114,7 @@ func run(ctx context.Context) error {
 }
 
 func create(
-	ctx context.Context, lac *ledgeraccount.LedgerAccountManager, name string, kind graph.LedgerAccountKind, isGroup bool, parentID *pulid.ID,
+	ctx context.Context, lac *ledgeraccount.LedgerAccountManager, name string, kind graph.LedgerAccountKind, isGroup bool, parentID *prid.ID,
 ) (*graph.LedgerAccount, error) {
 	a, err := lac.Create(ctx, graph.CreateLedgerAccountInput{
 		Name:     name,

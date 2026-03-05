@@ -10,12 +10,12 @@ import (
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 func (m *TransactionManager) Delete(
 	ctx context.Context,
-	publicID pulid.ID,
+	publicID prid.ID,
 ) (*graph.DeleteTransactionPayload, error) {
 	logging.Debug(
 		ctx,
@@ -37,7 +37,7 @@ func (m *TransactionManager) Delete(
 func (m *TransactionManager) deleteTx(
 	ctx context.Context,
 	client *ent.Client,
-	publicID pulid.ID,
+	publicID prid.ID,
 ) error {
 	txn, err := client.Transaction.Query().
 		Where(transaction.PublicID(publicID)).

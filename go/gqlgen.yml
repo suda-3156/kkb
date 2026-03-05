@@ -23,7 +23,7 @@ autobind:
 models:
   ID:
     model:
-      - github.com/suda-3156/kkb/go/internal/pulid.ID
+      - github.com/suda-3156/kkb/go/internal/prid.ID
 
   Int:
     model:

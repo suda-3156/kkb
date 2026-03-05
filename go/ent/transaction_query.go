@@ -338,7 +338,7 @@ func (_q *TransactionQuery) WithEncryptionKey(opts ...func(*LedgerEncryptionKeyQ
 // Example:
 //
 //	var v []struct {
-//		PublicID pulid.ID `json:"public_id,omitempty"`
+//		PublicID prid.ID `json:"public_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -361,7 +361,7 @@ func (_q *TransactionQuery) GroupBy(field string, fields ...string) *Transaction
 // Example:
 //
 //	var v []struct {
-//		PublicID pulid.ID `json:"public_id,omitempty"`
+//		PublicID prid.ID `json:"public_id,omitempty"`
 //	}
 //
 //	client.Transaction.Query().

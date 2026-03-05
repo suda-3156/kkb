@@ -12,7 +12,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // LedgerAccount is the model entity for the LedgerAccount schema.
@@ -21,7 +21,7 @@ type LedgerAccount struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// PublicID holds the value of the "public_id" field.
-	PublicID pulid.ID `json:"public_id,omitempty"`
+	PublicID prid.ID `json:"public_id,omitempty"`
 	// AccountName holds the value of the "account_name" field.
 	AccountName []byte `json:"account_name,omitempty"`
 	// Kind holds the value of the "kind" field.
@@ -105,7 +105,7 @@ func (*LedgerAccount) scanValues(columns []string) ([]any, error) {
 		case ledgeraccount.FieldAccountName:
 			values[i] = new([]byte)
 		case ledgeraccount.FieldPublicID:
-			values[i] = new(pulid.ID)
+			values[i] = new(prid.ID)
 		case ledgeraccount.FieldIsGroup:
 			values[i] = new(sql.NullBool)
 		case ledgeraccount.FieldID:
@@ -140,7 +140,7 @@ func (_m *LedgerAccount) assignValues(columns []string, values []any) error {
 			}
 			_m.ID = int(value.Int64)
 		case ledgeraccount.FieldPublicID:
-			if value, ok := values[i].(*pulid.ID); !ok {
+			if value, ok := values[i].(*prid.ID); !ok {
 				return fmt.Errorf("unexpected type %T for field public_id", values[i])
 			} else if value != nil {
 				_m.PublicID = *value

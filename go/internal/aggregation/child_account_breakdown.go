@@ -11,12 +11,12 @@ import (
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 func (m *AggregationManager) GetChildAccountBreakdown(
 	ctx context.Context,
-	parentPublicID pulid.ID,
+	parentPublicID prid.ID,
 	startDate date.Date,
 	endDate date.Date,
 ) (*graph.ChildAccountBreakdown, error) {

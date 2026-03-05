@@ -10,13 +10,13 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // Archive archives a ledger account and all its descendant accounts.
 func (m *LedgerAccountManager) Archive(
 	ctx context.Context,
-	id pulid.ID,
+	id prid.ID,
 ) (*graph.LedgerAccount, error) {
 	logging.Debug(
 		ctx,
@@ -39,7 +39,7 @@ func (m *LedgerAccountManager) Archive(
 func (m *LedgerAccountManager) archiveTx(
 	ctx context.Context,
 	client *ent.Client,
-	id pulid.ID,
+	id prid.ID,
 ) (*graph.LedgerAccount, error) {
 	// Get the account to archive.
 	account, err := client.LedgerAccount.Query().

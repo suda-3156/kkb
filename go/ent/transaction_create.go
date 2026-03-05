@@ -14,7 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 // TransactionCreate is the builder for creating a Transaction entity.
@@ -25,7 +25,7 @@ type TransactionCreate struct {
 }
 
 // SetPublicID sets the "public_id" field.
-func (_c *TransactionCreate) SetPublicID(v pulid.ID) *TransactionCreate {
+func (_c *TransactionCreate) SetPublicID(v prid.ID) *TransactionCreate {
 	_c.mutation.SetPublicID(v)
 	return _c
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -112,11 +112,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ArchiveLedgerAccount   func(childComplexity int, id pulid.ID) int
+		ArchiveLedgerAccount   func(childComplexity int, id prid.ID) int
 		CreateLedgerAccount    func(childComplexity int, input model.CreateLedgerAccountInput) int
 		CreateTransaction      func(childComplexity int, input model.CreateTransactionInput) int
-		DeleteTransaction      func(childComplexity int, id pulid.ID) int
-		UnarchiveLedgerAccount func(childComplexity int, id pulid.ID) int
+		DeleteTransaction      func(childComplexity int, id prid.ID) int
+		UnarchiveLedgerAccount func(childComplexity int, id prid.ID) int
 		UpdateLedgerAccount    func(childComplexity int, input model.UpdateLedgerAccountInput) int
 		UpdateTransaction      func(childComplexity int, input model.UpdateTransactionInput) int
 	}
@@ -142,15 +142,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		ChildAccountBreakdown   func(childComplexity int, parentID pulid.ID, startDate date.Date, endDate date.Date) int
+		ChildAccountBreakdown   func(childComplexity int, parentID prid.ID, startDate date.Date, endDate date.Date) int
 		HealthCheck             func(childComplexity int) int
-		LedgerAccount           func(childComplexity int, id pulid.ID) int
-		LedgerAccounts          func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) int
-		Node                    func(childComplexity int, id pulid.ID) int
+		LedgerAccount           func(childComplexity int, id prid.ID) int
+		LedgerAccounts          func(childComplexity int, first *int32, after *prid.ID, last *int32, before *prid.ID, kind *model.LedgerAccountKind, includeArchived *bool) int
+		Node                    func(childComplexity int, id prid.ID) int
 		PeriodAggregation       func(childComplexity int, startDate date.Date, endDate date.Date) int
 		PeriodAggregationSeries func(childComplexity int, startDate date.Date, endDate date.Date, granularity model.Granularity) int
-		Transaction             func(childComplexity int, id pulid.ID) int
-		Transactions            func(childComplexity int, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date) int
+		Transaction             func(childComplexity int, id prid.ID) int
+		Transactions            func(childComplexity int, first *int32, after *prid.ID, last *int32, before *prid.ID, startDate *date.Date, endDate *date.Date) int
 		TrialBalance            func(childComplexity int, asOf date.Date) int
 	}
 
@@ -202,23 +202,23 @@ type LedgerAccountResolver interface {
 type MutationResolver interface {
 	CreateLedgerAccount(ctx context.Context, input model.CreateLedgerAccountInput) (*model.LedgerAccount, error)
 	UpdateLedgerAccount(ctx context.Context, input model.UpdateLedgerAccountInput) (*model.LedgerAccount, error)
-	ArchiveLedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error)
-	UnarchiveLedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error)
+	ArchiveLedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
+	UnarchiveLedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
 	CreateTransaction(ctx context.Context, input model.CreateTransactionInput) (*model.Transaction, error)
 	UpdateTransaction(ctx context.Context, input model.UpdateTransactionInput) (*model.Transaction, error)
-	DeleteTransaction(ctx context.Context, id pulid.ID) (*model.DeleteTransactionPayload, error)
+	DeleteTransaction(ctx context.Context, id prid.ID) (*model.DeleteTransactionPayload, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (string, error)
-	Node(ctx context.Context, id pulid.ID) (model.Node, error)
+	Node(ctx context.Context, id prid.ID) (model.Node, error)
 	PeriodAggregation(ctx context.Context, startDate date.Date, endDate date.Date) (*model.PeriodAggregation, error)
 	PeriodAggregationSeries(ctx context.Context, startDate date.Date, endDate date.Date, granularity model.Granularity) (*model.PeriodAggregationSeries, error)
 	TrialBalance(ctx context.Context, asOf date.Date) (*model.TrialBalance, error)
-	ChildAccountBreakdown(ctx context.Context, parentID pulid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error)
-	LedgerAccount(ctx context.Context, id pulid.ID) (*model.LedgerAccount, error)
-	LedgerAccounts(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error)
-	Transaction(ctx context.Context, id pulid.ID) (*model.Transaction, error)
-	Transactions(ctx context.Context, first *int32, after *pulid.ID, last *int32, before *pulid.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error)
+	ChildAccountBreakdown(ctx context.Context, parentID prid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error)
+	LedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
+	LedgerAccounts(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error)
+	Transaction(ctx context.Context, id prid.ID) (*model.Transaction, error)
+	Transactions(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error)
 }
 
 type executableSchema struct {
@@ -445,7 +445,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ArchiveLedgerAccount(childComplexity, args["id"].(pulid.ID)), true
+		return e.complexity.Mutation.ArchiveLedgerAccount(childComplexity, args["id"].(prid.ID)), true
 	case "Mutation.createLedgerAccount":
 		if e.complexity.Mutation.CreateLedgerAccount == nil {
 			break
@@ -478,7 +478,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteTransaction(childComplexity, args["id"].(pulid.ID)), true
+		return e.complexity.Mutation.DeleteTransaction(childComplexity, args["id"].(prid.ID)), true
 	case "Mutation.unarchiveLedgerAccount":
 		if e.complexity.Mutation.UnarchiveLedgerAccount == nil {
 			break
@@ -489,7 +489,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UnarchiveLedgerAccount(childComplexity, args["id"].(pulid.ID)), true
+		return e.complexity.Mutation.UnarchiveLedgerAccount(childComplexity, args["id"].(prid.ID)), true
 	case "Mutation.updateLedgerAccount":
 		if e.complexity.Mutation.UpdateLedgerAccount == nil {
 			break
@@ -592,7 +592,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ChildAccountBreakdown(childComplexity, args["parentId"].(pulid.ID), args["startDate"].(date.Date), args["endDate"].(date.Date)), true
+		return e.complexity.Query.ChildAccountBreakdown(childComplexity, args["parentId"].(prid.ID), args["startDate"].(date.Date), args["endDate"].(date.Date)), true
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
 			break
@@ -609,7 +609,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.LedgerAccount(childComplexity, args["id"].(pulid.ID)), true
+		return e.complexity.Query.LedgerAccount(childComplexity, args["id"].(prid.ID)), true
 	case "Query.ledgerAccounts":
 		if e.complexity.Query.LedgerAccounts == nil {
 			break
@@ -620,7 +620,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.LedgerAccounts(childComplexity, args["first"].(*int32), args["after"].(*pulid.ID), args["last"].(*int32), args["before"].(*pulid.ID), args["kind"].(*model.LedgerAccountKind), args["includeArchived"].(*bool)), true
+		return e.complexity.Query.LedgerAccounts(childComplexity, args["first"].(*int32), args["after"].(*prid.ID), args["last"].(*int32), args["before"].(*prid.ID), args["kind"].(*model.LedgerAccountKind), args["includeArchived"].(*bool)), true
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
 			break
@@ -631,7 +631,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Node(childComplexity, args["id"].(pulid.ID)), true
+		return e.complexity.Query.Node(childComplexity, args["id"].(prid.ID)), true
 	case "Query.periodAggregation":
 		if e.complexity.Query.PeriodAggregation == nil {
 			break
@@ -664,7 +664,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Transaction(childComplexity, args["id"].(pulid.ID)), true
+		return e.complexity.Query.Transaction(childComplexity, args["id"].(prid.ID)), true
 	case "Query.transactions":
 		if e.complexity.Query.Transactions == nil {
 			break
@@ -675,7 +675,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["after"].(*pulid.ID), args["last"].(*int32), args["before"].(*pulid.ID), args["startDate"].(*date.Date), args["endDate"].(*date.Date)), true
+		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["after"].(*prid.ID), args["last"].(*int32), args["before"].(*prid.ID), args["startDate"].(*date.Date), args["endDate"].(*date.Date)), true
 	case "Query.trialBalance":
 		if e.complexity.Query.TrialBalance == nil {
 			break
@@ -1180,7 +1180,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_archiveLedgerAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1213,7 +1213,7 @@ func (ec *executionContext) field_Mutation_createTransaction_args(ctx context.Co
 func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1224,7 +1224,7 @@ func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Co
 func (ec *executionContext) field_Mutation_unarchiveLedgerAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1268,7 +1268,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_childAccountBreakdown_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "parentId", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "parentId", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1289,7 +1289,7 @@ func (ec *executionContext) field_Query_childAccountBreakdown_args(ctx context.C
 func (ec *executionContext) field_Query_ledgerAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1305,7 +1305,7 @@ func (ec *executionContext) field_Query_ledgerAccounts_args(ctx context.Context,
 		return nil, err
 	}
 	args["first"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1315,7 +1315,7 @@ func (ec *executionContext) field_Query_ledgerAccounts_args(ctx context.Context,
 		return nil, err
 	}
 	args["last"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1336,7 +1336,7 @@ func (ec *executionContext) field_Query_ledgerAccounts_args(ctx context.Context,
 func (ec *executionContext) field_Query_node_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1384,7 +1384,7 @@ func (ec *executionContext) field_Query_periodAggregation_args(ctx context.Conte
 func (ec *executionContext) field_Query_transaction_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1400,7 +1400,7 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 		return nil, err
 	}
 	args["first"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -1410,7 +1410,7 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 		return nil, err
 	}
 	args["last"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID)
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
@@ -2082,7 +2082,7 @@ func (ec *executionContext) _LedgerAccount_id(ctx context.Context, field graphql
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
+		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID,
 		true,
 		true,
 	)
@@ -2482,7 +2482,7 @@ func (ec *executionContext) _LedgerAccountEdge_cursor(ctx context.Context, field
 			return obj.Cursor, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
+		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID,
 		true,
 		true,
 	)
@@ -2674,7 +2674,7 @@ func (ec *executionContext) _Mutation_archiveLedgerAccount(ctx context.Context, 
 		ec.fieldContext_Mutation_archiveLedgerAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ArchiveLedgerAccount(ctx, fc.Args["id"].(pulid.ID))
+			return ec.resolvers.Mutation().ArchiveLedgerAccount(ctx, fc.Args["id"].(prid.ID))
 		},
 		nil,
 		ec.marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount,
@@ -2733,7 +2733,7 @@ func (ec *executionContext) _Mutation_unarchiveLedgerAccount(ctx context.Context
 		ec.fieldContext_Mutation_unarchiveLedgerAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UnarchiveLedgerAccount(ctx, fc.Args["id"].(pulid.ID))
+			return ec.resolvers.Mutation().UnarchiveLedgerAccount(ctx, fc.Args["id"].(prid.ID))
 		},
 		nil,
 		ec.marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount,
@@ -2902,7 +2902,7 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 		ec.fieldContext_Mutation_deleteTransaction,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteTransaction(ctx, fc.Args["id"].(pulid.ID))
+			return ec.resolvers.Mutation().DeleteTransaction(ctx, fc.Args["id"].(prid.ID))
 		},
 		nil,
 		ec.marshalNDeleteTransactionPayload2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐDeleteTransactionPayload,
@@ -2949,7 +2949,7 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 			return obj.StartCursor, nil
 		},
 		nil,
-		ec.marshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
+		ec.marshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID,
 		true,
 		false,
 	)
@@ -2978,7 +2978,7 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 			return obj.EndCursor, nil
 		},
 		nil,
-		ec.marshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
+		ec.marshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID,
 		true,
 		false,
 	)
@@ -3319,7 +3319,7 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 		ec.fieldContext_Query_node,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Node(ctx, fc.Args["id"].(pulid.ID))
+			return ec.resolvers.Query().Node(ctx, fc.Args["id"].(prid.ID))
 		},
 		nil,
 		ec.marshalONode2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐNode,
@@ -3509,7 +3509,7 @@ func (ec *executionContext) _Query_childAccountBreakdown(ctx context.Context, fi
 		ec.fieldContext_Query_childAccountBreakdown,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ChildAccountBreakdown(ctx, fc.Args["parentId"].(pulid.ID), fc.Args["startDate"].(date.Date), fc.Args["endDate"].(date.Date))
+			return ec.resolvers.Query().ChildAccountBreakdown(ctx, fc.Args["parentId"].(prid.ID), fc.Args["startDate"].(date.Date), fc.Args["endDate"].(date.Date))
 		},
 		nil,
 		ec.marshalNChildAccountBreakdown2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐChildAccountBreakdown,
@@ -3562,7 +3562,7 @@ func (ec *executionContext) _Query_ledgerAccount(ctx context.Context, field grap
 		ec.fieldContext_Query_ledgerAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().LedgerAccount(ctx, fc.Args["id"].(pulid.ID))
+			return ec.resolvers.Query().LedgerAccount(ctx, fc.Args["id"].(prid.ID))
 		},
 		nil,
 		ec.marshalOLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount,
@@ -3621,7 +3621,7 @@ func (ec *executionContext) _Query_ledgerAccounts(ctx context.Context, field gra
 		ec.fieldContext_Query_ledgerAccounts,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().LedgerAccounts(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*pulid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*pulid.ID), fc.Args["kind"].(*model.LedgerAccountKind), fc.Args["includeArchived"].(*bool))
+			return ec.resolvers.Query().LedgerAccounts(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*prid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*prid.ID), fc.Args["kind"].(*model.LedgerAccountKind), fc.Args["includeArchived"].(*bool))
 		},
 		nil,
 		ec.marshalNLedgerAccountConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccountConnection,
@@ -3672,7 +3672,7 @@ func (ec *executionContext) _Query_transaction(ctx context.Context, field graphq
 		ec.fieldContext_Query_transaction,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Transaction(ctx, fc.Args["id"].(pulid.ID))
+			return ec.resolvers.Query().Transaction(ctx, fc.Args["id"].(prid.ID))
 		},
 		nil,
 		ec.marshalOTransaction2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction,
@@ -3727,7 +3727,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		ec.fieldContext_Query_transactions,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*pulid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*pulid.ID), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date))
+			return ec.resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*prid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*prid.ID), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date))
 		},
 		nil,
 		ec.marshalNTransactionConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionConnection,
@@ -3954,7 +3954,7 @@ func (ec *executionContext) _Transaction_id(ctx context.Context, field graphql.C
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
+		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID,
 		true,
 		true,
 	)
@@ -4282,7 +4282,7 @@ func (ec *executionContext) _TransactionEdge_cursor(ctx context.Context, field g
 			return obj.Cursor, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID,
+		ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID,
 		true,
 		true,
 	)
@@ -5905,7 +5905,7 @@ func (ec *executionContext) unmarshalInputCreateLedgerAccountInput(ctx context.C
 		switch k {
 		case "parentId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentId"))
-			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx, v)
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5994,7 +5994,7 @@ func (ec *executionContext) unmarshalInputJournalEntryInput(ctx context.Context,
 		switch k {
 		case "ledgerAccountId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerAccountId"))
-			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx, v)
+			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6039,14 +6039,14 @@ func (ec *executionContext) unmarshalInputUpdateLedgerAccountInput(ctx context.C
 		switch k {
 		case "id":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx, v)
+			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.ID = data
 		case "parentId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentId"))
-			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx, v)
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6101,7 +6101,7 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 		switch k {
 		case "id":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx, v)
+			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8059,13 +8059,13 @@ func (ec *executionContext) marshalNGranularity2githubᚗcomᚋsudaᚑ3156ᚋkkb
 	return v
 }
 
-func (ec *executionContext) unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx context.Context, v any) (pulid.ID, error) {
-	var res pulid.ID
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx context.Context, v any) (prid.ID, error) {
+	var res prid.ID
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx context.Context, sel ast.SelectionSet, v pulid.ID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx context.Context, sel ast.SelectionSet, v prid.ID) graphql.Marshaler {
 	return v
 }
 
@@ -8684,16 +8684,16 @@ func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context,
 	return res
 }
 
-func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx context.Context, v any) (*pulid.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx context.Context, v any) (*prid.ID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(pulid.ID)
+	var res = new(prid.ID)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpulidᚐID(ctx context.Context, sel ast.SelectionSet, v *pulid.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx context.Context, sel ast.SelectionSet, v *prid.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

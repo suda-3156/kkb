@@ -408,7 +408,7 @@ func (_q *LedgerAccountQuery) WithEncryptionKey(opts ...func(*LedgerEncryptionKe
 // Example:
 //
 //	var v []struct {
-//		PublicID pulid.ID `json:"public_id,omitempty"`
+//		PublicID prid.ID `json:"public_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -431,7 +431,7 @@ func (_q *LedgerAccountQuery) GroupBy(field string, fields ...string) *LedgerAcc
 // Example:
 //
 //	var v []struct {
-//		PublicID pulid.ID `json:"public_id,omitempty"`
+//		PublicID prid.ID `json:"public_id,omitempty"`
 //	}
 //
 //	client.LedgerAccount.Query().

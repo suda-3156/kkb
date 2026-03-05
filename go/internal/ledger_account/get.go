@@ -9,12 +9,12 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 func (m *LedgerAccountManager) GetByPublicID(
 	ctx context.Context,
-	publicID pulid.ID,
+	publicID prid.ID,
 ) (*graph.LedgerAccount, error) {
 	logging.Debug(
 		ctx,

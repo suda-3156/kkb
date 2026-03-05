@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/suda-3156/kkb/go/internal/date"
-	"github.com/suda-3156/kkb/go/internal/pulid"
+	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
 type Node interface {
 	IsNode()
-	GetID() pulid.ID
+	GetID() prid.ID
 }
 
 type AccountAmountSummary struct {
@@ -39,7 +39,7 @@ type ChildAccountBreakdown struct {
 }
 
 type CreateLedgerAccountInput struct {
-	ParentID *pulid.ID         `json:"parentId,omitempty"`
+	ParentID *prid.ID          `json:"parentId,omitempty"`
 	Name     string            `json:"name"`
 	Kind     LedgerAccountKind `json:"kind"`
 	IsGroup  bool              `json:"isGroup"`
@@ -61,7 +61,7 @@ type ExpenseSummary struct {
 }
 
 type JournalEntryInput struct {
-	LedgerAccountID pulid.ID         `json:"ledgerAccountId"`
+	LedgerAccountID prid.ID          `json:"ledgerAccountId"`
 	Amount          int32            `json:"amount"`
 	Kind            JournalEntryKind `json:"kind"`
 }
@@ -74,7 +74,7 @@ type LedgerAccountConnection struct {
 }
 
 type LedgerAccountEdge struct {
-	Cursor pulid.ID       `json:"cursor"`
+	Cursor prid.ID        `json:"cursor"`
 	Node   *LedgerAccount `json:"node"`
 }
 
@@ -82,10 +82,10 @@ type Mutation struct {
 }
 
 type PageInfo struct {
-	StartCursor     *pulid.ID `json:"startCursor,omitempty"`
-	EndCursor       *pulid.ID `json:"endCursor,omitempty"`
-	HasPreviousPage bool      `json:"hasPreviousPage"`
-	HasNextPage     bool      `json:"hasNextPage"`
+	StartCursor     *prid.ID `json:"startCursor,omitempty"`
+	EndCursor       *prid.ID `json:"endCursor,omitempty"`
+	HasPreviousPage bool     `json:"hasPreviousPage"`
+	HasNextPage     bool     `json:"hasNextPage"`
 }
 
 type PeriodAggregation struct {
@@ -117,7 +117,7 @@ type TransactionConnection struct {
 }
 
 type TransactionEdge struct {
-	Cursor pulid.ID     `json:"cursor"`
+	Cursor prid.ID      `json:"cursor"`
 	Node   *Transaction `json:"node"`
 }
 
@@ -128,8 +128,8 @@ type TrialBalance struct {
 }
 
 type UpdateLedgerAccountInput struct {
-	ID          pulid.ID  `json:"id"`
-	ParentID    *pulid.ID `json:"parentId,omitempty"`
+	ID          prid.ID   `json:"id"`
+	ParentID    *prid.ID  `json:"parentId,omitempty"`
 	UnsetParent bool      `json:"unsetParent"`
 	Name        *string   `json:"name,omitempty"`
 	IsGroup     *bool     `json:"isGroup,omitempty"`
@@ -137,7 +137,7 @@ type UpdateLedgerAccountInput struct {
 }
 
 type UpdateTransactionInput struct {
-	ID          pulid.ID             `json:"id"`
+	ID          prid.ID              `json:"id"`
 	Entries     []*JournalEntryInput `json:"entries,omitempty"`
 	Date        *date.Date           `json:"date,omitempty"`
 	Description *string              `json:"description,omitempty"`
