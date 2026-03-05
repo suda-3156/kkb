@@ -4,12 +4,12 @@ import { useSetAtom } from "jotai"
 import { Moon, PiggyBank, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
-import { openCreateTransactionModalAtom } from "./input-modal/transaction/state"
+import { openModalAtom } from "./edit/state"
 
-export function ThemeHeader() {
+export function Header() {
   const { theme, setTheme } = useTheme()
 
-  const open = useSetAtom(openCreateTransactionModalAtom)
+  const open = useSetAtom(openModalAtom)
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
