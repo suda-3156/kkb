@@ -2,9 +2,8 @@ import type { Metadata } from "next"
 import { Montserrat, Open_Sans, Prata, Shippori_Mincho } from "next/font/google"
 import { Providers } from "@/components/providers"
 import "./globals.css"
-import { CommandPrompt } from "@/components/command-prompt/modal"
-import { ThemeHeader } from "@/components/header"
-import { TransactionModal } from "@/components/input-modal/transaction/modal"
+import { EditModal } from "@/components/edit"
+import { Header } from "@/components/header"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
@@ -62,13 +61,12 @@ export default function RootLayout({
         )}
       >
         <Providers>
-          <main className="relative flex h-screen w-full flex-col overflow-hidden bg-background">
-            <ThemeHeader />
+          <main className="relative mx-auto flex h-screen w-full max-w-7xl flex-col overflow-hidden bg-background">
+            <Header />
             <ScrollArea className="container relative mx-auto flex h-screen flex-1 flex-col overflow-y-auto">
               {children}
             </ScrollArea>
-            <CommandPrompt />
-            <TransactionModal />
+            <EditModal />
             <Toaster />
           </main>
         </Providers>
