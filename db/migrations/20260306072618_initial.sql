@@ -11,7 +11,7 @@ CREATE TABLE `ledger_encryption_keys` (
 -- Create "ledger_accounts" table
 CREATE TABLE `ledger_accounts` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` char(30) NOT NULL,
+  `public_id` char(20) NOT NULL,
   `account_name` blob NOT NULL,
   `kind` enum('ASSET','LIABILITY','EXPENSE','REVENUE','EQUITY') NOT NULL,
   `is_group` bool NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE `ledger_accounts` (
 -- Create "transactions" table
 CREATE TABLE `transactions` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` char(30) NOT NULL,
+  `public_id` char(20) NOT NULL,
   `date` char(10) NOT NULL,
   `description` blob NOT NULL,
   `created_at` datetime(6) NOT NULL,

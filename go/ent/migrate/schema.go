@@ -39,7 +39,7 @@ var (
 	// LedgerAccountsColumns holds the columns for the "ledger_accounts" table.
 	LedgerAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
+		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 20, SchemaType: map[string]string{"mysql": "char(20)"}},
 		{Name: "account_name", Type: field.TypeBytes, Size: 512},
 		{Name: "kind", Type: field.TypeEnum, Enums: []string{"ASSET", "LIABILITY", "EXPENSE", "REVENUE", "EQUITY"}},
 		{Name: "is_group", Type: field.TypeBool},
@@ -87,7 +87,7 @@ var (
 	// TransactionsColumns holds the columns for the "transactions" table.
 	TransactionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 30, SchemaType: map[string]string{"mysql": "char(30)"}},
+		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 20, SchemaType: map[string]string{"mysql": "char(20)"}},
 		{Name: "date", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
 		{Name: "description", Type: field.TypeBytes, Size: 1536},
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
