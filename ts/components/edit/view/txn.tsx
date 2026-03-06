@@ -16,7 +16,7 @@ import { type TransactionFormValues, transactionSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
 import { cn } from "@/lib/utils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
-import { CreateTransactionDoc, UpdateTransactionDoc } from "../query"
+import { CreateTransactionDoc, UpdateTransactionDoc } from "../queries"
 import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 

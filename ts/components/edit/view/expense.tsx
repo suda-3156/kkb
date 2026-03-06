@@ -11,7 +11,7 @@ import { todayStr } from "@/lib/timeutils"
 import { LoadingInline } from "../../loading"
 import { Button } from "../../ui/button"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
-import { CreateTransactionDoc } from "../query"
+import { CreateTransactionDoc } from "../queries"
 import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 

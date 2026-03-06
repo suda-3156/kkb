@@ -11,7 +11,7 @@ import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
 import { type TransferFormValues, transferSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
-import { CreateTransactionDoc } from "../query"
+import { CreateTransactionDoc } from "../queries"
 import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 
