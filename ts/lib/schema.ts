@@ -16,7 +16,7 @@ const amountSchema = z
 
 export const expenseSchema = z.object({
   date: dateSchema,
-  desc: z.string().min(1, "説明は必須です"),
+  desc: z.string().min(1, "説明は必須です").max(300, "説明は300文字以下です"),
   amount: amountSchema,
   paymentId: z.string().min(1, "支払い方法を選択してください"),
   categoryId: z.string().min(1, "費用科目を選択してください"),
@@ -24,7 +24,7 @@ export const expenseSchema = z.object({
 
 export const revenueSchema = z.object({
   date: dateSchema,
-  desc: z.string().min(1, "説明は必須です"),
+  desc: z.string().min(1, "説明は必須です").max(300, "説明は300文字以下です"),
   amount: amountSchema,
   depositId: z.string().min(1, "入金先口座を選択してください"),
   sourceId: z.string().min(1, "収入科目を選択してください"),
@@ -32,7 +32,7 @@ export const revenueSchema = z.object({
 
 export const transferSchema = z.object({
   date: dateSchema,
-  desc: z.string().min(1, "説明は必須です"),
+  desc: z.string().min(1, "説明は必須です").max(300, "説明は300文字以下です"),
   amount: amountSchema,
   fromId: z.string().min(1, "振替元口座を選択してください"),
   toId: z.string().min(1, "振替先口座を選択してください"),
@@ -47,7 +47,7 @@ export const journalEntrySchema = z.object({
 export const transactionSchema = z
   .object({
     date: dateSchema,
-    desc: z.string().min(1, "説明は必須です"),
+    desc: z.string().min(1, "説明は必須です").max(300, "説明は300文字以下です"),
     entries: z.array(journalEntrySchema).min(2, "仕訳は 2 行以上必要です"),
   })
   .superRefine((data, ctx) => {
@@ -70,3 +70,11 @@ export type ExpenseFormValues = z.infer<typeof expenseSchema>
 export type RevenueFormValues = z.infer<typeof revenueSchema>
 export type TransferFormValues = z.infer<typeof transferSchema>
 export type TransactionFormValues = z.infer<typeof transactionSchema>
+
+export const ledgerAccountSchema = z.object({
+  parentId: z.string().optional(),
+  name: z.string().min(1, "勘定科目名は必須です").max(100, "勘定科目名は100文字以下です"),
+  isGroup: z.boolean(),
+})
+
+export type LedgerAccountFormValues = z.infer<typeof ledgerAccountSchema>
