@@ -22,6 +22,10 @@ type Documents = {
     "\n  query GetTransactionForModal($id: ID!) {\n    transaction(id: $id) {\n      id\n      date\n      description\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n          kind\n        }\n        amount\n        kind\n      }\n    }\n  }\n": typeof types.GetTransactionForModalDocument,
     "\n  mutation CreateTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n      date\n      description\n      createdAt\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n        }\n        amount\n        kind\n      }\n    }\n  }\n": typeof types.CreateTransactionDocument,
     "\n  mutation UpdateTransaction($input: UpdateTransactionInput!) {\n    updateTransaction(input: $input) {\n      id\n      date\n      description\n      createdAt\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n        }\n        amount\n        kind\n      }\n    }\n  }\n": typeof types.UpdateTransactionDocument,
+    "\n  query GetLedgerAccounts ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after, includeArchived: true) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n        archivedAt\n        updatedAt\n        parent {\n          id\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n": typeof types.GetLedgerAccountsDocument,
+    "\n  mutation ArchiveLedgerAccount($id: ID!) {\n    archiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": typeof types.ArchiveLedgerAccountDocument,
+    "\n  mutation UnarchiveLedgerAccount($id: ID!) {\n    unarchiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": typeof types.UnarchiveLedgerAccountDocument,
+    "\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n": typeof types.UpdateLedgerAccountDocument,
 };
 const documents: Documents = {
     "\n  query PeriodicExpenses(\n    $weekStart: Date!, $weekEnd: Date!\n    $monthStart: Date!, $monthEnd: Date!\n    $yearStart: Date!, $yearEnd: Date!\n  ) {\n    thisWeek:  periodAggregation(startDate: $weekStart,  endDate: $weekEnd)  { expenses { totalAmount } }\n    thisMonth: periodAggregation(startDate: $monthStart, endDate: $monthEnd) { expenses { totalAmount } }\n    thisYear:  periodAggregation(startDate: $yearStart,  endDate: $yearEnd)  { expenses { totalAmount } }\n  }\n": types.PeriodicExpensesDocument,
@@ -32,6 +36,10 @@ const documents: Documents = {
     "\n  query GetTransactionForModal($id: ID!) {\n    transaction(id: $id) {\n      id\n      date\n      description\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n          kind\n        }\n        amount\n        kind\n      }\n    }\n  }\n": types.GetTransactionForModalDocument,
     "\n  mutation CreateTransaction($input: CreateTransactionInput!) {\n    createTransaction(input: $input) {\n      id\n      date\n      description\n      createdAt\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n        }\n        amount\n        kind\n      }\n    }\n  }\n": types.CreateTransactionDocument,
     "\n  mutation UpdateTransaction($input: UpdateTransactionInput!) {\n    updateTransaction(input: $input) {\n      id\n      date\n      description\n      createdAt\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n        }\n        amount\n        kind\n      }\n    }\n  }\n": types.UpdateTransactionDocument,
+    "\n  query GetLedgerAccounts ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after, includeArchived: true) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n        archivedAt\n        updatedAt\n        parent {\n          id\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n": types.GetLedgerAccountsDocument,
+    "\n  mutation ArchiveLedgerAccount($id: ID!) {\n    archiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": types.ArchiveLedgerAccountDocument,
+    "\n  mutation UnarchiveLedgerAccount($id: ID!) {\n    unarchiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": types.UnarchiveLedgerAccountDocument,
+    "\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n": types.UpdateLedgerAccountDocument,
 };
 
 /**
@@ -80,6 +88,22 @@ export function graphql(source: "\n  mutation CreateTransaction($input: CreateTr
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation UpdateTransaction($input: UpdateTransactionInput!) {\n    updateTransaction(input: $input) {\n      id\n      date\n      description\n      createdAt\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n        }\n        amount\n        kind\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateTransaction($input: UpdateTransactionInput!) {\n    updateTransaction(input: $input) {\n      id\n      date\n      description\n      createdAt\n      updatedAt\n      entries {\n        ledgerAccount {\n          id\n          name\n        }\n        amount\n        kind\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetLedgerAccounts ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after, includeArchived: true) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n        archivedAt\n        updatedAt\n        parent {\n          id\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetLedgerAccounts ($first: Int!, $after: ID) {\n    ledgerAccounts(first: $first, after: $after, includeArchived: true) {\n      nodes {\n        id\n        name\n        kind\n        isGroup\n        archivedAt\n        updatedAt\n        parent {\n          id\n        }\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ArchiveLedgerAccount($id: ID!) {\n    archiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n"): (typeof documents)["\n  mutation ArchiveLedgerAccount($id: ID!) {\n    archiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UnarchiveLedgerAccount($id: ID!) {\n    unarchiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n"): (typeof documents)["\n  mutation UnarchiveLedgerAccount($id: ID!) {\n    unarchiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
