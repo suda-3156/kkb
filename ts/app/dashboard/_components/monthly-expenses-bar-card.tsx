@@ -2,14 +2,14 @@
 
 import { useQuery } from "@apollo/client/react/compiled"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import { ErrorCard } from "@/components/error"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart"
-import { Skeleton } from "@/components/ui/skeleton"
-import { graphql } from "@/graph"
-import type { MonthlyExpensesSeriesQuery } from "@/graph/graphql"
-import { formatYen } from "@/lib/numutils"
-import { dateStr } from "@/lib/timeutils"
+import { ErrorCard } from "../../../components/error"
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
+import { type ChartConfig, ChartContainer, ChartTooltip } from "../../../components/ui/chart"
+import { Skeleton } from "../../../components/ui/skeleton"
+import { graphql } from "../../../graph"
+import type { MonthlyExpensesSeriesQuery } from "../../../graph/graphql"
+import { formatYen } from "../../../lib/numutils"
+import { dateStr } from "../../../lib/timeutils"
 
 const MonthlyExpensesSeries = graphql(/* GraphQL */ `
   query MonthlyExpensesSeries($start: Date!, $end: Date!) {

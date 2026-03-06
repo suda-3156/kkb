@@ -5,18 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useSetAtom } from "jotai"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import {
-  AmountField,
-  DateField,
-  SelectLedgerAccountField,
-  TextField,
-} from "@/components/edit/fields"
-import { CreateTransactionDoc } from "@/components/edit/query"
-import { LoadingInline } from "@/components/loading"
-import { Button } from "@/components/ui/button"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
 import { type ExpenseFormValues, expenseSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
+import { LoadingInline } from "../../loading"
+import { Button } from "../../ui/button"
+import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
+import { CreateTransactionDoc } from "../query"
 import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 

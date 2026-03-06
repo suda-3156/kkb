@@ -13,8 +13,7 @@ import { graphql } from "@/graph"
 import type { GetTransactionForModalQuery } from "@/graph/graphql"
 import { LoadingInline } from "../loading"
 import { closeModalAtom, type ModalView, modalStateAtom, openModalAtom } from "./state"
-import { ExpenseForm, RevenueForm, TransferForm } from "./view"
-import { TransactionForm } from "./view/txn"
+import { ExpenseForm, RevenueForm, TransactionForm, TransferForm } from "./view"
 import * as EditWrapper from "./wrapper"
 
 const GetTransactionDoc = graphql(/* GraphQL */ `

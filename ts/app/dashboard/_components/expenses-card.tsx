@@ -1,14 +1,14 @@
 "use client"
 
 import { useQuery } from "@apollo/client/react"
-import { ErrorCard } from "@/components/error"
-import { Card, CardContent } from "@/components/ui/card"
-import Reveal from "@/components/ui/reveal"
-import { Skeleton } from "@/components/ui/skeleton"
-import { graphql } from "@/graph"
-import type { PeriodicExpensesQuery } from "@/graph/graphql"
-import { formatYen } from "@/lib/numutils"
-import { getMonthStr, getWeekStr, getYearStr } from "@/lib/timeutils"
+import { ErrorCard } from "../../../components/error"
+import { Card, CardContent } from "../../../components/ui/card"
+import Reveal from "../../../components/ui/reveal"
+import { Skeleton } from "../../../components/ui/skeleton"
+import { graphql } from "../../../graph"
+import type { PeriodicExpensesQuery } from "../../../graph/graphql"
+import { formatYen } from "../../../lib/numutils"
+import { getMonthStr, getWeekStr, getYearStr } from "../../../lib/timeutils"
 
 const PeriodicExpenses = graphql(/* GraphQL */ `
   query PeriodicExpenses(

@@ -3,8 +3,8 @@
 import { useSetAtom } from "jotai"
 import { Moon, PiggyBank, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
 import { openModalAtom } from "./edit/state"
+import { Button } from "./ui/button"
 
 export function Header() {
   const { theme, setTheme } = useTheme()

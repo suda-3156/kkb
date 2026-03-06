@@ -7,13 +7,6 @@ import { Plus, Trash2 } from "lucide-react"
 import { useEffect } from "react"
 import { type UseFieldArrayRemove, useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
-import {
-  AmountField,
-  DateField,
-  SelectLedgerAccountField,
-  TextField,
-} from "@/components/edit/fields"
-import { CreateTransactionDoc, UpdateTransactionDoc } from "@/components/edit/query"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -22,6 +15,8 @@ import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/grap
 import { type TransactionFormValues, transactionSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
 import { cn } from "@/lib/utils"
+import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
+import { CreateTransactionDoc, UpdateTransactionDoc } from "../query"
 import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 

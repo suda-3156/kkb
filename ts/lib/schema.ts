@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { JournalEntryKind } from "@/graph/graphql"
+import { JournalEntryKind } from "../graph/graphql"
 
 const dateSchema = z
   .string()

@@ -5,37 +5,32 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useSetAtom } from "jotai/react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import {
-  AmountField,
-  DateField,
-  SelectLedgerAccountField,
-  TextField,
-} from "@/components/edit/fields"
-import { CreateTransactionDoc } from "@/components/edit/query"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
-import { type TransferFormValues, transferSchema } from "@/lib/schema"
+import { type RevenueFormValues, revenueSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
+import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
+import { CreateTransactionDoc } from "../query"
 import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 
-export const TransferForm = () => {
+export const RevenueForm = () => {
   const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
   const close = useSetAtom(closeModalAtom)
 
-  const form = useForm<TransferFormValues>({
-    resolver: zodResolver(transferSchema),
+  const form = useForm<RevenueFormValues>({
+    resolver: zodResolver(revenueSchema),
     defaultValues: {
       date: todayStr(),
       desc: "",
       amount: 0,
-      fromId: "",
-      toId: "",
+      depositId: "",
+      sourceId: "",
     },
   })
 
-  const onSubmit = async (values: TransferFormValues) => {
+  const onSubmit = async (values: RevenueFormValues) => {
     try {
       await createTransaction({
         variables: {
@@ -44,12 +39,12 @@ export const TransferForm = () => {
             description: values.desc,
             entries: [
               {
-                ledgerAccountId: values.toId,
+                ledgerAccountId: values.depositId,
                 amount: values.amount,
                 kind: JournalEntryKind.Debit,
               },
               {
-                ledgerAccountId: values.fromId,
+                ledgerAccountId: values.sourceId,
                 amount: values.amount,
                 kind: JournalEntryKind.Credit,
               },
@@ -59,10 +54,10 @@ export const TransferForm = () => {
         refetchQueries: ["RecentTransactions"],
         awaitRefetchQueries: true,
       })
-      toast.success("振替を記録しました")
+      toast.success("収入を記録しました")
       close()
     } catch {
-      toast.error("振替の記録に失敗しました")
+      toast.error("収入の記録に失敗しました")
     }
   }
 
@@ -87,15 +82,15 @@ export const TransferForm = () => {
 
       <SelectLedgerAccountField
         form={form}
-        label="振替元口座"
-        name="fromId"
-        kind={LedgerAccountKind.Asset}
+        label="収入科目"
+        name="sourceId"
+        kind={LedgerAccountKind.Revenue}
       />
 
       <SelectLedgerAccountField
         form={form}
-        label="振替先口座"
-        name="toId"
+        label="入金先口座"
+        name="depositId"
         kind={LedgerAccountKind.Asset}
       />
 
