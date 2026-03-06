@@ -65,7 +65,7 @@ func (m *LedgerAccountManager) unarchiveTx(
 	// Unarchive the account by setting ArchivedAt to null.
 	if err := client.LedgerAccount.Update().
 		Where(ledgeraccount.ID(account.ID)).
-		SetNillableArchivedAt(nil).
+		ClearArchivedAt().
 		Exec(ctx); err != nil {
 		return nil, fmt.Errorf("unarchive: clear archived_at: %w", err)
 	}

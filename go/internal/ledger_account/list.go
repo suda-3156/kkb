@@ -35,7 +35,7 @@ func (m *LedgerAccountManager) List(
 	)
 
 	var scanDesc bool
-	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey()
+	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey().WithParent()
 
 	query, scanDesc = m.applyFilter(filter, query)
 
