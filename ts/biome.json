@@ -8,7 +8,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build", "!src/graph", "!next-env.d.ts"]
+    "includes": ["**", "!node_modules", "!.next", "!dist", "!build", "!graph", "!next-env.d.ts"]
   },
   "formatter": {
     "enabled": true,

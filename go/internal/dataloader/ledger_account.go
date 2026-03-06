@@ -6,6 +6,7 @@ import (
 	"github.com/graph-gophers/dataloader/v7"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
+	"github.com/suda-3156/kkb/go/internal/ptrutil"
 )
 
 type ledgerAccountBatcher struct {
@@ -26,7 +27,8 @@ func (l *ledgerAccountBatcher) BatchGetLedgerAccounts(ctx context.Context, ids [
 	}
 
 	accounts, err := l.lac.List(ctx, &ledgeraccount.Filter{
-		IDs: ids,
+		IDs:             ids,
+		IncludeArchived: ptrutil.To(true),
 	})
 	if err != nil {
 		for i := range results {

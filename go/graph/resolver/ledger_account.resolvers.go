@@ -16,6 +16,9 @@ import (
 
 // Parent is the resolver for the parent field.
 func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAccount) (*model.LedgerAccount, error) {
+	if obj.Parent == nil {
+		return nil, nil
+	}
 	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.Parent.IntID)
 	lac, err := thunk()
 	if err != nil {
