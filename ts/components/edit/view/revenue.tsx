@@ -64,7 +64,7 @@ export const RevenueForm = () => {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="relative w-full space-y-4 overflow-hidden"
+      className="relative w-full space-y-4 overflow-hidden px-3"
     >
       <div className="grid grid-cols-2 gap-4">
         <DateField name="date" form={form} />

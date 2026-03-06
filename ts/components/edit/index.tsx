@@ -13,7 +13,7 @@ import { graphql } from "@/graph"
 import type { GetTransactionForModalQuery } from "@/graph/graphql"
 import { LoadingInline } from "../loading"
 import { closeModalAtom, type ModalView, modalStateAtom, openModalAtom } from "./state"
-import { ExpenseForm, RevenueForm, TransactionForm, TransferForm } from "./view"
+import { ExpenseForm, LedgerAccountForm, RevenueForm, TransactionForm, TransferForm } from "./view"
 import * as EditWrapper from "./wrapper"
 
 const GetTransactionDoc = graphql(/* GraphQL */ `
@@ -47,7 +47,7 @@ const viewMap = (view: string, data?: GetTransactionForModalQuery) => {
     case "txn":
       return <TransactionForm data={data} />
     case "lac":
-      return <div> Ledger Account Form </div>
+      return <LedgerAccountForm />
     default:
       return null
   }

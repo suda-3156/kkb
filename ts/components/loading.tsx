@@ -12,10 +12,10 @@ export const LoadingPage = () => {
 
 export const LoadingInline = ({ text, className }: { text?: string; className?: string }) => {
   return (
-    <div className="flex w-full items-center justify-center gap-2">
+    <div className="flex w-full items-center justify-center gap-2 pt-2 pb-1">
       <LoaderCircle
         size={16}
-        className="shrink-0 translate-y-px animate-spin text-muted-foreground"
+        className="shrink-0 -translate-y-1.75 animate-spin text-muted-foreground"
       />
       <TextGradient className={cn("text-base leading-none", className)} spread={10}>
         {text || "Loading..."}

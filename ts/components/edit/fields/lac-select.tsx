@@ -113,34 +113,43 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
               placeholder="科目を選択"
             />
             <ComboboxContent>
-              <ComboboxEmpty>{loading ? <LoadingInline /> : "科目が見つかりません"}</ComboboxEmpty>
-              <ComboboxList>
-                {kind ? (
-                  <ComboboxGroup>
-                    <ComboboxLabel>{KIND_LABELS[kind]}</ComboboxLabel>
-                    {items.map((item) => (
-                      <ComboboxItem key={item.id} value={item}>
-                        {item.name}
-                      </ComboboxItem>
-                    ))}
-                  </ComboboxGroup>
-                ) : (
-                  KIND_ORDER.map((k) => {
-                    const groupItems = items.filter((item) => item.kind === k)
-                    if (groupItems.length === 0) return null
-                    return (
-                      <ComboboxGroup key={k}>
-                        <ComboboxLabel>{KIND_LABELS[k]}</ComboboxLabel>
-                        {groupItems.map((item) => (
+              {loading && (
+                <div className="py-2">
+                  <LoadingInline className="mb-4" />
+                </div>
+              )}
+              {!loading && (
+                <>
+                  <ComboboxEmpty>"科目が見つかりません"</ComboboxEmpty>
+                  <ComboboxList>
+                    {kind ? (
+                      <ComboboxGroup>
+                        <ComboboxLabel>{KIND_LABELS[kind]}</ComboboxLabel>
+                        {items.map((item) => (
                           <ComboboxItem key={item.id} value={item}>
                             {item.name}
                           </ComboboxItem>
                         ))}
                       </ComboboxGroup>
-                    )
-                  })
-                )}
-              </ComboboxList>
+                    ) : (
+                      KIND_ORDER.map((k) => {
+                        const groupItems = items.filter((item) => item.kind === k)
+                        if (groupItems.length === 0) return null
+                        return (
+                          <ComboboxGroup key={k}>
+                            <ComboboxLabel>{KIND_LABELS[k]}</ComboboxLabel>
+                            {groupItems.map((item) => (
+                              <ComboboxItem key={item.id} value={item}>
+                                {item.name}
+                              </ComboboxItem>
+                            ))}
+                          </ComboboxGroup>
+                        )
+                      })
+                    )}
+                  </ComboboxList>
+                </>
+              )}
             </ComboboxContent>
           </Combobox>
           {fieldState.error?.message && <FieldError>{fieldState.error.message}</FieldError>}
