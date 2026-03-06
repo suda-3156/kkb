@@ -7,6 +7,7 @@ import {
   type DragTarget,
   dragAndDropFeature,
   type ItemInstance,
+  insertItemsAtTarget,
   renamingFeature,
   selectionFeature,
   syncDataLoaderFeature,
@@ -77,6 +78,21 @@ const UpdateLedgerAccountDoc = graphql(/* GraphQL */ `
     updateLedgerAccount(input: $input) {
       id
       name
+      parent {
+        id
+      }
+    }
+  }
+`)
+
+const CreateLedgerAccountDoc = graphql(/* GraphQL */ `
+  mutation CreateLedgerAccount($input: CreateLedgerAccountInput!) {
+    createLedgerAccount(input: $input) {
+      id
+      name
+      kind
+      isGroup
+      updatedAt
       parent {
         id
       }
@@ -188,6 +204,7 @@ export const LedgerAccountForm = () => {
   const [archiveLedgerAccount] = useMutation(ArchiveLedgerAccountDoc)
   const [unarchiveLedgerAccount] = useMutation(UnarchiveLedgerAccountDoc)
   const [updateLedgerAccount] = useMutation(UpdateLedgerAccountDoc)
+  const [createLedgerAccount] = useMutation(CreateLedgerAccountDoc)
 
   React.useEffect(() => {
     if (!loading && data?.ledgerAccounts.pageInfo.hasNextPage) {
@@ -211,7 +228,48 @@ export const LedgerAccountForm = () => {
     getItemName: (item) => item.getItemData().name,
     isItemFolder: (item) => item.getItemData().isGroup,
 
-    // drag and drop
+    // drag and drop to create new items
+    canDropForeignDragObject: (_, target) => {
+      if (!target.item.isFolder()) return false
+      if (target.item.getId() === "__root__") return false
+      const node = target.item.getItemData()
+      if (node.archivedAt) return false
+      return true
+    },
+    onDropForeignDragObject: async (dataTransfer, target) => {
+      let isGroup = false
+      try {
+        const parsed = JSON.parse(dataTransfer.getData("text/plain"))
+        isGroup = parsed.isGroup ?? false
+      } catch {
+        return
+      }
+      const name = isGroup ? "新しいフォルダ" : "新しい科目"
+      const result = await handleCreate(target.item.getId(), name, isGroup)
+
+      if (!result) {
+        toast.warning("ツリーの更新に失敗しました。ページをリロードしてください。")
+        return
+      }
+
+      nodes[result.id] = {
+        id: result.id,
+        name: result.name,
+        kind: result.kind,
+        isGroup: result.isGroup,
+        updatedAt: result.updatedAt,
+        parent: {
+          id: result.parent?.id || null,
+        },
+        children: [],
+      }
+
+      insertItemsAtTarget([result?.id], target, (item, newChildrenIds) => {
+        nodes[(item as ItemInstance<Node>).getId()].children = newChildrenIds as string[]
+      })
+    },
+
+    // drag and drop to move items
     canReorder: true,
     canDrag: (items) => items.every((item) => !item.getId().startsWith("__")),
     canDrop: (items, target) => {
@@ -331,9 +389,36 @@ export const LedgerAccountForm = () => {
     }
   }
 
+  const handleCreate = async (parentId: string, name: string, isGroup = false) => {
+    const kind = nodes[parentId].kind
+    if (!kind) return
+    try {
+      const result = await createLedgerAccount({
+        variables: {
+          input: {
+            name,
+            isGroup,
+            parentId: parentId.startsWith("__") ? null : parentId,
+            kind,
+          },
+        },
+        refetchQueries: ["GetLedgerAccounts"],
+        awaitRefetchQueries: true,
+      })
+      return result.data?.createLedgerAccount
+    } catch (e) {
+      console.log("error", e)
+      toast.error("科目を作成できませんでした")
+    }
+  }
+
   return (
     <div>
-      <div {...tree.getContainerProps()}>
+      <div {...tree.getContainerProps()} className="relative">
+        <div
+          style={tree.getDragLineStyle()}
+          className="pointer-events-none absolute h-0.5 bg-primary/60"
+        />
         {tree.getItems().map((item) => {
           const node = item.getItemData()
           return (
@@ -459,6 +544,30 @@ export const LedgerAccountForm = () => {
             </Fragment>
           )
         })}
+      </div>
+      <div className="mt-3 flex gap-2 border-border border-t pt-3">
+        {/** biome-ignore lint/a11y/noStaticElementInteractions: This is a draggable element */}
+        <div
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer.setData("text/plain", JSON.stringify({ isGroup: false }))
+          }}
+          className="flex cursor-grab items-center gap-1.5 rounded border border-border border-dashed px-2 py-1.5 text-muted-foreground text-sm transition-colors hover:border-foreground/40 hover:text-foreground active:cursor-grabbing"
+        >
+          <FileIcon className="size-4 shrink-0" />
+          新しい科目
+        </div>
+        {/** biome-ignore lint/a11y/noStaticElementInteractions: This is a draggable element */}
+        <div
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer.setData("text/plain", JSON.stringify({ isGroup: true }))
+          }}
+          className="flex cursor-grab items-center gap-1.5 rounded border border-border border-dashed px-2 py-1.5 text-muted-foreground text-sm transition-colors hover:border-foreground/40 hover:text-foreground active:cursor-grabbing"
+        >
+          <FolderIcon className="size-4 shrink-0 text-amber-500" />
+          新しいフォルダ
+        </div>
       </div>
     </div>
   )

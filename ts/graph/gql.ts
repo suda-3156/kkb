@@ -26,6 +26,7 @@ type Documents = {
     "\n  mutation ArchiveLedgerAccount($id: ID!) {\n    archiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": typeof types.ArchiveLedgerAccountDocument,
     "\n  mutation UnarchiveLedgerAccount($id: ID!) {\n    unarchiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": typeof types.UnarchiveLedgerAccountDocument,
     "\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n": typeof types.UpdateLedgerAccountDocument,
+    "\n  mutation CreateLedgerAccount($input: CreateLedgerAccountInput!) {\n    createLedgerAccount(input: $input) {\n      id\n      name\n      kind\n      isGroup\n      updatedAt\n      parent {\n        id\n      }\n    }\n  }\n": typeof types.CreateLedgerAccountDocument,
 };
 const documents: Documents = {
     "\n  query PeriodicExpenses(\n    $weekStart: Date!, $weekEnd: Date!\n    $monthStart: Date!, $monthEnd: Date!\n    $yearStart: Date!, $yearEnd: Date!\n  ) {\n    thisWeek:  periodAggregation(startDate: $weekStart,  endDate: $weekEnd)  { expenses { totalAmount } }\n    thisMonth: periodAggregation(startDate: $monthStart, endDate: $monthEnd) { expenses { totalAmount } }\n    thisYear:  periodAggregation(startDate: $yearStart,  endDate: $yearEnd)  { expenses { totalAmount } }\n  }\n": types.PeriodicExpensesDocument,
@@ -40,6 +41,7 @@ const documents: Documents = {
     "\n  mutation ArchiveLedgerAccount($id: ID!) {\n    archiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": types.ArchiveLedgerAccountDocument,
     "\n  mutation UnarchiveLedgerAccount($id: ID!) {\n    unarchiveLedgerAccount(id: $id) {\n      id\n      archivedAt\n    }\n  }\n": types.UnarchiveLedgerAccountDocument,
     "\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n": types.UpdateLedgerAccountDocument,
+    "\n  mutation CreateLedgerAccount($input: CreateLedgerAccountInput!) {\n    createLedgerAccount(input: $input) {\n      id\n      name\n      kind\n      isGroup\n      updatedAt\n      parent {\n        id\n      }\n    }\n  }\n": types.CreateLedgerAccountDocument,
 };
 
 /**
@@ -104,6 +106,10 @@ export function graphql(source: "\n  mutation UnarchiveLedgerAccount($id: ID!) {
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateLedgerAccount($input: UpdateLedgerAccountInput!) {\n    updateLedgerAccount(input: $input) {\n      id\n      name\n      parent {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateLedgerAccount($input: CreateLedgerAccountInput!) {\n    createLedgerAccount(input: $input) {\n      id\n      name\n      kind\n      isGroup\n      updatedAt\n      parent {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateLedgerAccount($input: CreateLedgerAccountInput!) {\n    createLedgerAccount(input: $input) {\n      id\n      name\n      kind\n      isGroup\n      updatedAt\n      parent {\n        id\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
