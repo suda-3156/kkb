@@ -1,23 +1,18 @@
 import { atom } from "jotai"
 
 export type ModalView =
-  | "fallback" // fallback view when the view is not specified
   | "expense" // create expense form
   | "revenue" // create revenue form
   | "transfer" // create transfer form
   | "txn" // input or edit transaction form
   | "lac" // create or edit ledger account form
 
-export type ModalState =
-  | {
-      open: true
-      view: ModalView
-      txnId?: string // For edit mode of transaction, the ID of the transaction being edited
-      lacId?: string // For edit mode of ledger account, the ID of the ledger account being edited
-    }
-  | {
-      open: false
-    }
+export type ModalState = {
+  open: boolean
+  view?: ModalView
+  txnId?: string // For edit mode of transaction, the ID of the transaction being edited
+  lacId?: string // For edit mode of ledger account, the ID of the ledger account being edited
+}
 
 export const modalStateAtom = atom<ModalState>({
   open: false,

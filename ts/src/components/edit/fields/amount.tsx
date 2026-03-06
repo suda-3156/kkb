@@ -9,10 +9,12 @@ export const AmountField = ({
   name,
   form,
   disabled,
+  hideLabel,
 }: {
   name: string
   form: AnyForm
   disabled?: boolean
+  hideLabel?: boolean
 }) => {
   return (
     <Controller
@@ -20,7 +22,7 @@ export const AmountField = ({
       control={form.control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>金額</FieldLabel>
+          {!hideLabel && <FieldLabel>金額</FieldLabel>}
           <Input
             type="number"
             min="1"

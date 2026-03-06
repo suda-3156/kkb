@@ -2,11 +2,11 @@
 
 import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useSetAtom } from "jotai/react"
 import { Plus, Trash2 } from "lucide-react"
-import React from "react"
-import { Controller, useFieldArray, useForm } from "react-hook-form"
+import { useEffect } from "react"
+import { type UseFieldArrayRemove, useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { DebitCreditToggle } from "@/components/debit-credit-toggle"
 import {
   AmountField,
   DateField,
@@ -16,48 +16,47 @@ import {
 import { CreateTransactionDoc, UpdateTransactionDoc } from "@/components/edit/query"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
-import { DialogFooter } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { JournalEntryKind } from "@/graph/graphql"
+import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/graphql"
 import { type TransactionFormValues, transactionSchema } from "@/lib/schema"
 import { todayStr } from "@/lib/timeutils"
+import { cn } from "@/lib/utils"
+import { closeModalAtom } from "../state"
 import { Footer } from "../wrapper"
 
-interface TransactionInitialData {
-  id: string
-  date: string
-  description: string
-  updatedAt: string
-  entries: Array<{
-    ledgerAccount: { id: string; name: string }
-    amount: number
-    kind: JournalEntryKind
-  }>
-}
-
-type Props = {
-  onSuccess: () => void
-  initialData?: TransactionInitialData
-}
-
-const defaultEntry = (kind: JournalEntryKind): TransactionFormValues["entries"][number] => ({
-  lacId: "",
-  amount: 0,
-  kind,
-})
-
-export const TransactionForm = ({ onSuccess, initialData }: Props) => {
-  const isEdit = !!initialData
+export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }) => {
   const [createTransaction, { loading: creating }] = useMutation(CreateTransactionDoc)
   const [updateTransaction, { loading: updating }] = useMutation(UpdateTransactionDoc)
   const loading = creating || updating
+  const close = useSetAtom(closeModalAtom)
+
+  const updateMode = Boolean(data?.transaction)
+
+  useEffect(() => {
+    if (data?.transaction) {
+      const txn = data.transaction
+      form.reset({
+        date: txn.date,
+        desc: txn.description,
+        entries: txn.entries.map((e) => ({
+          lacId: e.ledgerAccount.id,
+          amount: e.amount,
+          kind: e.kind,
+        })),
+      })
+    }
+  })
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       date: todayStr(),
       desc: "",
-      entries: [defaultEntry(JournalEntryKind.Debit), defaultEntry(JournalEntryKind.Credit)],
+      entries: [
+        { lacId: "", amount: 0, kind: JournalEntryKind.Debit },
+        { lacId: "", amount: 0, kind: JournalEntryKind.Credit },
+      ],
     },
   })
 
@@ -66,120 +65,103 @@ export const TransactionForm = ({ onSuccess, initialData }: Props) => {
     name: "entries",
   })
 
-  React.useEffect(() => {
-    if (initialData) {
-      form.reset({
-        date: initialData.date,
-        desc: initialData.description,
-        entries: initialData.entries.map((e) => ({
-          ledgerAccountId: e.ledgerAccount.id,
-          ledgerAccountName: e.ledgerAccount.name,
-          amount: e.amount,
-          kind: e.kind,
-        })),
+  const save = async (values: TransactionFormValues) => {
+    if (updateMode) {
+      await updateTransaction({
+        variables: {
+          input: {
+            id: data?.transaction?.id ?? "",
+            date: values.date,
+            description: values.desc,
+            entries: values.entries.map((e) => ({
+              ledgerAccountId: e.lacId,
+              amount: e.amount,
+              kind: e.kind,
+            })),
+            updatedAt: data?.transaction?.updatedAt ?? "",
+          },
+        },
+        refetchQueries: ["RecentTransactions"],
+        awaitRefetchQueries: true,
       })
+      toast.success("更新しました")
+    } else {
+      await createTransaction({
+        variables: {
+          input: {
+            date: values.date,
+            description: values.desc,
+            entries: values.entries.map((e) => ({
+              ledgerAccountId: e.lacId,
+              amount: e.amount,
+              kind: e.kind,
+            })),
+          },
+        },
+        refetchQueries: ["RecentTransactions"],
+        awaitRefetchQueries: true,
+      })
+      toast.success("記録しました")
     }
-  }, [initialData, form.reset])
+  }
 
   const onSubmit = async (values: TransactionFormValues) => {
     try {
-      if (isEdit && initialData) {
-        await updateTransaction({
-          variables: {
-            input: {
-              id: initialData.id,
-              date: values.date,
-              description: values.desc,
-              entries: values.entries.map((e) => ({
-                ledgerAccountId: e.lacId,
-                amount: e.amount,
-                kind: e.kind,
-              })),
-              updatedAt: initialData.updatedAt,
-            },
-          },
-          refetchQueries: ["RecentTransactions", "GetTransactionForModal"],
-          awaitRefetchQueries: true,
-        })
-        toast.success("取引を更新しました")
-      } else {
-        await createTransaction({
-          variables: {
-            input: {
-              date: values.date,
-              description: values.desc,
-              entries: values.entries.map((e) => ({
-                ledgerAccountId: e.lacId,
-                amount: e.amount,
-                kind: e.kind,
-              })),
-            },
-          },
-          refetchQueries: ["RecentTransactions"],
-          awaitRefetchQueries: true,
-        })
-        toast.success("取引を記録しました")
-      }
-      onSuccess()
+      await save(values)
+      close()
     } catch {
-      toast.error(isEdit ? "取引の更新に失敗しました" : "取引の記録に失敗しました")
+      toast.error("記録に失敗しました")
     }
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="relative w-full space-y-4 overflow-hidden"
+    >
       <div className="grid grid-cols-2 gap-4">
         <DateField name="date" form={form} />
         <TextField
           name="desc"
           form={form}
-          label="説明"
+          label="メモ"
           required
           maxLength={300}
-          placeholder="説明を入力"
+          placeholder="メモを入力"
         />
       </div>
 
       <Separator />
 
       {/* Journal Entries */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="font-medium text-sm">仕訳</span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => append(defaultEntry(JournalEntryKind.Debit))}
-          >
-            <Plus className="mr-1 size-3.5" />
-            行を追加
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="grid grid-cols-[1.25rem_1fr_7rem_5rem_2rem] items-start gap-2 rounded-lg border px-3 py-2"
-            >
-              <span className="mt-7 font-mono text-muted-foreground text-xs">{index + 1}</span>
-
-              <SelectLedgerAccountField
-                name={`entries.${index}.ledgerAccountId`}
-                form={form}
-                label="勘定科目"
-                kind={undefined} // All kinds of accounts should be selectable, so kind is not specified
-              />
-              <AmountField name={`entries.${index}.amount`} form={form} disabled={false} />
-              <DebitCreditSelect form={form} index={index} />
-              <DeleteButton fieldsLength={fields.length} onClick={() => remove(index)} />
-            </div>
-          ))}
-        </div>
-
-        <Summary form={form} />
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-sm">仕訳</span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => append({ lacId: "", amount: 0, kind: JournalEntryKind.Debit })}
+        >
+          <Plus className="mr-1 size-3.5" />
+          行を追加
+        </Button>
       </div>
+
+      <ScrollArea className="max-h-[20vh] space-y-2 overflow-y-auto">
+        {fields.map((field, index) => (
+          <Entry
+            key={field.id}
+            index={index}
+            fieldsLen={fields.length}
+            remove={remove}
+            form={form}
+          />
+        ))}
+      </ScrollArea>
+
+      <Separator />
+
+      <Summary form={form} />
 
       <Footer>
         <Button type="submit" disabled={loading}>
@@ -190,43 +172,71 @@ export const TransactionForm = ({ onSuccess, initialData }: Props) => {
   )
 }
 
-const DeleteButton = ({ fieldsLength, onClick }: { fieldsLength: number; onClick: () => void }) => {
+type Props = {
+  index: number
+  fieldsLen: number
+  remove: UseFieldArrayRemove
+  form: ReturnType<typeof useForm<TransactionFormValues>>
+}
+
+const Entry = ({ index, fieldsLen, remove, form }: Props) => {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="mt-6 size-8 shrink-0 text-destructive"
-      disabled={fieldsLength <= 2}
-      onClick={onClick}
-    >
-      <Trash2 className="size-4 text-muted-foreground" />
-    </Button>
+    <div className="grid grid-cols-[1rem_1fr_7rem_5rem_2rem] items-center gap-2 rounded-md px-3 py-2 hover:bg-muted/50">
+      <span className="font-mono text-muted-foreground text-xs">{index + 1}</span>
+      <SelectLedgerAccountField
+        name={`entries.${index}.ledgerAccountId`}
+        form={form}
+        label={undefined} // Hide label
+        kind={undefined} // All kinds of accounts should be selectable, so kind is not specified
+      />
+      <AmountField name={`entries.${index}.amount`} form={form} disabled={false} hideLabel />
+      <DebitCreditToggle index={index} form={form} />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "size-8 shrink-0",
+          fieldsLen <= 2
+            ? "text-muted-foreground"
+            : "text-destructive hover:bg-destructive/10 hover:text-destructive",
+        )}
+        disabled={fieldsLen <= 2}
+        onClick={() => remove(index)}
+      >
+        <Trash2 />
+      </Button>
+    </div>
   )
 }
 
-const DebitCreditSelect = ({
-  form,
+const DebitCreditToggle = ({
   index,
+  form,
 }: {
-  form: ReturnType<typeof useForm<TransactionFormValues>>
   index: number
+  form: ReturnType<typeof useForm<TransactionFormValues>>
 }) => {
+  const kind = form.watch(`entries.${index}.kind`)
+
+  const toggleKind = () => {
+    form.setValue(
+      `entries.${index}.kind`,
+      kind === JournalEntryKind.Debit ? JournalEntryKind.Credit : JournalEntryKind.Debit,
+    )
+  }
+
   return (
-    <div className="flex h-full w-full items-end justify-center">
-      <Controller
-        control={form.control}
-        name={`entries.${index}.kind`}
-        render={({ field: f }) => (
-          <DebitCreditToggle
-            value={f.value.toLocaleLowerCase() as "debit" | "credit"}
-            onValueChange={(val) => f.onChange(val)}
-            size="sm"
-            className="translate-y-px"
-          />
-        )}
-      />
-    </div>
+    <Button
+      type="button"
+      variant="outline"
+      size="default"
+      onClick={toggleKind}
+      className={cn(kind === JournalEntryKind.Debit ? "bg-red-100" : "bg-blue-100")}
+    >
+      {" "}
+      {kind === JournalEntryKind.Debit ? "借方" : "貸方"}
+    </Button>
   )
 }
 

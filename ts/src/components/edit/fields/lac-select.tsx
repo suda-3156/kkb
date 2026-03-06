@@ -62,7 +62,7 @@ type Account = {
 
 type Props = {
   name: string
-  label: string
+  label?: string
   kind?: LedgerAccountKind
 
   form: AnyForm
@@ -83,20 +83,16 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
         },
       })
     }
-  }, [loading, data, fetchMore, kind])
+
+    if (!loading && error) {
+      toast.error("科目の情報の取得に失敗しました")
+    }
+  }, [loading, data, fetchMore, kind, error])
 
   const items: Account[] =
     data?.ledgerAccounts.nodes?.filter(
       (account): account is NonNullable<typeof account> => account != null && !account.isGroup,
     ) ?? []
-
-  if (error) {
-    toast.error("科目の情報の取得に失敗しました")
-  }
-
-  if (!error && items.length === 0) {
-    toast.error("科目が見つかりませんでした。先に科目を作成してください。")
-  }
 
   return (
     <Controller
@@ -104,7 +100,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
       control={form.control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
+          {label && <FieldLabel>{label}</FieldLabel>}
           <Combobox
             items={items}
             autoHighlight
