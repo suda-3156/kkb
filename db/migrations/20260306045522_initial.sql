@@ -11,7 +11,7 @@ CREATE TABLE `ledger_encryption_keys` (
 -- Create "ledger_accounts" table
 CREATE TABLE `ledger_accounts` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` char(30) NOT NULL,
+  `public_id` char(20) NOT NULL,
   `account_name` blob NOT NULL,
   `kind` enum('ASSET','LIABILITY','EXPENSE','REVENUE','EQUITY') NOT NULL,
   `is_group` bool NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE `ledger_accounts` (
 -- Create "transactions" table
 CREATE TABLE `transactions` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` char(30) NOT NULL,
+  `public_id` char(20) NOT NULL,
   `date` char(10) NOT NULL,
   `description` blob NOT NULL,
   `created_at` datetime(6) NOT NULL,
@@ -44,17 +44,13 @@ CREATE TABLE `transactions` (
 -- Create "journal_entries" table
 CREATE TABLE `journal_entries` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` char(30) NOT NULL,
   `amount` int NOT NULL,
   `kind` enum('DEBIT','CREDIT') NOT NULL,
-  `created_at` datetime(6) NOT NULL,
-  `updated_at` datetime(6) NOT NULL,
   `ledger_account_journal_entries` bigint NOT NULL,
   `transaction_entries` bigint NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `journal_entries_ledger_accounts_journal_entries` (`ledger_account_journal_entries`),
   INDEX `journal_entries_transactions_entries` (`transaction_entries`),
-  UNIQUE INDEX `public_id` (`public_id`),
   CONSTRAINT `journal_entries_ledger_accounts_journal_entries` FOREIGN KEY (`ledger_account_journal_entries`) REFERENCES `ledger_accounts` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT `journal_entries_transactions_entries` FOREIGN KEY (`transaction_entries`) REFERENCES `transactions` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
 ) CHARSET utf8mb4 COLLATE utf8mb4_bin;

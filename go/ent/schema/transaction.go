@@ -21,10 +21,10 @@ func (Transaction) Fields() []ent.Field {
 		field.String("public_id").
 			GoType(prid.ID("")).
 			SchemaType(map[string]string{
-				"mysql": "char(30)",
+				"mysql": "char(20)",
 			}).
-			MaxLen(30).
-			MinLen(30).
+			MaxLen(20).
+			MinLen(20).
 			NotEmpty().
 			Unique().
 			Immutable(),
