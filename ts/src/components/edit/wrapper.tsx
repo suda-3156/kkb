@@ -39,7 +39,7 @@ export const Container = ({
     <WrapperContext.Provider value={{ isMobile, close }}>
       {isMobile ? (
         open ? (
-          <div className="fixed inset-0 z-50 h-full w-full overflow-y-auto bg-background p-4">
+          <div className="fixed inset-0 z-50 h-screen w-screen overflow-y-auto bg-background p-4">
             {children}
           </div>
         ) : null
@@ -64,7 +64,7 @@ export const Content = ({
   const { isMobile } = useWrapperContext()
 
   if (isMobile) {
-    return <div className={cn("flex h-full flex-col gap-4", className)}>{children}</div>
+    return <div className={cn("flex flex-col gap-4", className)}>{children}</div>
   }
 
   return (

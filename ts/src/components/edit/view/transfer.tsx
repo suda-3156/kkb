@@ -69,7 +69,7 @@ export const TransferForm = () => {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="relative w-full space-y-4 overflow-x-hidden"
+      className="relative w-full space-y-4 overflow-hidden"
     >
       <div className="grid grid-cols-2 gap-4">
         <DateField name="date" form={form} />
