@@ -1,6 +1,8 @@
 "use client"
 
 import { FileIcon, FolderIcon } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { TreeItem } from "./tree-item"
 import { useLedgerAccount } from "./use-ledger-account"
 
@@ -8,8 +10,8 @@ export const LedgerAccountForm = () => {
   const { tree, handleArchive } = useLedgerAccount()
 
   return (
-    <div>
-      <div {...tree.getContainerProps()} className="relative">
+    <div className="inset-shadow-2xs flex flex-col space-y-3 rounded-lg border bg-muted/20 p-1">
+      <ScrollArea {...tree.getContainerProps()} className="relative max-h-[50vh] min-h-60 pr-3">
         <div
           style={tree.getDragLineStyle()}
           className="pointer-events-none absolute h-0.5 bg-primary/60"
@@ -23,8 +25,9 @@ export const LedgerAccountForm = () => {
             onAbortRenaming={() => tree.abortRenaming()}
           />
         ))}
-      </div>
-      <div className="mt-3 flex gap-2 border-border border-t pt-3">
+      </ScrollArea>
+      <Separator />
+      <div className="flex gap-2 px-2 pb-2">
         {/** biome-ignore lint/a11y/noStaticElementInteractions: This is a draggable element */}
         <div
           draggable
