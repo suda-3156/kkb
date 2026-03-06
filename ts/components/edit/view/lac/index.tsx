@@ -431,7 +431,10 @@ export const LedgerAccountForm = () => {
                   <Input
                     {...item.getRenameInputProps()}
                     onKeyDown={(e) => {
-                      if (e.key === "Escape") e.nativeEvent.stopImmediatePropagation()
+                      if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                        tree.completeRenaming()
+                        return
+                      }
                       item.getRenameInputProps().onKeyDown?.(e)
                     }}
                     className="flex-1 rounded border border-input bg-background px-2 py-0.5 text-sm outline-none focus:ring-1 focus:ring-ring"
@@ -460,8 +463,17 @@ export const LedgerAccountForm = () => {
                   </Button>
                 </div>
               ) : (
+                // biome-ignore lint/a11y/noStaticElementInteractions: The div has onKeyDown handler to handle renaming with keyboard
                 <div
                   {...item.getProps()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && item.isSelected()) {
+                      e.preventDefault()
+                      item.startRenaming()
+                      return
+                    }
+                    item.getProps().onKeyDown?.(e)
+                  }}
                   className={cn(
                     "group flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-sm outline-none transition-colors",
                     "hover:bg-accent hover:text-accent-foreground",
