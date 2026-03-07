@@ -145,12 +145,12 @@ type ComplexityRoot struct {
 		ChildAccountBreakdown   func(childComplexity int, parentID prid.ID, startDate date.Date, endDate date.Date) int
 		HealthCheck             func(childComplexity int) int
 		LedgerAccount           func(childComplexity int, id prid.ID) int
-		LedgerAccounts          func(childComplexity int, first *int32, after *prid.ID, last *int32, before *prid.ID, kind *model.LedgerAccountKind, includeArchived *bool) int
+		LedgerAccounts          func(childComplexity int, first *int32, last *int32, kind *model.LedgerAccountKind, includeArchived *bool, after *prid.ID, before *prid.ID) int
 		Node                    func(childComplexity int, id prid.ID) int
 		PeriodAggregation       func(childComplexity int, startDate date.Date, endDate date.Date) int
 		PeriodAggregationSeries func(childComplexity int, startDate date.Date, endDate date.Date, granularity model.Granularity) int
 		Transaction             func(childComplexity int, id prid.ID) int
-		Transactions            func(childComplexity int, first *int32, after *prid.ID, last *int32, before *prid.ID, startDate *date.Date, endDate *date.Date) int
+		Transactions            func(childComplexity int, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) int
 		TrialBalance            func(childComplexity int, asOf date.Date) int
 	}
 
@@ -216,9 +216,9 @@ type QueryResolver interface {
 	TrialBalance(ctx context.Context, asOf date.Date) (*model.TrialBalance, error)
 	ChildAccountBreakdown(ctx context.Context, parentID prid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error)
 	LedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
-	LedgerAccounts(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error)
+	LedgerAccounts(ctx context.Context, first *int32, last *int32, kind *model.LedgerAccountKind, includeArchived *bool, after *prid.ID, before *prid.ID) (*model.LedgerAccountConnection, error)
 	Transaction(ctx context.Context, id prid.ID) (*model.Transaction, error)
-	Transactions(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error)
+	Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) (*model.TransactionConnection, error)
 }
 
 type executableSchema struct {
@@ -620,7 +620,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.LedgerAccounts(childComplexity, args["first"].(*int32), args["after"].(*prid.ID), args["last"].(*int32), args["before"].(*prid.ID), args["kind"].(*model.LedgerAccountKind), args["includeArchived"].(*bool)), true
+		return e.complexity.Query.LedgerAccounts(childComplexity, args["first"].(*int32), args["last"].(*int32), args["kind"].(*model.LedgerAccountKind), args["includeArchived"].(*bool), args["after"].(*prid.ID), args["before"].(*prid.ID)), true
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
 			break
@@ -675,7 +675,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["after"].(*prid.ID), args["last"].(*int32), args["before"].(*prid.ID), args["startDate"].(*date.Date), args["endDate"].(*date.Date)), true
+		return e.complexity.Query.Transactions(childComplexity, args["first"].(*int32), args["last"].(*int32), args["startDate"].(*date.Date), args["endDate"].(*date.Date), args["after"].(*prid.ID), args["before"].(*prid.ID)), true
 	case "Query.trialBalance":
 		if e.complexity.Query.TrialBalance == nil {
 			break
@@ -1046,11 +1046,12 @@ extend type Query {
 
   ledgerAccounts(
     first: Int
-    after: ID
     last: Int
-    before: ID
     kind: LedgerAccountKind
     includeArchived: Boolean = false
+    # Cursor-based pagination; 'after' and 'before' depend on the 'createdAt' timestamp of the accounts.
+    after: ID
+    before: ID
   ): LedgerAccountConnection!
 }
 
@@ -1120,11 +1121,12 @@ extend type Query {
 
   transactions(
     first: Int
-    after: ID
     last: Int
-    before: ID
     startDate: Date
     endDate: Date
+    # Cursor-based pagination; 'after' and 'before' depend on the 'createdAt' timestamp of the accounts.
+    after: ID
+    before: ID
   ): TransactionConnection!
 }
 
@@ -1305,31 +1307,31 @@ func (ec *executionContext) field_Query_ledgerAccounts_args(ctx context.Context,
 		return nil, err
 	}
 	args["first"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint32)
 	if err != nil {
 		return nil, err
 	}
-	args["after"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint32)
+	args["last"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "kind", ec.unmarshalOLedgerAccountKind2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccountKind)
 	if err != nil {
 		return nil, err
 	}
-	args["last"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
+	args["kind"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "includeArchived", ec.unmarshalOBoolean2ᚖbool)
 	if err != nil {
 		return nil, err
 	}
-	args["before"] = arg3
-	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "kind", ec.unmarshalOLedgerAccountKind2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccountKind)
+	args["includeArchived"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
-	args["kind"] = arg4
-	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "includeArchived", ec.unmarshalOBoolean2ᚖbool)
+	args["after"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
-	args["includeArchived"] = arg5
+	args["before"] = arg5
 	return args, nil
 }
 
@@ -1400,31 +1402,31 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 		return nil, err
 	}
 	args["first"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint32)
 	if err != nil {
 		return nil, err
 	}
-	args["after"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint32)
+	args["last"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "startDate", ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
 	if err != nil {
 		return nil, err
 	}
-	args["last"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
+	args["startDate"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "endDate", ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
 	if err != nil {
 		return nil, err
 	}
-	args["before"] = arg3
-	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "startDate", ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
+	args["endDate"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
-	args["startDate"] = arg4
-	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "endDate", ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate)
+	args["after"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID)
 	if err != nil {
 		return nil, err
 	}
-	args["endDate"] = arg5
+	args["before"] = arg5
 	return args, nil
 }
 
@@ -3621,7 +3623,7 @@ func (ec *executionContext) _Query_ledgerAccounts(ctx context.Context, field gra
 		ec.fieldContext_Query_ledgerAccounts,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().LedgerAccounts(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*prid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*prid.ID), fc.Args["kind"].(*model.LedgerAccountKind), fc.Args["includeArchived"].(*bool))
+			return ec.resolvers.Query().LedgerAccounts(ctx, fc.Args["first"].(*int32), fc.Args["last"].(*int32), fc.Args["kind"].(*model.LedgerAccountKind), fc.Args["includeArchived"].(*bool), fc.Args["after"].(*prid.ID), fc.Args["before"].(*prid.ID))
 		},
 		nil,
 		ec.marshalNLedgerAccountConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccountConnection,
@@ -3727,7 +3729,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		ec.fieldContext_Query_transactions,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["after"].(*prid.ID), fc.Args["last"].(*int32), fc.Args["before"].(*prid.ID), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date))
+			return ec.resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["last"].(*int32), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date), fc.Args["after"].(*prid.ID), fc.Args["before"].(*prid.ID))
 		},
 		nil,
 		ec.marshalNTransactionConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionConnection,

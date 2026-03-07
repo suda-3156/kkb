@@ -53,7 +53,7 @@ func (r *queryResolver) LedgerAccount(ctx context.Context, id prid.ID) (*model.L
 }
 
 // LedgerAccounts is the resolver for the ledgerAccounts field.
-func (r *queryResolver) LedgerAccounts(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, kind *model.LedgerAccountKind, includeArchived *bool) (*model.LedgerAccountConnection, error) {
+func (r *queryResolver) LedgerAccounts(ctx context.Context, first *int32, last *int32, kind *model.LedgerAccountKind, includeArchived *bool, after *prid.ID, before *prid.ID) (*model.LedgerAccountConnection, error) {
 	filter := &ledgeraccount.Filter{
 		First:           first,
 		After:           after,

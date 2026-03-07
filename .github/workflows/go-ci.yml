@@ -67,6 +67,7 @@ jobs:
       - uses: golangci/golangci-lint-action@v9.2.0
         with:
           working-directory: ./go
+          args: --config=./go/.golangci.yml
       - run: go clean -modcache
 
   generate:

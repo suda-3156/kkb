@@ -46,7 +46,7 @@ func (r *queryResolver) Transaction(ctx context.Context, id prid.ID) (*model.Tra
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, first *int32, after *prid.ID, last *int32, before *prid.ID, startDate *date.Date, endDate *date.Date) (*model.TransactionConnection, error) {
+func (r *queryResolver) Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) (*model.TransactionConnection, error) {
 	filter := &transaction.Filter{
 		First:     first,
 		After:     after,
