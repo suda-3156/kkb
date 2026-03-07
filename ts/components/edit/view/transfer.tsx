@@ -3,6 +3,7 @@
 import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSetAtom } from "jotai/react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
@@ -18,6 +19,7 @@ import { Footer } from "../wrapper"
 export const TransferForm = () => {
   const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
   const close = useSetAtom(closeModalAtom)
+  const router = useRouter()
 
   const form = useForm<TransferFormValues>({
     resolver: zodResolver(transferSchema),
@@ -51,10 +53,9 @@ export const TransferForm = () => {
             ],
           },
         },
-        refetchQueries: ["RecentTransactions"],
-        awaitRefetchQueries: true,
       })
       toast.success("振替を記録しました")
+      router.refresh()
       close()
     } catch {
       toast.error("振替の記録に失敗しました")

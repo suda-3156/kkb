@@ -4,6 +4,7 @@ import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSetAtom } from "jotai/react"
 import { Plus, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { type UseFieldArrayRemove, useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -25,8 +26,21 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
   const [updateTransaction, { loading: updating }] = useMutation(UpdateTransactionDoc)
   const loading = creating || updating
   const close = useSetAtom(closeModalAtom)
+  const router = useRouter()
 
   const updateMode = Boolean(data?.transaction)
+
+  const form = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      date: todayString(),
+      desc: "",
+      entries: [
+        { lacId: "", amount: 0, kind: JournalEntryKind.Debit },
+        { lacId: "", amount: 0, kind: JournalEntryKind.Credit },
+      ],
+    },
+  })
 
   useEffect(() => {
     if (data?.transaction) {
@@ -41,19 +55,7 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
         })),
       })
     }
-  })
-
-  const form = useForm<TransactionFormValues>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      date: todayString(),
-      desc: "",
-      entries: [
-        { lacId: "", amount: 0, kind: JournalEntryKind.Debit },
-        { lacId: "", amount: 0, kind: JournalEntryKind.Credit },
-      ],
-    },
-  })
+  }, [data, form.reset])
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -76,10 +78,9 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
             updatedAt: data?.transaction?.updatedAt ?? "",
           },
         },
-        refetchQueries: ["RecentTransactions"],
-        awaitRefetchQueries: true,
       })
       toast.success("更新しました")
+      router.refresh()
     } else {
       await createTransaction({
         variables: {
@@ -93,10 +94,9 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
             })),
           },
         },
-        refetchQueries: ["RecentTransactions"],
-        awaitRefetchQueries: true,
       })
       toast.success("記録しました")
+      router.refresh()
     }
   }
 

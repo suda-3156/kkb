@@ -14,6 +14,12 @@ const link = new HttpLink({
 export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
   return new ApolloClient({
     link: link,
-    cache: new InMemoryCache(), // TODO: Set up cache policies and type policies as needed
+    cache: new InMemoryCache({
+      typePolicies: {
+        PeriodAggregation: { merge: true },
+        ExpenseSummary: { merge: true },
+        RevenueSummary: { merge: true },
+      },
+    }),
   })
 })

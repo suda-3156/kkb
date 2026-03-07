@@ -94,6 +94,9 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
       (account): account is NonNullable<typeof account> => account != null && !account.isGroup,
     ) ?? []
 
+  // Only show spinner on initial load; fetchMore loading does not block the UI
+  const isInitialLoading = loading && !data
+
   return (
     <Controller
       name={name}
@@ -113,12 +116,12 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
               placeholder="科目を選択"
             />
             <ComboboxContent>
-              {loading && (
+              {isInitialLoading && (
                 <div className="py-2">
                   <LoadingInline className="mb-4" />
                 </div>
               )}
-              {!loading && (
+              {!isInitialLoading && (
                 <>
                   <ComboboxEmpty>"科目が見つかりません"</ComboboxEmpty>
                   <ComboboxList>

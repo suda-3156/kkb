@@ -3,6 +3,7 @@
 import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSetAtom } from "jotai/react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
@@ -18,6 +19,7 @@ import { Footer } from "../wrapper"
 export const RevenueForm = () => {
   const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
   const close = useSetAtom(closeModalAtom)
+  const router = useRouter()
 
   const form = useForm<RevenueFormValues>({
     resolver: zodResolver(revenueSchema),
@@ -51,10 +53,9 @@ export const RevenueForm = () => {
             ],
           },
         },
-        refetchQueries: ["RecentTransactions"],
-        awaitRefetchQueries: true,
       })
       toast.success("収入を記録しました")
+      router.refresh()
       close()
     } catch {
       toast.error("収入の記録に失敗しました")

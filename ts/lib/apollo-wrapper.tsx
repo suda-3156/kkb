@@ -16,7 +16,26 @@ const link = new HttpLink({
 function makeClient() {
   return new ApolloClient({
     link: link,
-    cache: new InMemoryCache(), // TODO: Set up cache policies and type policies as needed
+    cache: new InMemoryCache({
+      typePolicies: {
+        PeriodAggregation: { merge: true },
+        ExpenseSummary: { merge: true },
+        RevenueSummary: { merge: true },
+        Query: {
+          fields: {
+            ledgerAccounts: {
+              keyArgs: ["kind", "includeArchived"],
+              merge(existing, incoming) {
+                return {
+                  ...incoming,
+                  nodes: [...(existing?.nodes ?? []), ...(incoming.nodes ?? [])],
+                }
+              },
+            },
+          },
+        },
+      },
+    }),
   })
 }
 

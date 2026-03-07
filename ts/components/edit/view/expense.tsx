@@ -3,6 +3,7 @@
 import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSetAtom } from "jotai"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
@@ -18,6 +19,7 @@ import { Footer } from "../wrapper"
 export const ExpenseForm = () => {
   const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
   const close = useSetAtom(closeModalAtom)
+  const router = useRouter()
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
@@ -51,15 +53,9 @@ export const ExpenseForm = () => {
             ],
           },
         },
-        refetchQueries: [
-          "PeriodicExpenses",
-          "RecentTransactions",
-          "MonthlyExpensesSeries",
-          "ExpensesProportion",
-        ],
-        awaitRefetchQueries: true,
       })
       toast.success("記録しました")
+      router.refresh()
       close()
     } catch {
       toast.error("記録に失敗しました")
