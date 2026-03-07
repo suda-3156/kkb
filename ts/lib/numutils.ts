@@ -5,3 +5,8 @@ export const insertCommas = (num: number): string => {
 export const formatYen = (num: number): string => {
   return `¥${insertCommas(num)}`
 }
+
+export const extractNumber = (str: string): number => {
+  const numericString = str.replace(/[^0-9.-]+/g, "")
+  return parseFloat(numericString)
+}

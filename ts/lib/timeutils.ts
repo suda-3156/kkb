@@ -1,3 +1,5 @@
+// The start of the week is Monday, and the end of the week is Sunday.
+
 const TZ = process.env.NEXT_PUBLIC_TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone
 
 export function todayString(): string {
@@ -13,71 +15,47 @@ export function stringToDate(str: string): Date {
   return new Date(y, m - 1, d)
 }
 
-// TODO: refactor funcs below
-
-export const getWeek = (date: Date) => {
-  const dayOfWeek = date.getDay()
-  const start = new Date(date)
-  start.setDate(date.getDate() - dayOfWeek)
-  start.setHours(0, 0, 0, 0)
-
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
-  end.setHours(23, 59, 59, 999)
-
-  return { start, end }
+type DateRange = {
+  start: string
+  end: string
 }
 
-export const getWeekStr = (date: Date) => {
-  const { start, end } = getWeek(date)
-  const startStr = `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, "0")}-${start.getDate().toString().padStart(2, "0")}`
-  const endStr = `${end.getFullYear()}-${(end.getMonth() + 1).toString().padStart(2, "0")}-${end.getDate().toString().padStart(2, "0")}`
+export function thisWeekString(): DateRange {
+  const today = new Date()
+  const dayOfWeek = today.getDay() // 0 (Sun) - 6 (Sat)
+  const diffToMonday = (dayOfWeek + 6) % 7
+  const diffToSunday = (7 - dayOfWeek) % 7
 
-  return { start: startStr, end: endStr }
+  const startOfWeek = new Date(today)
+  startOfWeek.setDate(today.getDate() - diffToMonday)
+
+  const endOfWeek = new Date(today)
+  endOfWeek.setDate(today.getDate() + diffToSunday)
+
+  return {
+    start: dateToString(startOfWeek),
+    end: dateToString(endOfWeek),
+  }
 }
 
-export const getMonth = (date: Date) => {
-  const start = new Date(date.getFullYear(), date.getMonth(), 1)
-  start.setHours(0, 0, 0, 0)
+export function thisMonthString(): DateRange {
+  const today = new Date()
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0)
-  end.setHours(23, 59, 59, 999)
-
-  return { start, end }
+  return {
+    start: dateToString(startOfMonth),
+    end: dateToString(endOfMonth),
+  }
 }
 
-export const getMonthStr = (date: Date) => {
-  const startStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-01`
-  const endStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate().toString().padStart(2, "0")}`
+export function thisYearString(): DateRange {
+  const today = new Date()
+  const startOfYear = new Date(today.getFullYear(), 0, 1)
+  const endOfYear = new Date(today.getFullYear(), 11, 31)
 
-  return { start: startStr, end: endStr }
-}
-
-export const getYear = (date: Date) => {
-  const start = new Date(date.getFullYear(), 0, 1)
-  start.setHours(0, 0, 0, 0)
-
-  const end = new Date(date.getFullYear(), 11, 31)
-  end.setHours(23, 59, 59, 999)
-
-  return { start, end }
-}
-
-export const getYearStr = (date: Date) => {
-  const startStr = `${date.getFullYear()}-01-01`
-  const endStr = `${date.getFullYear()}-12-31`
-
-  return { start: startStr, end: endStr }
-}
-
-export const dateStr = (date: Date) => {
-  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`
-}
-
-export const todayStr = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
-    .getDate()
-    .toString()
-    .padStart(2, "0")}`
+  return {
+    start: dateToString(startOfYear),
+    end: dateToString(endOfYear),
+  }
 }

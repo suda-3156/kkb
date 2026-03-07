@@ -9,7 +9,7 @@ import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
 import { type RevenueFormValues, revenueSchema } from "@/lib/schema"
-import { todayStr } from "@/lib/timeutils"
+import { todayString } from "@/lib/timeutils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
 import { CreateTransactionDoc } from "../queries"
 import { closeModalAtom } from "../state"
@@ -22,7 +22,7 @@ export const RevenueForm = () => {
   const form = useForm<RevenueFormValues>({
     resolver: zodResolver(revenueSchema),
     defaultValues: {
-      date: todayStr(),
+      date: todayString(),
       desc: "",
       amount: 0,
       depositId: "",

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
 import { type ExpenseFormValues, expenseSchema } from "@/lib/schema"
-import { todayStr } from "@/lib/timeutils"
+import { todayString } from "@/lib/timeutils"
 import { LoadingInline } from "../../loading"
 import { Button } from "../../ui/button"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
@@ -22,7 +22,7 @@ export const ExpenseForm = () => {
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
-      date: todayStr(),
+      date: todayString(),
       desc: "",
       amount: 0,
       paymentId: "",

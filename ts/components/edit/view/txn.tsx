@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/graphql"
 import { type TransactionFormValues, transactionSchema } from "@/lib/schema"
-import { todayStr } from "@/lib/timeutils"
+import { todayString } from "@/lib/timeutils"
 import { cn } from "@/lib/utils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
 import { CreateTransactionDoc, UpdateTransactionDoc } from "../queries"
@@ -46,7 +46,7 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      date: todayStr(),
+      date: todayString(),
       desc: "",
       entries: [
         { lacId: "", amount: 0, kind: JournalEntryKind.Debit },
