@@ -37,7 +37,10 @@ func (m *LedgerAccountManager) List(
 	var scanDesc bool
 	query := m.db.Client.LedgerAccount.Query().WithEncryptionKey().WithParent()
 
-	query, scanDesc = m.applyFilter(filter, query)
+	query, scanDesc, err := m.applyFilter(ctx, m.db.Client, filter, query)
+	if err != nil {
+		return nil, fmt.Errorf("list: apply filter: %w", err)
+	}
 
 	lacs, err := query.All(ctx)
 	if err != nil {
@@ -53,9 +56,11 @@ func (m *LedgerAccountManager) List(
 }
 
 func (m *LedgerAccountManager) applyFilter(
+	ctx context.Context,
+	client *ent.Client,
 	filter *Filter,
 	query *ent.LedgerAccountQuery,
-) (*ent.LedgerAccountQuery, bool) {
+) (*ent.LedgerAccountQuery, bool, error) {
 	var scanDesc = false
 
 	if len(filter.PublicIDs) > 0 {
@@ -67,11 +72,19 @@ func (m *LedgerAccountManager) applyFilter(
 	}
 
 	if filter.After != nil {
-		query = query.Where(ledgeraccount.PublicIDGT(*filter.After))
+		after, err := client.LedgerAccount.Query().Where(ledgeraccount.PublicID(*filter.After)).Only(ctx)
+		if err != nil {
+			return nil, false, fmt.Errorf("applyFilter: get after ledger account: %w", err)
+		}
+		query = query.Where(ledgeraccount.PublicIDGT(after.PublicID))
 	}
 
 	if filter.Before != nil {
-		query = query.Where(ledgeraccount.PublicIDLT(*filter.Before))
+		before, err := client.LedgerAccount.Query().Where(ledgeraccount.PublicID(*filter.Before)).Only(ctx)
+		if err != nil {
+			return nil, false, fmt.Errorf("applyFilter: get before ledger account: %w", err)
+		}
+		query = query.Where(ledgeraccount.PublicIDLT(before.PublicID))
 		scanDesc = true
 	}
 
@@ -98,7 +111,7 @@ func (m *LedgerAccountManager) applyFilter(
 		query = query.Where(ledgeraccount.ArchivedAtIsNil())
 	}
 
-	return query, scanDesc
+	return query, scanDesc, nil
 }
 
 func (m *LedgerAccountManager) getPageInfo(

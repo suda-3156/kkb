@@ -37,11 +37,12 @@ extend type Query {
 
   transactions(
     first: Int
-    after: ID
     last: Int
-    before: ID
     startDate: Date
     endDate: Date
+    # Cursor-based pagination; 'after' and 'before' depend on the 'createdAt' timestamp of the accounts.
+    after: ID
+    before: ID
   ): TransactionConnection!
 }
 

@@ -42,7 +42,10 @@ func (m *TransactionManager) List(
 			q.WithLedgerAccount()
 		})
 
-	query, scanDesc = m.applyFilter(filter, query)
+	query, scanDesc, err := m.applyFilter(ctx, m.db.Client, filter, query)
+	if err != nil {
+		return nil, fmt.Errorf("list: apply filter: %w", err)
+	}
 
 	txns, err := query.All(ctx)
 	if err != nil {
@@ -64,9 +67,11 @@ func (m *TransactionManager) List(
 }
 
 func (m *TransactionManager) applyFilter(
+	ctx context.Context,
+	client *ent.Client,
 	filter *Filter,
 	query *ent.TransactionQuery,
-) (*ent.TransactionQuery, bool) {
+) (*ent.TransactionQuery, bool, error) {
 	var scanDesc = false
 
 	if len(filter.PublicIDs) > 0 {
@@ -86,11 +91,20 @@ func (m *TransactionManager) applyFilter(
 	}
 
 	if filter.After != nil {
-		query = query.Where(transaction.PublicIDGT(*filter.After))
+		after, err := client.Transaction.Query().Where(transaction.PublicID(*filter.After)).Only(ctx)
+		if err != nil {
+			return nil, false, fmt.Errorf("applyFilter: get after transaction: %w", err)
+		}
+
+		query = query.Where(transaction.UpdatedAtGT(after.UpdatedAt))
 	}
 
 	if filter.Before != nil {
-		query = query.Where(transaction.PublicIDLT(*filter.Before))
+		before, err := client.Transaction.Query().Where(transaction.PublicID(*filter.Before)).Only(ctx)
+		if err != nil {
+			return nil, false, fmt.Errorf("applyFilter: get before transaction: %w", err)
+		}
+		query = query.Where(transaction.UpdatedAtLT(before.UpdatedAt))
 		scanDesc = true
 	}
 
@@ -104,12 +118,12 @@ func (m *TransactionManager) applyFilter(
 	}
 
 	if scanDesc {
-		query = query.Order(ent.Desc(transaction.FieldPublicID))
+		query = query.Order(ent.Desc(transaction.FieldUpdatedAt))
 	} else {
-		query = query.Order(ent.Asc(transaction.FieldPublicID))
+		query = query.Order(ent.Asc(transaction.FieldUpdatedAt))
 	}
 
-	return query, scanDesc
+	return query, scanDesc, nil
 }
 
 func (m *TransactionManager) getPageInfo(

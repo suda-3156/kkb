@@ -36,11 +36,12 @@ extend type Query {
 
   ledgerAccounts(
     first: Int
-    after: ID
     last: Int
-    before: ID
     kind: LedgerAccountKind
     includeArchived: Boolean = false
+    # Cursor-based pagination; 'after' and 'before' depend on the 'createdAt' timestamp of the accounts.
+    after: ID
+    before: ID
   ): LedgerAccountConnection!
 }
 
