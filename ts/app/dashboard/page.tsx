@@ -6,6 +6,8 @@ import {
   RecentTransactions,
 } from "./_components"
 
+export const dynamic = "force-dynamic"
+
 export default function DashboardPage() {
   return (
     // Single unified grid: 1 col → 2 col (md) → 3 col (lg)
