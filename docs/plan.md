@@ -1,6 +1,6 @@
 # Plan
 
-## Phase 1: Backend server
+## [DONE]Phase 1: Backend server
 
 ### [DONE] Queries: Ledger account
 
@@ -35,7 +35,7 @@
   - go test
   - lint
 
-## Phase 2: Frontend, Aggregation
+## [DONE]Phase 2: Frontend, Aggregation
 
 ## Phase 3: DB Migration system (and terraform)
 
@@ -50,12 +50,10 @@
 
 ---
 
-## Phase 5: Complexity
+# TODO
 
-## Phase 6: Implement tests
-
-## Phase N:
-
+- GraphQL complexity
+- tests
 - Key rotation
   - requires: lock control in DB -> lock table
   - -> lock db when migrating
