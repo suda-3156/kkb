@@ -19,7 +19,7 @@ db/docker/logs/
 
 # go
 air_tmp
-transaction.json
+transactions.json
 
 # node
 node_modules

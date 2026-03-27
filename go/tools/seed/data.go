@@ -58,7 +58,7 @@ func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountM
 		return nil, fmt.Errorf("insertLedgerAccounts: parse JSON: %w", err)
 	}
 
-	// typeStr → LedgerAccountKind のマッピング
+	// typeStr → LedgerAccountKind
 	kindMap := map[string]graph.LedgerAccountKind{
 		"ASSET":     graph.LedgerAccountKindAsset,
 		"LIABILITY": graph.LedgerAccountKindLiability,

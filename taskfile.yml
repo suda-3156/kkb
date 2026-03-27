@@ -50,10 +50,10 @@ tasks:
       - task: start:db
       - task: start:api
       - |
-        if [ ! -e ./tools/seed/data/transaction.json ]; then
+        if [ ! -e go/tools/seed/data/transactions.json ]; then
           python go/tools/seed/data/generate_transactions.py
         fi
-        docker compose exec api bash -c "go run ./tools/seed/main.go"
+        docker compose exec api bash -c "go run ./tools/seed/"
 
   start:all:
     desc: Start all containers
