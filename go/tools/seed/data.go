@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
@@ -13,12 +14,6 @@ import (
 	"github.com/suda-3156/kkb/go/internal/prid"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
-
-//go:embed data/ledgeraccounts.json
-var ledgeraccountsJSON []byte
-
-//go:embed data/transactions.json
-var transactionsJSON []byte
 
 type LedgerAccount struct {
 	Name    string `json:"name"`
@@ -54,6 +49,12 @@ func insertData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, tm
 
 func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountManager) (map[string]prid.ID, error) {
 	var seeds []LedgerAccount
+
+	ledgeraccountsJSON, err := os.ReadFile("tools/seed/data/ledgeraccounts.json")
+	if err != nil {
+		return nil, fmt.Errorf("read JSON: %w", err)
+	}
+
 	if err := json.Unmarshal(ledgeraccountsJSON, &seeds); err != nil {
 		return nil, fmt.Errorf("insertLedgerAccounts: parse JSON: %w", err)
 	}
@@ -102,6 +103,12 @@ func insertTransactions(
 	accountMap map[string]prid.ID,
 ) error {
 	var seeds []Transaction
+
+	transactionsJSON, err := os.ReadFile("tools/seed/data/transactions.json")
+	if err != nil {
+		return fmt.Errorf("read JSON: %w", err)
+	}
+
 	if err := json.Unmarshal(transactionsJSON, &seeds); err != nil {
 		return fmt.Errorf("insertTransactions: parse JSON: %w", err)
 	}
