@@ -17,6 +17,7 @@ A budget book with Next.js, GraphQL, Golang, ent., MySQL.
 
 ```sh
 direnv allow
+mise trust # With mise
 task init
 task start:all
 ```
