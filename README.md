@@ -45,6 +45,8 @@ touch ./db/docker/logs/mysql-slow.log;
 touch ./db/docker/logs/mysql-query.log;
 docker compose up -d
 python go/tools/seed/data/generate_transactions.py
+mkdir -p go/local/secrets
+tr -dc A-Za-z0-9 </dev/urandom | head -c 16 >go/local/secrets/encryption_aad
 docker compose exec api bash -c "go run ./tools/seed/"
 
 # Reload the api server and boot the Next.js
