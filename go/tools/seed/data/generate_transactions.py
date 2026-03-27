@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate seed transactions for kkb.
-Period : 2025-01-01 – 2026-02-28
+Period : 2025-01-01 – today
 Target : ~1000 transactions
 
 Leaf accounts (non-group) from ledgeraccounts.json
@@ -13,12 +13,12 @@ Leaf accounts (non-group) from ledgeraccounts.json
   EQUITY    : 元入金
 """
 
+import calendar
 import json
 import random
 import string
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
-import calendar
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,8 +50,9 @@ def txn(d: date, desc: str, debit_acc: str, credit_acc: str, amt: int) -> dict:
 
 # ── date helpers ──────────────────────────────────────────────────────────────
 
-START = date(2025, 1, 1)
-END = date(2026, 2, 28)
+today = datetime.today()
+START = date(today.year - 1, today.month, today.day)
+END = today.date()
 
 MONTHS: list[date] = []
 cur = date(START.year, START.month, 1)
