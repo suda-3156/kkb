@@ -41,6 +41,7 @@ tasks:
     cmds:
       - |
         cd ts
+        bun i
         bun dev
     silent: true
 
