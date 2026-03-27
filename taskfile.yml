@@ -53,6 +53,10 @@ tasks:
         if [ ! -e go/tools/seed/data/transactions.json ]; then
           python go/tools/seed/data/generate_transactions.py
         fi
+        if [ ! -e go/local/secrets/encryption_aad ]; then
+          mkdir -p go/local/secrets
+          tr -dc A-Za-z0-9 </dev/urandom | head -c 16 >go/local/secrets/encryption_aad
+        fi
         docker compose exec api bash -c "go run ./tools/seed/"
 
   start:all:

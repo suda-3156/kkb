@@ -16,6 +16,7 @@ A budget book with Next.js, GraphQL, Golang, ent., MySQL.
 - Steps
 
 ```sh
+direnv allow
 task init
 task start:all
 ```
