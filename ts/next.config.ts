@@ -2,6 +2,8 @@ import path from "node:path"
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  // Emit a standalone server bundle (.next/standalone/server.js) for Docker.
+  output: "standalone",
   async redirects() {
     return [
       {
