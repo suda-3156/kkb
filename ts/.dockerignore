@@ -1,0 +1,9 @@
+# Keep the Docker build context small and prevent the host's node_modules
+# (wrong arch) from clobbering the image's freshly installed deps.
+node_modules
+.next
+.git
+*.log
+.env*
+Dockerfile*
+*.dockerfile

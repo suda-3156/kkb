@@ -1,0 +1,7 @@
+# Applies to builds using the repository root as context (e.g. the Go API
+# image in self-host/service.dockerfile). Keeps the context small.
+.git
+**/node_modules
+ts/.next
+.local.ignore
+*.log
