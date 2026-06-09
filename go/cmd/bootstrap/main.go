@@ -47,6 +47,8 @@ func main() {
 
 	if err := run(ctx); err != nil {
 		logging.Error(ctx, "bootstrap failed", slog.Any("error", err))
+		stop()
+		//nolint:gocritic // bootstrap script should exit with 1 when failed
 		os.Exit(1)
 	}
 
