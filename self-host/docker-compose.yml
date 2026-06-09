@@ -52,6 +52,8 @@ services:
     build:
       context: ..
       dockerfile: ./self-host/service.dockerfile
+      platforms:
+        - "linux/arm64"
     image: ${PROJECT_NAME:-kkb}-api
     restart: "no"
     entrypoint: ["/bin/bootstrap"]
@@ -67,6 +69,8 @@ services:
     build:
       context: ..
       dockerfile: ./self-host/service.dockerfile
+      platforms:
+        - "linux/arm64"
     image: ${PROJECT_NAME:-kkb}-api
     restart: always
     environment:
@@ -103,6 +107,8 @@ services:
     build:
       context: ../ts
       dockerfile: ../self-host/next.dockerfile
+      platforms:
+        - "linux/arm64"
       args:
         # Browser uses same-origin "/query" (proxied by nginx to the backend).
         NEXT_PUBLIC_GRAPHQL_URL: /query
