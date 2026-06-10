@@ -1,9 +1,4 @@
-// Package main provides a one-shot bootstrap for self-hosted / non-managed
-// deployments: it creates the encryption wrapper key on the configured
-// (FILESYSTEM) key manager so the API can start. Unlike the seed tool, it does
-// NOT touch the database or insert any sample data. Safe to leave wired as a
-// one-shot init service: it is idempotent and skips creation if a key version
-// already exists.
+// For self-hosted / non-managed
 package main
 
 import (

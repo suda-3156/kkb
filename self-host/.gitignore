@@ -7,3 +7,5 @@ mysql/
 mysql-log/
 secrets/
 keys/
+
+*.tar

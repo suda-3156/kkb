@@ -2,7 +2,7 @@
 # Build context: ./ts  (set in docker-compose: build.context = ../ts).
 # bun supports arm64, so the same toolchain works on the Pi.
 
-FROM oven/bun:1.3.10-alpine AS base
+FROM oven/bun:1.3-alpine AS base
 
 # --- deps ---
 FROM base AS deps
@@ -33,7 +33,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nextjs
+	&& adduser --system --uid 1001 nextjs
 
 # No ./public dir in this project; add a COPY here if one is introduced.
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
