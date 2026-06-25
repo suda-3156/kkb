@@ -37,6 +37,7 @@ func main() {
 
 	if err != nil {
 		logging.Critical(ctx, "application error", slog.Any("error", err))
+		//nolint: gocritic // we don't need to check error here
 		os.Exit(1)
 	}
 
