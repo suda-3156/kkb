@@ -1,4 +1,4 @@
-package migrate
+package main
 
 import (
 	"context"
@@ -37,6 +37,7 @@ func main() {
 
 	if err != nil {
 		logging.Critical(ctx, "application error", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	logging.Info(ctx, "successful shutdown")
@@ -68,7 +69,7 @@ func run(ctx context.Context) error {
 	}
 
 	status, err := client.MigrateStatus(ctx, &atlasexec.MigrateStatusParams{
-		URL: "mysql://" + cfg.ConnectionURL(),
+		URL: cfg.AtlasURL(),
 	})
 	if err != nil {
 		return fmt.Errorf("client.MigrateStatus: %w", err)
@@ -88,7 +89,7 @@ func run(ctx context.Context) error {
 	}
 
 	result, err := client.MigrateApply(ctx, &atlasexec.MigrateApplyParams{
-		URL: "mysql://" + cfg.ConnectionURL(),
+		URL: cfg.AtlasURL(),
 	})
 	if err != nil {
 		return fmt.Errorf("client.MigrateApply: %w", err)

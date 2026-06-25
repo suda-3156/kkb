@@ -34,3 +34,15 @@ func (c *Config) ConnectionURL() string {
 
 	return fmt.Sprintf("%s:%s@cloudsqlconn(localhost:3306)/%s?parseTime=true", c.User, c.Password, c.Name)
 }
+
+// AtlasURL returns a DSN in the URL form the Atlas CLI expects
+// (mysql://user:pass@host:port/dbname). This differs from ConnectionURL, which
+// returns the go-sql-driver DSN (user:pass@tcp(host:port)/dbname)
+func (c *Config) AtlasURL() string {
+	addr := c.Host
+	if c.Port != "" {
+		addr = fmt.Sprintf("%s:%s", c.Host, c.Port)
+	}
+
+	return fmt.Sprintf("mysql://%s:%s@%s/%s", c.User, c.Password, addr, c.Name)
+}

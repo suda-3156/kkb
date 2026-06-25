@@ -77,5 +77,5 @@ func connect(ctx context.Context, cfg *Config) (*sql.DB, error) {
 			return dialer.Dial(ctx, cfg.ConnectionName, opts...)
 		})
 
-	return sql.Open("cloudsqlconn", cfg.ConnectionURL())
+	return sql.Open("mysql", cfg.ConnectionURL())
 }

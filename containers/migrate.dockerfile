@@ -14,7 +14,7 @@ COPY ./go/go.mod ./
 COPY ./go/go.sum ./
 
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go mod download -x
+  go mod download -x
 
 COPY ./go ./
 
@@ -23,7 +23,7 @@ RUN curl -sSf https://atlasgo.sh | sh -s -- -y --platform linux-amd64
 # Step 2: Server building
 FROM modules AS builder
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go build -o /bin/migration ./cmd/migration/main.go
+  go build -o /bin/migration ./cmd/migrate/main.go
 
 COPY ./db/migrations /db/migrations
 

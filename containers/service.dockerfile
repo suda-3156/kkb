@@ -12,14 +12,14 @@ COPY ./go.mod ./
 COPY ./go.sum ./
 
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go mod download -x
+	go mod download -x
 
-COPY ./go ./
+COPY ./ ./
 
 # Step 2: Server building
 FROM modules AS builder
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go build -o /bin/server ./cmd/api/main.go
+	go build -o /bin/server ./cmd/api/main.go
 
 # Step 3: Final image
 FROM gcr.io/distroless/static-debian12:latest-amd64

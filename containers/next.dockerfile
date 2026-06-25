@@ -1,4 +1,4 @@
-# Build context: ./ts  (set in docker-compose: build.context = ../ts)
+# Build context: ./ts  (task build:frontend runs from main/ with --file ./containers/next.dockerfile ./ts)
 # Based on https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 # Adapted for this repo: bun (not pnpm), Next.js standalone output.
 
@@ -19,19 +19,25 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG NEXT_PUBLIC_GRAPHQL_URL=/query
+ENV NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL}
+
 # Next.js telemetry off during build.
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
 # --- Production runner ---
-FROM base AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
+
+# libc6-compat: some native deps expect glibc symbols on alpine.
+RUN apk add --no-cache libc6-compat
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nextjs
+	&& adduser --system --uid 1001 nextjs
 
 # No ./public dir in this project; add a COPY here if one is introduced.
 
@@ -46,4 +52,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # server.js is produced by `next build` with output: "standalone".
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]
