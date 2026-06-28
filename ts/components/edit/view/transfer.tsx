@@ -26,7 +26,7 @@ export const TransferForm = () => {
     defaultValues: {
       date: todayString(),
       desc: "",
-      amount: 0,
+      amount: Number.NaN,
       fromId: "",
       toId: "",
     },

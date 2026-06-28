@@ -26,7 +26,7 @@ export const RevenueForm = () => {
     defaultValues: {
       date: todayString(),
       desc: "",
-      amount: 0,
+      amount: Number.NaN,
       depositId: "",
       sourceId: "",
     },

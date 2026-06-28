@@ -36,8 +36,8 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
       date: todayString(),
       desc: "",
       entries: [
-        { lacId: "", amount: 0, kind: JournalEntryKind.Debit },
-        { lacId: "", amount: 0, kind: JournalEntryKind.Credit },
+        { lacId: "", amount: Number.NaN, kind: JournalEntryKind.Debit },
+        { lacId: "", amount: Number.NaN, kind: JournalEntryKind.Credit },
       ],
     },
   })
@@ -135,7 +135,7 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => append({ lacId: "", amount: 0, kind: JournalEntryKind.Debit })}
+          onClick={() => append({ lacId: "", amount: Number.NaN, kind: JournalEntryKind.Debit })}
         >
           <Plus className="mr-1 size-3.5" />
           行を追加

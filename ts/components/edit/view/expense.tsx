@@ -26,7 +26,7 @@ export const ExpenseForm = () => {
     defaultValues: {
       date: todayString(),
       desc: "",
-      amount: 0,
+      amount: Number.NaN,
       paymentId: "",
       categoryId: "",
     },
