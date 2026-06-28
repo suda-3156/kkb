@@ -1,4 +1,4 @@
-query {
+query LedgerAccount {
   ledgerAccount(id: "lac_01KHYXYY6VXE2G8V0B8RY9BHYX") {
     id
     parent {

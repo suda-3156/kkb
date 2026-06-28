@@ -1,7 +1,7 @@
 {
   "name": "kkb",
   "devDependencies": {
-    "@biomejs/biome": "2.4.4"
+    "@biomejs/biome": "2.4.15"
   },
   "scripts": {
     "lint": "biome check",

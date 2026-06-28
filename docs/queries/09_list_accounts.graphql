@@ -1,4 +1,4 @@
-query {
+query LedgerAccounts {
   ledgerAccounts(first: 10) {
     nodes {
       id

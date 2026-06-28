@@ -1,4 +1,4 @@
-mutation {
+mutation CreateLedgerAccount {
   createLedgerAccount(input: { name: "test1", kind: ASSET, isGroup: false }) {
     id
     parent {

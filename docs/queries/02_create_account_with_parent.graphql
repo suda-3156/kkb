@@ -1,5 +1,5 @@
 # This will raise error because the parent is not a group account.
-mutation {
+mutation CreateLedgerAccount {
   createLedgerAccount(
     input: {
       name: "test2"

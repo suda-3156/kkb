@@ -1,4 +1,4 @@
-mutation {
+mutation UpdateLedgerAccount {
   updateLedgerAccount(
     input: {
       id: "lac_01KHYXYY6VXE2G8V0B8RY9BHYX"

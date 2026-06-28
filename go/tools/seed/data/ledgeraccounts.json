@@ -1,9 +1,24 @@
 [
   { "name": "流動資産", "type": "ASSET", "is_group": true },
   { "name": "現金", "type": "ASSET", "is_group": false, "parent": "流動資産" },
-  { "name": "プリペイドカード", "type": "ASSET", "is_group": true, "parent": "流動資産" },
-  {"name": "Suica", "type": "ASSET", "is_group": false, "parent": "プリペイドカード"},
-  {"name": "PASMO", "type": "ASSET", "is_group": false, "parent": "プリペイドカード"},
+  {
+    "name": "プリペイドカード",
+    "type": "ASSET",
+    "is_group": true,
+    "parent": "流動資産"
+  },
+  {
+    "name": "Suica",
+    "type": "ASSET",
+    "is_group": false,
+    "parent": "プリペイドカード"
+  },
+  {
+    "name": "PASMO",
+    "type": "ASSET",
+    "is_group": false,
+    "parent": "プリペイドカード"
+  },
   {
     "name": "普通預金",
     "type": "ASSET",
@@ -40,7 +55,12 @@
 
   { "name": "生活費", "type": "EXPENSE", "is_group": true },
   { "name": "食費", "type": "EXPENSE", "is_group": false, "parent": "生活費" },
-  { "name": "固定支出", "type": "EXPENSE", "is_group": true, "parent": "生活費" },
+  {
+    "name": "固定支出",
+    "type": "EXPENSE",
+    "is_group": true,
+    "parent": "生活費"
+  },
   {
     "name": "水道光熱費",
     "type": "EXPENSE",
@@ -59,9 +79,24 @@
     "is_group": true,
     "parent": "生活費"
   },
-  { "name": "日用品A", "type": "EXPENSE", "is_group": false, "parent": "日用品" },
-  { "name": "日用品B", "type": "EXPENSE", "is_group": false, "parent": "日用品" },
-  { "name": "日用品C", "type": "EXPENSE", "is_group": false, "parent": "日用品" },
+  {
+    "name": "日用品A",
+    "type": "EXPENSE",
+    "is_group": false,
+    "parent": "日用品"
+  },
+  {
+    "name": "日用品B",
+    "type": "EXPENSE",
+    "is_group": false,
+    "parent": "日用品"
+  },
+  {
+    "name": "日用品C",
+    "type": "EXPENSE",
+    "is_group": false,
+    "parent": "日用品"
+  },
   {
     "name": "交通費",
     "type": "EXPENSE",

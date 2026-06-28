@@ -61,10 +61,10 @@ export default function RootLayout({
         )}
       >
         <Providers>
-          <main className="relative mx-auto flex h-screen w-full max-w-7xl flex-col overflow-hidden bg-background">
+          <main className="relative mx-auto flex h-screen w-full flex-col overflow-hidden bg-background">
             <Header />
-            <ScrollArea className="container relative mx-auto flex h-screen flex-1 flex-col overflow-y-auto">
-              {children}
+            <ScrollArea className="relative mx-0.5 flex h-screen flex-1 flex-col overflow-y-auto">
+              <div className="container relative mx-auto">{children}</div>
             </ScrollArea>
             <EditModal />
             <Toaster />

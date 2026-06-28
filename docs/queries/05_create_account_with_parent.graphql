@@ -1,5 +1,5 @@
 # This time, this won't raise error.
-mutation {
+mutation CreateLedgerAccount {
   createLedgerAccount(
     input: {
       name: "test2"
