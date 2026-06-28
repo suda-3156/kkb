@@ -5,6 +5,7 @@ import { graphql } from "@/graph"
 import type { ExpenseSummaryQuery } from "@/graph/graphql"
 import { query } from "@/lib/apollo-client"
 import { thisMonthString, thisWeekString, thisYearString } from "@/lib/timeutils"
+import { OpenModalOnClick } from "./open-modal-on-click"
 
 const ExpenseSummaryDoc = graphql(/* GraphQL */ `
   query ExpenseSummary (
@@ -36,35 +37,37 @@ export const ExpenseSummary = async () => {
   })
 
   return (
-    <Card className="lg:col-span-2">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
-          <TrendingDown className="h-4 w-4" />
-          支出サマリー
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-baseline justify-between">
-          <span className="text-muted-foreground text-sm">今週</span>
-          <span className="font-bold text-4xl tabular-nums md:text-5xl">
-            ¥{data?.thisWeek?.expenses?.totalAmount?.toLocaleString() ?? "0"}
-          </span>
-        </div>
-        <Separator />
-        <div className="flex items-baseline justify-between">
-          <span className="text-muted-foreground text-sm">今月</span>
-          <span className="font-semibold text-3xl tabular-nums">
-            ¥{data?.thisMonth?.expenses?.totalAmount?.toLocaleString() ?? "0"}
-          </span>
-        </div>
-        <Separator />
-        <div className="flex items-baseline justify-between">
-          <span className="text-muted-foreground text-sm">今年</span>
-          <span className="font-semibold text-2xl text-muted-foreground tabular-nums">
-            ¥{data?.thisYear?.expenses?.totalAmount?.toLocaleString() ?? "0"}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+    <OpenModalOnClick view="expense" className="lg:col-span-2">
+      <Card className="hover:bg-muted/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
+            <TrendingDown className="h-4 w-4" />
+            支出サマリー
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-baseline justify-between">
+            <span className="text-muted-foreground text-sm">今週</span>
+            <span className="font-bold text-4xl tabular-nums md:text-5xl">
+              ¥{data?.thisWeek?.expenses?.totalAmount?.toLocaleString() ?? "0"}
+            </span>
+          </div>
+          <Separator />
+          <div className="flex items-baseline justify-between">
+            <span className="text-muted-foreground text-sm">今月</span>
+            <span className="font-semibold text-3xl tabular-nums">
+              ¥{data?.thisMonth?.expenses?.totalAmount?.toLocaleString() ?? "0"}
+            </span>
+          </div>
+          <Separator />
+          <div className="flex items-baseline justify-between">
+            <span className="text-muted-foreground text-sm">今年</span>
+            <span className="font-semibold text-2xl text-muted-foreground tabular-nums">
+              ¥{data?.thisYear?.expenses?.totalAmount?.toLocaleString() ?? "0"}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </OpenModalOnClick>
   )
 }
