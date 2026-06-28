@@ -25,10 +25,14 @@ function makeClient() {
           fields: {
             ledgerAccounts: {
               keyArgs: ["kind", "includeArchived"],
-              merge(existing, incoming) {
+              merge(existing, incoming, { args }) {
+                // Only append when paginating (an `after` cursor is provided);
+                // otherwise the initial page would be concatenated onto the
+                // already-accumulated list, producing duplicate nodes.
+                const previous = args?.after ? (existing?.nodes ?? []) : []
                 return {
                   ...incoming,
-                  nodes: [...(existing?.nodes ?? []), ...(incoming.nodes ?? [])],
+                  nodes: [...previous, ...(incoming.nodes ?? [])],
                 }
               },
             },

@@ -179,7 +179,7 @@ const Entry = ({ index, fieldsLen, remove, form }: Props) => {
     <div className="grid grid-cols-[1rem_1fr_7rem_5rem_2rem] items-center gap-2 rounded-md px-3 py-2 hover:bg-muted/50">
       <span className="font-mono text-muted-foreground text-xs">{index + 1}</span>
       <SelectLedgerAccountField
-        name={`entries.${index}.ledgerAccountId`}
+        name={`entries.${index}.lacId`}
         form={form}
         label={undefined} // Hide label
         kind={undefined} // All kinds of accounts should be selectable, so kind is not specified

@@ -107,6 +107,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
           <Combobox
             items={items}
             autoHighlight
+            value={items.find((item) => item.id === field.value) ?? null}
             onValueChange={(val: Account | null) => field.onChange(val?.id ?? null)}
             itemToStringLabel={(item) => item?.name ?? ""}
           >
