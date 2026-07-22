@@ -47,7 +47,6 @@ flowchart LR
 | `schema/` | GraphQL schema shared by backend and frontend codegen |
 | `containers/` | Dockerfiles and the nginx ingress config |
 | `db/` | Local MySQL (Docker) files |
-| `self-host/` | Archived self-hosting setup (Raspberry Pi era, see [History](#history)) |
 
 Infrastructure is defined with Terraform and managed in a separate private repository.
 
@@ -116,7 +115,7 @@ Ledger data is encrypted with a data encryption key (DEK), and the DEK itself is
 |---|---|
 | Feb–Mar 2026 | Initial development (schema design, backend, frontend) |
 | — | LB + two-service infrastructure built and verified ahead of implementation (never operated) |
-| — | Self-hosted on a Raspberry Pi 5 with Tailscale (archived; `self-host/` remains) |
+| — | Self-hosted on a Raspberry Pi 5 with Tailscale (retired; the setup files were removed — see git history) |
 | Now | Running on GCP with the single-service nginx-sidecar layout |
 
 

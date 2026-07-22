@@ -47,7 +47,6 @@ flowchart LR
 | `schema/` | バックエンドとフロントエンドの codegen が共有する GraphQL スキーマ |
 | `containers/` | Dockerfile 群と nginx ingress の設定 |
 | `db/` | ローカル MySQL（Docker）関連ファイル |
-| `self-host/` | セルフホスト構成のアーカイブ（Raspberry Pi 時代。[History](#history) 参照） |
 
 インフラは Terraform で定義し、別のプライベートリポジトリで管理しています。
 
@@ -116,7 +115,7 @@ flowchart LR
 |---|---|
 | 2026 年 2〜3 月 | 初期開発（スキーマ設計、バックエンド、フロントエンド） |
 | — | LB + 2 サービスのインフラを実装に先立って構築・検証（運用実績なし） |
-| — | Raspberry Pi 5 + Tailscale でセルフホスト（アーカイブ済み。`self-host/` が名残） |
+| — | Raspberry Pi 5 + Tailscale でセルフホスト（終了。構成ファイルは削除済み — git 履歴参照） |
 | 現在 | nginx サイドカーの単一サービス構成で GCP 上で運用中 |
 
 ## ローカル開発
