@@ -1,6 +1,7 @@
 package encryption
 
 import (
+	"bytes"
 	"context"
 	"testing"
 	"time"
@@ -81,7 +82,7 @@ func TestEncrypt_NonDeterministic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(a.Ciphertext) == string(b.Ciphertext) {
+	if bytes.Equal(a.Ciphertext, b.Ciphertext) {
 		t.Error("Encrypt produced identical ciphertext for equal plaintext; nonce reuse?")
 	}
 }

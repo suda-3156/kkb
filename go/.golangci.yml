@@ -103,3 +103,4 @@ linters:
           - dupl
           - mnd
           - lll
+          - unparam # test helpers legitimately keep params that currently take one value
