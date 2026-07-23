@@ -49,6 +49,23 @@ jobs:
       - run: bun install
       - run: bun run lint
 
+  test:
+    name: Test
+    needs: files-changed
+    if: needs.files-changed.outputs.ts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      # Must be `bun run test` (Vitest), not `bun test` (Bun's native runner,
+      # which ignores vitest.config.ts and lacks vi.setSystemTime).
+      - run: bun run test
+
   generate:
     name: Generate
     needs: files-changed
