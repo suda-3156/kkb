@@ -25,7 +25,7 @@ jobs:
       run:
         working-directory: ./go
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ inputs.ref }}
@@ -41,13 +41,13 @@ jobs:
       run:
         working-directory: ./go
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ inputs.ref }}
       - uses: ./.github/actions/setup-go
 
-      - uses: golangci/golangci-lint-action@v9.2.0
+      - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           working-directory: ./go
 
@@ -59,7 +59,7 @@ jobs:
       run:
         working-directory: ./go
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ inputs.ref }}
@@ -82,7 +82,7 @@ jobs:
       run:
         working-directory: ./go
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ inputs.ref }}
@@ -100,7 +100,7 @@ jobs:
           go test ./... -json > test-report.json
 
       - name: Test Report
-        uses: dorny/test-reporter@v2.5.0
+        uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
         if: ${{ !cancelled() }}
         with:
           name: Unit Tests

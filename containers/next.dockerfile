@@ -2,7 +2,7 @@
 # Based on https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 # Adapted for this repo: bun (not pnpm), Next.js standalone output.
 
-FROM oven/bun:1.3.10-alpine AS base
+FROM oven/bun:1.3.10-alpine@sha256:32f1fcccb1523960b254c4f80973bee1a910d60be000a45c20c9129a1efcffee AS base
 
 # --- Install dependencies only when needed ---
 FROM base AS deps
@@ -27,7 +27,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
 # --- Production runner ---
-FROM node:22-alpine AS runner
+FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS runner
 WORKDIR /app
 
 # libc6-compat: some native deps expect glibc symbols on alpine.
