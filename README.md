@@ -16,13 +16,11 @@ Since I can write code, both problems have the same root fix — use a real RDB 
 flowchart LR
     B[Browser] -->|Google login| IAP[Cloud IAP]
     subgraph CR["Cloud Run (single service)"]
-        N["nginx :8080<br>(ingress)"]
-        F["frontend<br>Next.js :3000"]
+        F["frontend :8080<br>Next.js (ingress)"]
         A["backend<br>Go :8081"]
-        N -->|"/"| F
-        N -->|"/query"| A
+        F -->|"/query"| A
     end
-    IAP --> N
+    IAP --> F
     A --> SQL[("Cloud SQL<br>MySQL 8.4")]
     A --> KMS[Cloud KMS]
     A --> SM[Secret Manager]
@@ -45,7 +43,7 @@ flowchart LR
 | `go/` | Backend — gqlgen resolvers, ent schema, internal packages (`aggregation`, `encryption`, `ledger_account`, `transaction`, `dataloader`, `serverenv`, …) |
 | `ts/` | Frontend — Next.js app |
 | `schema/` | GraphQL schema shared by backend and frontend codegen |
-| `containers/` | Dockerfiles and the nginx ingress config |
+| `containers/` | Dockerfiles for the deployed images |
 | `db/` | Local MySQL (Docker) files |
 
 Infrastructure is defined with Terraform and managed in a separate private repository.
@@ -88,14 +86,15 @@ This is a single-user app, so user management is pure overhead. I initially plan
 
 In hindsight: after switching to a *time-based* DEK, app-layer auth would have been workable. The complexity came from tying encryption keys to users, not from auth itself.
 
-### Why a single Cloud Run service with an nginx sidecar
+### Why a single Cloud Run service
 
 The most reworked decision in the project:
 
 1. **LB + two services (verified, never operated).** When I started, attaching IAP to Cloud Run required a load balancer in front. Before implementing the app, I built the infrastructure — an LB with separate frontend/backend Cloud Run services — and verified connectivity and DB access.
 2. **IAP direct attach appears.** Around April 2025, attaching IAP directly to Cloud Run became available (Preview). Dropping the LB would remove its fixed cost (~$18/month even when idle), so I revisited the design.
 3. **Design-stage research killed the two-service layout.** With two IAP-protected services, the backend lives on a different origin, and browser → backend requests fail on three fronts: IAP session cookies are per-domain and cannot be shared; CORS preflight (`OPTIONS`) carries no credentials, so IAP rejects it; and an unauthenticated AJAX call gets a 302/401 that `fetch` cannot complete. I avoided this by design rather than discovering it in production.
-4. **Same origin fixes all three.** The final layout is one Cloud Run service: nginx as the ingress container, routing `/` to the Next.js sidecar and `/query` to the Go sidecar. One origin, one IAP session, no CORS. The LB is fully removed.
+4. **Same origin fixes all three.** The layout became one Cloud Run service: nginx as the ingress container, routing `/` to the Next.js sidecar and `/query` to the Go sidecar. One origin, one IAP session, no CORS. The LB is fully removed.
+5. **nginx turned out to be redundant.** Its whole job was path-based routing, which Next.js does natively with a rewrite (`/query` → `127.0.0.1:8081`). Dropping it removed one image to build, push and deploy, and one container's CPU and memory from every instance. The trade-off is that API traffic now passes through the Node process instead of nginx, and the two are no longer independently reachable — acceptable for a single-user app where the frontend being down means the app is down anyway.
 
 ### Secrets: the `secret://` resolver
 
@@ -116,7 +115,7 @@ Ledger data is encrypted with a data encryption key (DEK), and the DEK itself is
 | Feb–Mar 2026 | Initial development (schema design, backend, frontend) |
 | — | LB + two-service infrastructure built and verified ahead of implementation (never operated) |
 | — | Self-hosted on a Raspberry Pi 5 with Tailscale (retired; the setup files were removed — see git history) |
-| Now | Running on GCP with the single-service nginx-sidecar layout |
+| Now | Running on GCP as a single Cloud Run service (Next.js as ingress + Go sidecar) |
 
 
 ## Local development
