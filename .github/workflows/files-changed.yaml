@@ -7,6 +7,10 @@ on:
         value: ${{ jobs.detect.outputs.go }}
       ts:
         value: ${{ jobs.detect.outputs.ts }}
+      containers:
+        value: ${{ jobs.detect.outputs.containers }}
+      db:
+        value: ${{ jobs.detect.outputs.db }}
 
 permissions:
   contents: read
@@ -19,6 +23,8 @@ jobs:
     outputs:
       go: ${{ steps.changes.outputs.go_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
       ts: ${{ steps.changes.outputs.ts_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
+      containers: ${{ steps.changes.outputs.containers_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
+      db: ${{ steps.changes.outputs.db_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -38,6 +44,13 @@ jobs:
             ts:
               - ts/**/*
               - schema/**/*
+
+            containers:
+              - containers/**/*
+
+            # db/migrations is copied into the migrate image.
+            db:
+              - db/**/*
 
             ci:
               - .github/workflows/**/*

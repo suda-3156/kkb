@@ -1,0 +1,100 @@
+name: Images CI
+
+# Builds the container images without pushing them, so a broken Dockerfile or a
+# base image bump fails here instead of at release time. Nothing else exercises
+# containers/ until deploy.yml runs.
+#
+# Unlike go-ci / ts-ci this is not split into a reusable "checks" workflow:
+# deploy.yml builds and pushes the real images, so it has no use for a
+# build-only variant.
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  # See go-ci.yml for why this is a literal and not ${{ github.workflow }}.
+  group: images-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  files-changed:
+    uses: ./.github/workflows/files-changed.yaml
+    permissions:
+      contents: read
+      pull-requests: read
+
+  # Cache scopes match deploy.yml, so a build here warms the release build (and
+  # vice versa) instead of each maintaining its own copy.
+  frontend:
+    name: Build frontend image
+    needs: files-changed
+    if: needs.files-changed.outputs.containers == 'true' || needs.files-changed.outputs.ts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4.2.0
+      - uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./ts
+          file: ./containers/next.dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  backend:
+    name: Build backend image
+    needs: files-changed
+    if: needs.files-changed.outputs.containers == 'true' || needs.files-changed.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4.2.0
+      - uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./go
+          file: ./containers/service.dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+  migrate:
+    name: Build migrate image
+    needs: files-changed
+    # Also depends on db/: the image copies db/migrations in.
+    if: >-
+      needs.files-changed.outputs.containers == 'true'
+      || needs.files-changed.outputs.go == 'true'
+      || needs.files-changed.outputs.db == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4.2.0
+      - uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          file: ./containers/migrate.dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=migrate
+          cache-to: type=gha,mode=max,scope=migrate
