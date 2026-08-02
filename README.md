@@ -34,7 +34,7 @@ flowchart LR
 | DB | MySQL 8.4 (Cloud SQL) |
 | Cloud | GCP — Cloud Run, Cloud SQL, KMS, Secret Manager, IAP |
 | IaC | Terraform |
-| CI | GitHub Actions (lint, test) |
+| CI/CD | GitHub Actions (lint, test; tag-triggered deploy via Workload Identity Federation) |
 
 ### Repository layout
 

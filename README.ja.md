@@ -16,13 +16,11 @@
 flowchart LR
     B[ブラウザ] -->|Google ログイン| IAP[Cloud IAP]
     subgraph CR["Cloud Run（単一サービス）"]
-        N["nginx :8080<br>(ingress)"]
-        F["frontend<br>Next.js :3000"]
+        F["frontend :8080<br>Next.js (ingress)"]
         A["backend<br>Go :8081"]
-        N -->|"/"| F
-        N -->|"/query"| A
+        F -->|"/query"| A
     end
-    IAP --> N
+    IAP --> F
     A --> SQL[("Cloud SQL<br>MySQL 8.4")]
     A --> KMS[Cloud KMS]
     A --> SM[Secret Manager]
@@ -36,7 +34,7 @@ flowchart LR
 | DB | MySQL 8.4 (Cloud SQL) |
 | クラウド | GCP — Cloud Run, Cloud SQL, KMS, Secret Manager, IAP |
 | IaC | Terraform |
-| CI | GitHub Actions (lint, test) |
+| CI/CD | GitHub Actions（lint・test、Workload Identity Federation によるタグ契機のデプロイ） |
 
 ### リポジトリ構成
 
@@ -45,7 +43,7 @@ flowchart LR
 | `go/` | バックエンド — gqlgen リゾルバ、ent スキーマ、internal パッケージ群（`aggregation`, `encryption`, `ledger_account`, `transaction`, `dataloader`, `serverenv` など） |
 | `ts/` | フロントエンド — Next.js アプリ |
 | `schema/` | バックエンドとフロントエンドの codegen が共有する GraphQL スキーマ |
-| `containers/` | Dockerfile 群と nginx ingress の設定 |
+| `containers/` | デプロイするイメージの Dockerfile 群 |
 | `db/` | ローカル MySQL（Docker）関連ファイル |
 
 インフラは Terraform で定義し、別のプライベートリポジトリで管理しています。
@@ -88,14 +86,15 @@ flowchart LR
 
 振り返ると、DEK を*時間ベース*に切り替えた後であれば、アプリ層認証でも成立していたはずです。複雑さの原因は認証そのものではなく、暗号化キーをユーザーに紐づけていたことでした。
 
-### なぜ nginx サイドカーの単一 Cloud Run サービスか
+### なぜ単一の Cloud Run サービスか
 
 このプロジェクトで最も作り直した判断です。
 
 1. **LB + 2 サービス構成（検証のみ・運用実績なし）。** 開発開始当時、Cloud Run で IAP を使うには前段にロードバランサーが必要でした。アプリ実装に先立ち、LB とフロントエンド/バックエンドの 2 つの Cloud Run サービスからなるインフラを構築し、疎通と DB 接続を検証しました。
 2. **IAP 直接アタッチの登場。** 2025 年 4 月頃、Cloud Run への IAP 直接アタッチが利用可能になりました（Preview）。LB を撤去すればアイドル時でも発生する固定費（月 $18 程度〜）をなくせるため、構成を見直すことにしました。
 3. **設計段階の調査で 2 サービス構成を棄却。** IAP 付きサービスを 2 つに分けるとバックエンドが別オリジンになり、ブラウザ → バックエンドの通信は三重の問題で成立しません。IAP セッションクッキーはドメインごとに独立していて共有できない。CORS プリフライト（`OPTIONS`）には認証情報が付かないため IAP に拒否される。セッションのない AJAX には 302/401 が返り、`fetch` はこれを完遂できない。本番で失敗して気づいたのではなく、設計段階の調査で予見して回避しました。
-4. **同一オリジン化で 3 つとも解消。** 最終形は単一の Cloud Run サービスです。nginx を ingress コンテナとし、`/` を Next.js サイドカーへ、`/query` を Go サイドカーへルーティングします。オリジンは 1 つ、IAP セッションも 1 つ、CORS は発生しません。LB は完全に撤去済みです。
+4. **同一オリジン化で 3 つとも解消。** 単一の Cloud Run サービスに移行しました。nginx を ingress コンテナとし、`/` を Next.js サイドカーへ、`/query` を Go サイドカーへルーティングします。オリジンは 1 つ、IAP セッションも 1 つ、CORS は発生しません。LB は完全に撤去済みです。
+5. **その nginx も不要だと判明。** 仕事はパスベースのルーティングだけで、これは Next.js の rewrite（`/query` → `127.0.0.1:8081`）がそのまま担えます。撤去により、ビルド・push・デプロイ対象が 1 つ減り、全インスタンスから 1 コンテナ分の CPU とメモリが消えました。代償は、API のトラフィックが nginx ではなく Node のプロセスを通ること、そして両者が独立して到達可能ではなくなることです。フロントエンドが落ちればどのみちアプリは使えないので、単一ユーザーのアプリでは許容できる交換でした。
 
 ### シークレット管理: `secret://` リゾルバ
 
@@ -116,7 +115,7 @@ flowchart LR
 | 2026 年 2〜3 月 | 初期開発（スキーマ設計、バックエンド、フロントエンド） |
 | — | LB + 2 サービスのインフラを実装に先立って構築・検証（運用実績なし） |
 | — | Raspberry Pi 5 + Tailscale でセルフホスト（終了。構成ファイルは削除済み — git 履歴参照） |
-| 現在 | nginx サイドカーの単一サービス構成で GCP 上で運用中 |
+| 現在 | 単一の Cloud Run サービス（Next.js が ingress + Go サイドカー）で GCP 上で運用中 |
 
 ## ローカル開発
 
