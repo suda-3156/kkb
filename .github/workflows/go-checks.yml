@@ -1,0 +1,108 @@
+name: Go Checks
+
+# The Go checks themselves, with no opinion about when to run them. Callers
+# decide that: go-ci.yml gates on files-changed, deploy.yml runs them
+# unconditionally before shipping.
+#
+# No `concurrency` here on purpose: in a reusable workflow the github context
+# belongs to the caller, so a group built from github.workflow would be the same
+# string for every workflow called from the same caller, and they would cancel
+# each other. Callers declare their own group.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit, tag or branch to check. Defaults to the caller's ref."
+        type: string
+        required: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-go
+
+      - run: go build ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-go
+
+      - uses: golangci/golangci-lint-action@v9.2.0
+        with:
+          working-directory: ./go
+
+  generate:
+    name: Generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-go
+
+      # run go generate ./... and check if there are any changes in the generated files
+      - run: |
+          go generate ./...
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated files are not up to date. Please run 'go generate ./...' and commit the changes."
+            git --no-pager diff
+            exit 1
+          fi
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./go
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-go
+
+      - name: Set up test environment variables
+        run: |
+          if [ -f ./.env.test ]; then
+            export $(cat ./.env.test | grep -v '^#' | xargs)
+            env | grep -E '^[A-Z_]+=' >> $GITHUB_ENV
+          fi
+
+      - name: Run Tests
+        run: |
+          go test ./... -json > test-report.json
+
+      - name: Test Report
+        uses: dorny/test-reporter@v2.5.0
+        if: ${{ !cancelled() }}
+        with:
+          name: Unit Tests
+          path: go/test-report.json
+          reporter: golang-json

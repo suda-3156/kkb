@@ -1,0 +1,14 @@
+name: Setup Bun
+description: >-
+  Set up Bun and install the frontend dependencies.
+  The repository must already be checked out: local actions are resolved from
+  the workspace, so this cannot include the checkout step itself.
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+
+    - run: bun install
+      shell: bash
+      working-directory: ./ts

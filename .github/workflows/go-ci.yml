@@ -9,7 +9,10 @@ on:
       - dev
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Literal prefix rather than ${{ github.workflow }}: that context belongs to
+  # the caller inside a reusable workflow, so an expression-built group can
+  # collide between workflows. A literal is unambiguous either way.
+  group: go-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,126 +22,12 @@ jobs:
       contents: read
       pull-requests: read
 
-  build:
-    name: Build
+  # Whether to run lives here; what to run lives in go-checks.yml. deploy.yml
+  # calls the same checks without this gate.
+  checks:
     needs: files-changed
     if: needs.files-changed.outputs.go == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ./go
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@v6.2.0
-        with:
-          go-version-file: "./go/go.mod"
-          cache-dependency-path: "./go/go.sum"
-          check-latest: true
-          cache: true
-
-      - run: go mod download
-      - run: go build ./...
-      - run: go clean -modcache
-
-  lint:
-    name: Lint
-    needs: files-changed
-    if: needs.files-changed.outputs.go == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ./go
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@v6.2.0
-        with:
-          go-version-file: "./go/go.mod"
-          cache-dependency-path: "./go/go.sum"
-          check-latest: true
-          cache: true
-
-      - run: go mod download
-      - uses: golangci/golangci-lint-action@v9.2.0
-        with:
-          working-directory: ./go
-      - run: go clean -modcache
-
-  generate:
-    name: Generate
-    needs: files-changed
-    if: needs.files-changed.outputs.go == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ./go
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@v6.2.0
-        with:
-          go-version-file: "./go/go.mod"
-          cache-dependency-path: "./go/go.sum"
-          check-latest: true
-          cache: true
-
-      - run: go mod download
-
-      # run go generate ./... and check if there are any changes in the generated files
-      - run: |
-          go generate ./...
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Generated files are not up to date. Please run 'go generate ./...' and commit the changes."
-            git --no-pager diff
-            exit 1
-          fi
-
-      - run: go clean -modcache
-
-  test:
-    name: Test
-    needs: files-changed
-    if: needs.files-changed.outputs.go == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ./go
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@v6.2.0
-        with:
-          go-version-file: "./go/go.mod"
-          cache-dependency-path: "./go/go.sum"
-          check-latest: true
-          cache: true
-
-      - run: go mod download
-
-      - name: Set up test environment variables
-        run: |
-          if [ -f ./.env.test ]; then
-            export $(cat ./.env.test | grep -v '^#' | xargs)
-            env | grep -E '^[A-Z_]+=' >> $GITHUB_ENV
-          fi
-
-      - name: Run Tests
-        run: |
-          go test ./... -json > test-report.json
-
-      - name: Test Report
-        uses: dorny/test-reporter@v2.5.0
-        if: ${{ !cancelled() }}
-        with:
-          name: Unit Tests
-          path: go/test-report.json
-          reporter: golang-json
+    uses: ./.github/workflows/go-checks.yml
+    permissions:
+      contents: read
+      checks: write # dorny/test-reporter

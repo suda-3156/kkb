@@ -1,0 +1,21 @@
+name: Setup Go
+description: >-
+  Set up Go from go/go.mod with module caching and download dependencies.
+  The repository must already be checked out: local actions are resolved from
+  the workspace, so this cannot include the checkout step itself.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v6.2.0
+      with:
+        go-version-file: "./go/go.mod"
+        cache-dependency-path: "./go/go.sum"
+        check-latest: true
+        cache: true
+
+    # No `go clean -modcache` afterwards: the runner is disposable, and clearing
+    # the module cache defeats the cache: true above, whose post step saves it.
+    - run: go mod download
+      shell: bash
+      working-directory: ./go

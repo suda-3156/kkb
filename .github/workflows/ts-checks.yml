@@ -1,0 +1,85 @@
+name: TypeScript Checks
+
+# The TypeScript checks themselves, with no opinion about when to run them.
+# See go-checks.yml for why there is no `concurrency` block here.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit, tag or branch to check. Defaults to the caller's ref."
+        type: string
+        required: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-bun
+
+      - run: bun run build
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-bun
+
+      - run: bun run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-bun
+
+      # Must be `bun run test` (Vitest), not `bun test` (Bun's native runner,
+      # which ignores vitest.config.ts and lacks vi.setSystemTime).
+      - run: bun run test
+
+  generate:
+    name: Generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./ts
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup-bun
+
+      # run generation scripts and check if there are any changes in the generated files
+      - run: |
+          bun run generate
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "Generated files are not up to date. Please run 'bun run generate' and commit the changes."
+            git status
+            exit 1
+          fi

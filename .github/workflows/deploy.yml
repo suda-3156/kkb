@@ -1,13 +1,13 @@
 name: Deploy
 
-# Tagging main triggers a release: build -> migrate -> deploy.
+# Tagging main triggers a release: verify -> checks -> build -> migrate -> deploy.
 # workflow_dispatch takes an explicit ref so a previous tag can be redeployed as
 # a rollback. Rolling traffic back to an existing revision needs no build at all
 # — see `task rollback` in the terraform repo.
 #
-# This does not gate on Go CI / TS CI passing. Reviewed options for that, and
-# other gaps found in the workflows, are in
-# .local.ignore/ai/gha-workflow-review.md.
+# The checks are the same reusable workflows go-ci.yml / ts-ci.yml use. There
+# they run behind a files-changed gate; here they always run, because a release
+# ships everything. Remaining ideas are in .local.ignore/ai/gha-workflow-review.md.
 on:
   push:
     tags:
@@ -27,8 +27,51 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # A tag fires this workflow no matter which branch it points at, so confirm
+  # the commit is actually on main before spending a build on it. Runs in
+  # parallel with the checks so a bad ref fails in seconds.
+  verify-ref:
+    name: Verify the ref is on main
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.ref }}
+          # merge-base needs enough history to reach the fork point.
+          fetch-depth: 0
+
+      - run: |-
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
+            echo "::error::$(git rev-parse --short HEAD) is not an ancestor of origin/main — refusing to deploy"
+            exit 1
+          fi
+
+  # Verify the commit being deployed, not whatever the workflow file came from:
+  # a reusable workflow is always read from the caller's commit, but the ref
+  # input decides what gets checked out inside it.
+  go-checks:
+    uses: ./.github/workflows/go-checks.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+    permissions:
+      contents: read
+      checks: write # dorny/test-reporter
+
+  ts-checks:
+    uses: ./.github/workflows/ts-checks.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+    permissions:
+      contents: read
+
   deploy:
     name: Build and deploy
+    needs: [verify-ref, go-checks, ts-checks]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -48,7 +91,7 @@ jobs:
       - name: Set variables
         id: vars
         run: |-
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -146,4 +189,4 @@ jobs:
               --project="${{ secrets.GCP_PROJECT_ID }}" \
               --region="${{ secrets.GCP_REGION }}" \
               --format="value(status.latestReadyRevisionName)"
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"

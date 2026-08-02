@@ -20,19 +20,25 @@ jobs:
       go: ${{ steps.changes.outputs.go_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
       ts: ${{ steps.changes.outputs.ts_any_modified == 'true' || steps.changes.outputs.ci_any_modified == 'true' }}
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
       - uses: tj-actions/changed-files@v47
         id: changes
         with:
+          # schema/ belongs to both: go/gqlgen.yml and ts/codegen.ts both read
+          # ../schema/*.graphql, so a schema-only change has to run both
+          # `generate` checks — they are what catches stale generated code.
           files_yaml: |
             go:
               - go/**/*
+              - schema/**/*
 
             ts:
               - ts/**/*
+              - schema/**/*
 
             ci:
               - .github/workflows/**/*
+              - .github/actions/**/*
