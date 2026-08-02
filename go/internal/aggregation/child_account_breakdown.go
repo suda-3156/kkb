@@ -50,12 +50,12 @@ func (m *AggregationManager) GetChildAccountBreakdown(
 		}, nil
 	}
 
-	// Build child ID list and lookup map.
+	// Build child ID list and the kinds the arithmetic keys off.
 	childIDs := make([]int, len(parent.Edges.Children))
-	childLacMap := make(map[int]*ent.LedgerAccount)
+	childKinds := make([]accountKind, len(parent.Edges.Children))
 	for i, child := range parent.Edges.Children {
 		childIDs[i] = child.ID
-		childLacMap[child.ID] = child
+		childKinds[i] = accountKind{id: child.ID, kind: child.Kind}
 	}
 
 	// Sum journal entries per child account in the date range.
@@ -75,46 +75,15 @@ func (m *AggregationManager) GetChildAccountBreakdown(
 		return nil, fmt.Errorf("child account breakdown: aggregate entries: %w", err)
 	}
 
-	// Compute signed net amount per child based on account kind.
-	childAmounts := make(map[int]int32)
-	for _, row := range rows {
-		child, ok := childLacMap[row.LedgerAccountID]
-		if !ok {
-			continue
-		}
-		amount := row.Sum
-		switch child.Kind {
-		case ents.Asset, ents.Expense:
-			// Normal debit balance: credit reduces balance.
-			if row.Kind == ents.Credit.String() {
-				amount = -amount
-			}
-		case ents.Liability, ents.Revenue, ents.Equity:
-			// Normal credit balance: debit reduces balance.
-			if row.Kind == ents.Debit.String() {
-				amount = -amount
-			}
-		}
-		childAmounts[row.LedgerAccountID] += amount
-	}
-
-	var totalAmount int32
-	for _, amt := range childAmounts {
-		totalAmount += amt
-	}
+	childAmounts, totalAmount := foldChildBreakdown(childKinds, rows)
 
 	// Build the children summary, preserving order of parent.Edges.Children.
 	children := make([]*graph.AccountAmountSummary, 0, len(parent.Edges.Children))
 	for _, child := range parent.Edges.Children {
-		amount := childAmounts[child.ID]
-		var ratio float64
-		if totalAmount != 0 {
-			ratio = float64(amount) / float64(totalAmount)
-		}
 		children = append(children, &graph.AccountAmountSummary{
 			LedgerAccount: &graph.LedgerAccount{IntID: child.ID},
-			TotalAmount:   amount,
-			Ratio:         ratio,
+			TotalAmount:   childAmounts[child.ID],
+			Ratio:         ratio(childAmounts[child.ID], totalAmount),
 		})
 	}
 
@@ -125,4 +94,30 @@ func (m *AggregationManager) GetChildAccountBreakdown(
 		TotalAmount: totalAmount,
 		Children:    children,
 	}, nil
+}
+
+// foldChildBreakdown computes the signed amount of every child account in the
+// period and their total. Rows of an account that is not a child of the parent
+// are ignored.
+func foldChildBreakdown(
+	children []accountKind,
+	rows []lacAmountRow,
+) (amounts map[int]int32, total int32) {
+	kinds := make(map[int]ents.LedgerAccountKind, len(children))
+	for _, child := range children {
+		kinds[child.id] = child.kind
+	}
+
+	amounts = make(map[int]int32, len(children))
+	for _, row := range rows {
+		kind, ok := kinds[row.LedgerAccountID]
+		if !ok {
+			continue
+		}
+		amount := signedAmount(kind, row.Kind, row.Sum)
+		amounts[row.LedgerAccountID] += amount
+		total += amount
+	}
+
+	return amounts, total
 }

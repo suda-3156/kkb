@@ -3,6 +3,7 @@ package aggregation
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
@@ -42,16 +43,11 @@ func (m *AggregationManager) GetPeriodAggregation(
 
 	// Return an empty aggregation when there are no entries in the range.
 	if len(rows) == 0 {
-		return &graph.PeriodAggregation{
-			StartDate: startDate,
-			EndDate:   endDate,
-			Expenses:  &graph.ExpenseSummary{},
-			Revenue:   &graph.RevenueSummary{},
-			NetAmount: 0,
-		}, nil
+		return emptyPeriodAggregation(startDate, endDate), nil
 	}
 
-	// Fetch ledger account details for the involved ledger accounts.
+	// Fetch the kind of every ledger account involved; the arithmetic below
+	// keys off it.
 	lacIDs := make([]int, 0, len(rows))
 	for _, row := range rows {
 		lacIDs = append(lacIDs, row.LedgerAccountID)
@@ -64,86 +60,94 @@ func (m *AggregationManager) GetPeriodAggregation(
 		return nil, fmt.Errorf("period aggregation: query ledger accounts: %w", err)
 	}
 
-	ledgerAccountMap := make(map[int]*ent.LedgerAccount) // ledger account ID -> ledger account details
+	kinds := make(map[int]ents.LedgerAccountKind, len(ledgerAccounts))
 	for _, lac := range ledgerAccounts {
-		ledgerAccountMap[lac.ID] = lac
+		kinds[lac.ID] = lac.Kind
 	}
 
-	// Response
-	response := &graph.PeriodAggregation{
+	agg, err := foldPeriodAggregation(startDate, endDate, rows, kinds)
+	if err != nil {
+		return nil, fmt.Errorf("period aggregation: %w", err)
+	}
+	return agg, nil
+}
+
+func emptyPeriodAggregation(startDate, endDate date.Date) *graph.PeriodAggregation {
+	return &graph.PeriodAggregation{
 		StartDate: startDate,
 		EndDate:   endDate,
 		Expenses:  &graph.ExpenseSummary{},
 		Revenue:   &graph.RevenueSummary{},
+		NetAmount: 0,
 	}
+}
 
-	// Process the expenses
-	// One expense account may have up to two rows (debit and credit), so we need to combine them.
-	expenseMap := make(map[int]int32) // ledger account ID -> total amount
+// foldPeriodAggregation turns the per-(account, kind) sums into the expense and
+// revenue summaries of one period. An account may appear on both sides, so the
+// rows are folded per account before being apportioned.
+//
+// Only expense and revenue accounts take part: asset, liability and equity
+// movements are the counter entries of those, and counting them would double
+// the totals.
+func foldPeriodAggregation(
+	startDate date.Date,
+	endDate date.Date,
+	rows []lacAmountRow,
+	kinds map[int]ents.LedgerAccountKind,
+) (*graph.PeriodAggregation, error) {
+	response := emptyPeriodAggregation(startDate, endDate)
+
+	expenses := make(map[int]int32) // ledger account ID -> signed total
+	revenue := make(map[int]int32)
+
 	for _, row := range rows {
-		lac, ok := ledgerAccountMap[row.LedgerAccountID]
+		kind, ok := kinds[row.LedgerAccountID]
 		if !ok {
-			return nil, fmt.Errorf("period aggregation: ledger account not found for ID %d", row.LedgerAccountID)
+			return nil, fmt.Errorf("ledger account not found for ID %d", row.LedgerAccountID)
 		}
 
-		if lac.Kind != ents.Expense {
+		amount := signedAmount(kind, row.Kind, row.Sum)
+
+		switch kind {
+		case ents.Expense:
+			expenses[row.LedgerAccountID] += amount
+			response.Expenses.TotalAmount += amount
+		case ents.Revenue:
+			revenue[row.LedgerAccountID] += amount
+			response.Revenue.TotalAmount += amount
+		case ents.Asset, ents.Liability, ents.Equity:
 			continue
 		}
-
-		amount := row.Sum
-		if row.Kind == ents.Credit.String() {
-			amount = -amount
-		}
-
-		expenseMap[row.LedgerAccountID] += amount
-		response.Expenses.TotalAmount += amount
 	}
 
-	// Populate the response with expense data
-	for lacID, amount := range expenseMap {
-		response.Expenses.ByAccount = append(
-			response.Expenses.ByAccount,
-			&graph.AccountAmountSummary{
-				LedgerAccount: &graph.LedgerAccount{IntID: lacID},
-				TotalAmount:   amount,
-				Ratio:         float64(amount) / float64(response.Expenses.TotalAmount),
-			})
-	}
-
-	// Process the revenue
-	// Similar to expenses, one revenue account may have up to two rows (debit and credit).
-	revenueMap := make(map[int]int32) // ledger account ID -> total amount
-	for _, row := range rows {
-		lac, ok := ledgerAccountMap[row.LedgerAccountID]
-		if !ok {
-			return nil, fmt.Errorf("period aggregation: ledger account not found for ID %d", row.LedgerAccountID)
-		}
-
-		if lac.Kind != ents.Revenue {
-			continue
-		}
-
-		amount := row.Sum
-		if row.Kind == ents.Debit.String() {
-			amount = -amount
-		}
-
-		revenueMap[row.LedgerAccountID] += amount
-		response.Revenue.TotalAmount += amount
-	}
-
-	// Populate the response with revenue data
-	for lacID, amount := range revenueMap {
-		response.Revenue.ByAccount = append(
-			response.Revenue.ByAccount,
-			&graph.AccountAmountSummary{
-				LedgerAccount: &graph.LedgerAccount{IntID: lacID},
-				TotalAmount:   amount,
-				Ratio:         float64(amount) / float64(response.Revenue.TotalAmount),
-			})
-	}
-
+	response.Expenses.ByAccount = byAccountSummaries(expenses, response.Expenses.TotalAmount)
+	response.Revenue.ByAccount = byAccountSummaries(revenue, response.Revenue.TotalAmount)
 	response.NetAmount = response.Revenue.TotalAmount - response.Expenses.TotalAmount
 
 	return response, nil
+}
+
+// byAccountSummaries builds the per-account breakdown, sorted by ledger account
+// ID so that identical inputs always produce identical output (Go map iteration
+// order is randomized).
+func byAccountSummaries(amounts map[int]int32, total int32) []*graph.AccountAmountSummary {
+	if len(amounts) == 0 {
+		return nil
+	}
+
+	lacIDs := make([]int, 0, len(amounts))
+	for lacID := range amounts {
+		lacIDs = append(lacIDs, lacID)
+	}
+	sort.Ints(lacIDs)
+
+	summaries := make([]*graph.AccountAmountSummary, 0, len(lacIDs))
+	for _, lacID := range lacIDs {
+		summaries = append(summaries, &graph.AccountAmountSummary{
+			LedgerAccount: &graph.LedgerAccount{IntID: lacID},
+			TotalAmount:   amounts[lacID],
+			Ratio:         ratio(amounts[lacID], total),
+		})
+	}
+	return summaries
 }

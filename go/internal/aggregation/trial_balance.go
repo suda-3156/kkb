@@ -41,59 +41,24 @@ func (m *AggregationManager) GetTrialBalance(
 		return nil, fmt.Errorf("trial balance: aggregate journal entries: %w", err)
 	}
 
-	// Build a map: lacID -> {debit sum, credit sum}.
-	type debitCredit struct {
-		debit  int32
-		credit int32
+	kinds := make([]accountKind, 0, len(accounts))
+	for _, lac := range accounts {
+		kinds = append(kinds, accountKind{id: lac.ID, kind: lac.Kind})
 	}
-	entryMap := make(map[int]*debitCredit)
-	for _, row := range rows {
-		if entryMap[row.LedgerAccountID] == nil {
-			entryMap[row.LedgerAccountID] = &debitCredit{}
-		}
-		if row.Kind == ents.Debit.String() {
-			entryMap[row.LedgerAccountID].debit += row.Sum
-		} else {
-			entryMap[row.LedgerAccountID].credit += row.Sum
-		}
-	}
+	balances, netWorth := foldTrialBalance(kinds, rows)
 
-	// Build account balance list and compute net worth.
 	accountBalances := make([]*graph.AccountBalance, 0, len(accounts))
-	var netWorth int32
 	for _, lac := range accounts {
 		graphLac, err := m.convertLedgerAccountToGraph(ctx, lac)
 		if err != nil {
 			return nil, fmt.Errorf("trial balance: convert ledger account: %w", err)
 		}
 
-		dc := entryMap[lac.ID]
-		var balance int32
-		if dc != nil {
-			switch lac.Kind {
-			case ents.Asset, ents.Expense:
-				// Normal debit balance.
-				balance = dc.debit - dc.credit
-			case ents.Liability, ents.Revenue, ents.Equity:
-				// Normal credit balance.
-				balance = dc.credit - dc.debit
-			}
-		}
-
 		accountBalances = append(accountBalances, &graph.AccountBalance{
 			LedgerAccount: graphLac,
-			Balance:       balance,
+			Balance:       balances[lac.ID],
 			AsOf:          asOf,
 		})
-
-		// Net worth = total assets - total liabilities.
-		//nolint:exhaustive // We only consider Asset and Liability for net worth calculation.
-		switch lac.Kind {
-		case ents.Asset:
-			netWorth += balance
-		case ents.Liability:
-			netWorth -= balance
-		}
 	}
 
 	return &graph.TrialBalance{
@@ -101,4 +66,33 @@ func (m *AggregationManager) GetTrialBalance(
 		Accounts: accountBalances,
 		NetWorth: netWorth,
 	}, nil
+}
+
+// foldTrialBalance computes the balance of every given account and the net
+// worth over them. Accounts without entries get a zero balance, and rows
+// belonging to an account that is not listed (an archived one) are ignored.
+//
+// Net worth is total assets minus total liabilities; revenue, expense and
+// equity accounts do not contribute.
+func foldTrialBalance(
+	accounts []accountKind,
+	rows []lacAmountRow,
+) (balances map[int]int32, netWorth int32) {
+	entries := foldDebitCredit(rows)
+
+	balances = make(map[int]int32, len(accounts))
+	for _, account := range accounts {
+		balance := balanceOf(account.kind, entries[account.id])
+		balances[account.id] = balance
+
+		//nolint:exhaustive // Only assets and liabilities make up net worth.
+		switch account.kind {
+		case ents.Asset:
+			netWorth += balance
+		case ents.Liability:
+			netWorth -= balance
+		}
+	}
+
+	return balances, netWorth
 }
