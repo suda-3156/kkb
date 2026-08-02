@@ -1,25 +1,19 @@
 "use client"
 
-import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useSetAtom } from "jotai/react"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
-import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
+import { LedgerAccountKind } from "@/graph/graphql"
+import { buildTransferInput } from "@/lib/journal"
 import { type TransferFormValues, transferSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
-import { CreateTransactionDoc } from "../queries"
-import { closeModalAtom } from "../state"
+import { useTransaction } from "../use-transaction"
 import { Footer } from "../wrapper"
 
 export const TransferForm = () => {
-  const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
-  const close = useSetAtom(closeModalAtom)
-  const router = useRouter()
+  const { create, loading } = useTransaction()
 
   const form = useForm<TransferFormValues>({
     resolver: zodResolver(transferSchema),
@@ -32,35 +26,11 @@ export const TransferForm = () => {
     },
   })
 
-  const onSubmit = async (values: TransferFormValues) => {
-    try {
-      await createTransaction({
-        variables: {
-          input: {
-            date: values.date,
-            description: values.desc,
-            entries: [
-              {
-                ledgerAccountId: values.toId,
-                amount: values.amount,
-                kind: JournalEntryKind.Debit,
-              },
-              {
-                ledgerAccountId: values.fromId,
-                amount: values.amount,
-                kind: JournalEntryKind.Credit,
-              },
-            ],
-          },
-        },
-      })
-      toast.success("振替を記録しました")
-      router.refresh()
-      close()
-    } catch {
-      toast.error("振替の記録に失敗しました")
-    }
-  }
+  const onSubmit = (values: TransferFormValues) =>
+    create(buildTransferInput(values), {
+      success: "振替を記録しました",
+      error: "振替の記録に失敗しました",
+    })
 
   return (
     <form

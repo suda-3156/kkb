@@ -1,34 +1,31 @@
 "use client"
 
-import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useSetAtom } from "jotai/react"
 import { Plus, Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { type UseFieldArrayRemove, useFieldArray, useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/graphql"
+import {
+  buildCreateTransactionInput,
+  buildUpdateTransactionInput,
+  toTransactionFormValues,
+} from "@/lib/journal"
 import { type TransactionFormValues, transactionSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
 import { cn } from "@/lib/utils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
-import { CreateTransactionDoc, UpdateTransactionDoc } from "../queries"
-import { closeModalAtom } from "../state"
+import { useTransaction } from "../use-transaction"
 import { Footer } from "../wrapper"
 
 export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }) => {
-  const [createTransaction, { loading: creating }] = useMutation(CreateTransactionDoc)
-  const [updateTransaction, { loading: updating }] = useMutation(UpdateTransactionDoc)
-  const loading = creating || updating
-  const close = useSetAtom(closeModalAtom)
-  const router = useRouter()
+  const { create, update, loading } = useTransaction()
 
-  const updateMode = Boolean(data?.transaction)
+  // 取得済みの取引があれば編集モード
+  const txn = data?.transaction
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -43,71 +40,26 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
   })
 
   useEffect(() => {
-    if (data?.transaction) {
-      const txn = data.transaction
-      form.reset({
-        date: txn.date,
-        desc: txn.description,
-        entries: txn.entries.map((e) => ({
-          lacId: e.ledgerAccount.id,
-          amount: e.amount,
-          kind: e.kind,
-        })),
-      })
+    if (txn) {
+      form.reset(toTransactionFormValues(txn))
     }
-  }, [data, form.reset])
+  }, [txn, form.reset])
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "entries",
   })
 
-  const save = async (values: TransactionFormValues) => {
-    if (updateMode) {
-      await updateTransaction({
-        variables: {
-          input: {
-            id: data?.transaction?.id ?? "",
-            date: values.date,
-            description: values.desc,
-            entries: values.entries.map((e) => ({
-              ledgerAccountId: e.lacId,
-              amount: e.amount,
-              kind: e.kind,
-            })),
-            updatedAt: data?.transaction?.updatedAt ?? "",
-          },
-        },
-      })
-      toast.success("更新しました")
-      router.refresh()
-    } else {
-      await createTransaction({
-        variables: {
-          input: {
-            date: values.date,
-            description: values.desc,
-            entries: values.entries.map((e) => ({
-              ledgerAccountId: e.lacId,
-              amount: e.amount,
-              kind: e.kind,
-            })),
-          },
-        },
-      })
-      toast.success("記録しました")
-      router.refresh()
-    }
-  }
-
-  const onSubmit = async (values: TransactionFormValues) => {
-    try {
-      await save(values)
-      close()
-    } catch {
-      toast.error("記録に失敗しました")
-    }
-  }
+  const onSubmit = (values: TransactionFormValues) =>
+    txn
+      ? update(buildUpdateTransactionInput(values, txn), {
+          success: "更新しました",
+          error: "記録に失敗しました",
+        })
+      : create(buildCreateTransactionInput(values), {
+          success: "記録しました",
+          error: "記録に失敗しました",
+        })
 
   return (
     <form

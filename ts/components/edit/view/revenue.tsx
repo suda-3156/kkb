@@ -1,25 +1,19 @@
 "use client"
 
-import { useMutation } from "@apollo/client/react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useSetAtom } from "jotai/react"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
-import { JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
+import { LedgerAccountKind } from "@/graph/graphql"
+import { buildRevenueInput } from "@/lib/journal"
 import { type RevenueFormValues, revenueSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
-import { CreateTransactionDoc } from "../queries"
-import { closeModalAtom } from "../state"
+import { useTransaction } from "../use-transaction"
 import { Footer } from "../wrapper"
 
 export const RevenueForm = () => {
-  const [createTransaction, { loading }] = useMutation(CreateTransactionDoc)
-  const close = useSetAtom(closeModalAtom)
-  const router = useRouter()
+  const { create, loading } = useTransaction()
 
   const form = useForm<RevenueFormValues>({
     resolver: zodResolver(revenueSchema),
@@ -32,35 +26,11 @@ export const RevenueForm = () => {
     },
   })
 
-  const onSubmit = async (values: RevenueFormValues) => {
-    try {
-      await createTransaction({
-        variables: {
-          input: {
-            date: values.date,
-            description: values.desc,
-            entries: [
-              {
-                ledgerAccountId: values.depositId,
-                amount: values.amount,
-                kind: JournalEntryKind.Debit,
-              },
-              {
-                ledgerAccountId: values.sourceId,
-                amount: values.amount,
-                kind: JournalEntryKind.Credit,
-              },
-            ],
-          },
-        },
-      })
-      toast.success("収入を記録しました")
-      router.refresh()
-      close()
-    } catch {
-      toast.error("収入の記録に失敗しました")
-    }
-  }
+  const onSubmit = (values: RevenueFormValues) =>
+    create(buildRevenueInput(values), {
+      success: "収入を記録しました",
+      error: "収入の記録に失敗しました",
+    })
 
   return (
     <form
