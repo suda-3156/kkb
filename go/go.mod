@@ -13,7 +13,7 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/graph-gophers/dataloader/v7 v7.1.3
 	github.com/sethvargo/go-envconfig v1.3.0
-	github.com/vektah/gqlparser/v2 v2.5.31
+	github.com/vektah/gqlparser/v2 v2.5.36
 	google.golang.org/protobuf v1.36.11
 )
 
