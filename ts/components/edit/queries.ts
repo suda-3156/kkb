@@ -20,6 +20,14 @@ export const CreateTransactionDoc = graphql(/* GraphQL */ `
   }
 `)
 
+export const DeleteTransactionDoc = graphql(/* GraphQL */ `
+  mutation DeleteTransaction($id: ID!) {
+    deleteTransaction(id: $id) {
+      success
+    }
+  }
+`)
+
 export const UpdateTransactionDoc = graphql(/* GraphQL */ `
   mutation UpdateTransaction($input: UpdateTransactionInput!) {
     updateTransaction(input: $input) {
