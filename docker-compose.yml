@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: ${PROJECT_NAME}-db
+    container_name: ${PROJECT_NAME:?unset (run 'direnv allow' in main/ first)}-db
     image: mysql:8.4@sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -16,7 +16,7 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
       - app-network
 
   api:
-    container_name: ${PROJECT_NAME}-api
+    container_name: ${PROJECT_NAME:?unset (run 'direnv allow' in main/ first)}-api
     build:
       context: .
       dockerfile: ./go/Dockerfile
@@ -44,8 +44,8 @@ services:
 
 volumes:
   app-data:
-    name: ${PROJECT_NAME}-data
+    name: ${PROJECT_NAME:?unset (run 'direnv allow' in main/ first)}-data
 
 networks:
   app-network:
-    name: ${PROJECT_NAME}-network
+    name: ${PROJECT_NAME:?unset (run 'direnv allow' in main/ first)}-network
