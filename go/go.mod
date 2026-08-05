@@ -11,7 +11,7 @@ require (
 	github.com/99designs/gqlgen v0.17.86
 	github.com/go-chi/cors v1.2.2
 	github.com/go-sql-driver/mysql v1.10.0
-	github.com/graph-gophers/dataloader/v7 v7.1.3
+	github.com/graph-gophers/dataloader/v7 v7.2.0
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/vektah/gqlparser/v2 v2.5.36
 	google.golang.org/protobuf v1.36.11
