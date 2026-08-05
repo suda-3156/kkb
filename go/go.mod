@@ -1,9 +1,9 @@
 module github.com/suda-3156/kkb/go
 
-go 1.25.0
+go 1.26.4
 
 require (
-	ariga.io/atlas v1.1.0
+	ariga.io/atlas v1.3.0
 	cloud.google.com/go/cloudsqlconn v1.20.1
 	cloud.google.com/go/kms v1.33.0
 	cloud.google.com/go/secretmanager v1.16.0
