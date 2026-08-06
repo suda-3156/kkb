@@ -4,13 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
+import { Footer } from "@/components/ui/responsive-dialog"
 import { LedgerAccountKind } from "@/graph/graphql"
 import { buildRevenueInput } from "@/lib/journal"
 import { type RevenueFormValues, revenueSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
 import { useTransaction } from "../use-transaction"
-import { Footer } from "../wrapper"
 
 export const RevenueForm = () => {
   const { create, loading } = useTransaction()

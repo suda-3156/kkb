@@ -7,6 +7,7 @@ import { type UseFieldArrayRemove, useFieldArray, useForm } from "react-hook-for
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Footer } from "@/components/ui/responsive-dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/graphql"
@@ -20,7 +21,6 @@ import { todayString } from "@/lib/timeutils"
 import { cn } from "@/lib/utils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
 import { useTransaction } from "../use-transaction"
-import { Footer } from "../wrapper"
 
 export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }) => {
   // remove は useFieldArray(仕訳行の削除)と名前が衝突するので別名にする

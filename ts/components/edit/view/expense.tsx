@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { Footer } from "@/components/ui/responsive-dialog"
 import { LedgerAccountKind } from "@/graph/graphql"
 import { buildExpenseInput } from "@/lib/journal"
 import { type ExpenseFormValues, expenseSchema } from "@/lib/schema"
@@ -10,7 +11,6 @@ import { LoadingInline } from "../../loading"
 import { Button } from "../../ui/button"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
 import { useTransaction } from "../use-transaction"
-import { Footer } from "../wrapper"
 
 export const ExpenseForm = () => {
   const { create, loading } = useTransaction()

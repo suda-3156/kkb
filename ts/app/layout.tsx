@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers"
 import "./globals.css"
 import { EditModal } from "@/components/edit"
 import { Header } from "@/components/header"
+import { SettingsDialog } from "@/components/settings/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
@@ -67,6 +68,7 @@ export default function RootLayout({
               <div className="container relative mx-auto">{children}</div>
             </ScrollArea>
             <EditModal />
+            <SettingsDialog />
             <Toaster />
           </main>
         </Providers>
