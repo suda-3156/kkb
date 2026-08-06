@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
 import {
   Combobox,
+  ComboboxCollection,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxGroup,
@@ -15,23 +16,13 @@ import {
 } from "@/components/ui/combobox"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { graphql } from "@/graph"
-import { LedgerAccountKind } from "@/graph/graphql"
-
-const KIND_LABELS: Record<LedgerAccountKind, string> = {
-  [LedgerAccountKind.Asset]: "資産",
-  [LedgerAccountKind.Liability]: "負債",
-  [LedgerAccountKind.Expense]: "費用",
-  [LedgerAccountKind.Revenue]: "収益",
-  [LedgerAccountKind.Equity]: "純資産",
-}
-
-const KIND_ORDER: LedgerAccountKind[] = [
-  LedgerAccountKind.Asset,
-  LedgerAccountKind.Liability,
-  LedgerAccountKind.Expense,
-  LedgerAccountKind.Revenue,
-  LedgerAccountKind.Equity,
-]
+import type { LedgerAccountKind } from "@/graph/graphql"
+import {
+  type AccountGroup,
+  type AccountOption,
+  buildAccountGroups,
+  KIND_LABELS,
+} from "@/lib/lac-options"
 
 // biome-ignore lint/suspicious/noExplicitAny: shared generic helper
 type AnyForm = ReturnType<typeof useForm<any>>
@@ -52,13 +43,6 @@ const GetLedgerAccountsForComboboxDoc = graphql(/* GraphQL */ `
     }
   }
 `)
-
-type Account = {
-  id: string
-  name: string
-  kind: LedgerAccountKind
-  isGroup: boolean
-}
 
 type Props = {
   name: string
@@ -89,10 +73,16 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
     }
   }, [loading, data, fetchMore, kind, error])
 
-  const items: Account[] =
-    data?.ledgerAccounts.nodes?.filter(
-      (account): account is NonNullable<typeof account> => account != null && !account.isGroup,
-    ) ?? []
+  // fetchMore のたびに配列が作り直されるので、参照を安定させて再フィルタを避ける
+  const groups = React.useMemo(
+    () => buildAccountGroups(data?.ledgerAccounts.nodes, kind),
+    [data, kind],
+  )
+
+  const findById = React.useCallback(
+    (id: string) => groups.flatMap((group) => group.items).find((item) => item.id === id) ?? null,
+    [groups],
+  )
 
   // Only show spinner on initial load; fetchMore loading does not block the UI
   const isInitialLoading = loading && !data
@@ -105,11 +95,14 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
         <Field data-invalid={fieldState.invalid}>
           {label && <FieldLabel>{label}</FieldLabel>}
           <Combobox
-            items={items}
+            items={groups}
             autoHighlight
-            value={items.find((item) => item.id === field.value) ?? null}
-            onValueChange={(val: Account | null) => field.onChange(val?.id ?? null)}
+            value={findById(field.value)}
+            onValueChange={(val: AccountOption | null) => field.onChange(val?.id ?? null)}
             itemToStringLabel={(item) => item?.name ?? ""}
+            // items は再取得のたびに別インスタンスになるため、選択状態は id で判定する
+            itemToStringValue={(item) => item?.id ?? ""}
+            isItemEqualToValue={(item, value) => item?.id === value?.id}
           >
             <ComboboxInput
               className="w-[90%]"
@@ -124,32 +117,20 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
               )}
               {!isInitialLoading && (
                 <>
-                  <ComboboxEmpty>"科目が見つかりません"</ComboboxEmpty>
+                  <ComboboxEmpty>科目が見つかりません</ComboboxEmpty>
+                  {/* 絞り込みは Collection を通したときだけ効く。手で items を描画してはいけない */}
                   <ComboboxList>
-                    {kind ? (
-                      <ComboboxGroup>
-                        <ComboboxLabel>{KIND_LABELS[kind]}</ComboboxLabel>
-                        {items.map((item) => (
-                          <ComboboxItem key={item.id} value={item}>
-                            {item.name}
-                          </ComboboxItem>
-                        ))}
+                    {(group: AccountGroup) => (
+                      <ComboboxGroup key={group.value} items={group.items}>
+                        <ComboboxLabel>{KIND_LABELS[group.value]}</ComboboxLabel>
+                        <ComboboxCollection>
+                          {(item: AccountOption) => (
+                            <ComboboxItem key={item.id} value={item}>
+                              {item.name}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxCollection>
                       </ComboboxGroup>
-                    ) : (
-                      KIND_ORDER.map((k) => {
-                        const groupItems = items.filter((item) => item.kind === k)
-                        if (groupItems.length === 0) return null
-                        return (
-                          <ComboboxGroup key={k}>
-                            <ComboboxLabel>{KIND_LABELS[k]}</ComboboxLabel>
-                            {groupItems.map((item) => (
-                              <ComboboxItem key={item.id} value={item}>
-                                {item.name}
-                              </ComboboxItem>
-                            ))}
-                          </ComboboxGroup>
-                        )
-                      })
                     )}
                   </ComboboxList>
                 </>
