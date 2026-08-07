@@ -47,7 +47,7 @@
     "@graphql-codegen/introspection": "^5.0.2",
     "@parcel/watcher": "^2.6.0",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^20.19.43",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "shadcn": "^3.8.5",
