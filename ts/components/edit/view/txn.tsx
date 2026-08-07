@@ -23,11 +23,11 @@ import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../
 import { useTransaction } from "../use-transaction"
 
 export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }) => {
-  // remove は useFieldArray(仕訳行の削除)と名前が衝突するので別名にする
+  // Renamed because remove collides with useFieldArray's line removal
   const { create, update, remove: removeTransaction, loading } = useTransaction()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
-  // 取得済みの取引があれば編集モード
+  // A fetched transaction means edit mode
   const txn = data?.transaction
 
   const form = useForm<TransactionFormValues>({
@@ -218,7 +218,7 @@ const DebitCreditToggle = ({
 }
 
 const Summary = ({ form }: { form: ReturnType<typeof useForm<TransactionFormValues>> }) => {
-  // 借方・貸方合計
+  // Debit and credit totals
   const watchedEntries = form.watch("entries")
   const debitTotal = watchedEntries
     .filter((e) => e.kind === JournalEntryKind.Debit)

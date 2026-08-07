@@ -20,7 +20,7 @@ type Messages = {
   error: string
 }
 
-/** 直近利用の書き戻しに要るぶんだけの、mutation の返り値の形。 */
+/** Just enough of the mutation result to write the last use back. */
 type RecordedTransaction = {
   date: string
   createdAt: string
@@ -28,15 +28,16 @@ type RecordedTransaction = {
 }
 
 /**
- * 記録した取引に出てくる科目の直近利用を、キャッシュ上で進める。
+ * Advance, in the cache, the last use of every account in the recorded transaction.
  *
- * これが無いと、いま入力した科目が「最近使った順」の先頭に来るのはページを
- * 読み直した後になる。取引日・記録時刻・科目はどれも mutation の返り値にある
- * ので、サーバへ取りに戻る必要はない。
+ * Without this, an account just used only reaches the top of the most-recently-used
+ * ordering after a reload. The date, the recorded time and the accounts all come back
+ * in the mutation result, so there is nothing to fetch.
  *
- * 科目を**外した**取引を更新した場合、外された側の直近利用は下がりうるが、それは
- * 手元の情報からは決められない(その科目の他の取引を知らない)。下げずに放置し、
- * 次の再取得で合わせる。並びが少し古いだけで、壊れはしない。
+ * When an update **removes** an account, that account's last use may need to drop -
+ * but nothing here can decide by how much, since the other transactions using it are
+ * unknown. Leave it alone and let the next fetch settle it: the ordering goes
+ * slightly stale, it does not break.
  */
 const bumpAccountsLastUsed = (cache: ApolloCache, transaction: RecordedTransaction) => {
   for (const entry of transaction.entries) {
@@ -63,9 +64,10 @@ const bumpAccountsLastUsed = (cache: ApolloCache, transaction: RecordedTransacti
 }
 
 /**
- * 取引の作成 / 更新 / 削除と、成功後の後始末(トースト・サーバー側の再取得・モーダルを閉じる)。
- * 費用・収入・振替・詳細の 4 フォームと、ダッシュボードの取引一覧で共通の副作用をここに集約する。
- * 入力値 → input への変換は `lib/journal.ts` の純粋関数側にある。
+ * Creating, updating and deleting a transaction, plus the cleanup that follows a
+ * success: toast, server-side refetch, close the modal. The four forms (expense,
+ * revenue, transfer, detailed) and the dashboard list share these side effects.
+ * Turning form values into the input lives in the pure functions of `lib/journal.ts`.
  */
 export const useTransaction = () => {
   const [createTransaction, { loading: creating }] = useMutation(CreateTransactionDoc, {
@@ -99,8 +101,8 @@ export const useTransaction = () => {
   const update = (input: UpdateTransactionInput, messages: Messages) =>
     run(() => updateTransaction({ variables: { input } }), messages)
 
-  // 物理削除。呼び出し側で必ず確認を挟む(ConfirmDialog)。
-  // 一覧から削除したときはモーダルが開いていないが、close は no-op なので害はない。
+  // A hard delete. Callers must confirm first (ConfirmDialog).
+  // Deleting from the list happens with no modal open, but close is a no-op there.
   const remove = (id: string, messages: Messages) =>
     run(() => deleteTransaction({ variables: { id } }), messages)
 

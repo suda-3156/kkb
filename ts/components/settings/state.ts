@@ -10,12 +10,13 @@ import {
 } from "@/lib/settings"
 
 /**
- * 設定を atom で持つのは、SelectLedgerAccountField が仕訳行の数だけ並ぶため。
- * hook でインスタンスごとに state を持つと、設定変更が他の行に伝わらない。
+ * The settings live in an atom because SelectLedgerAccountField is rendered once per
+ * journal line. Holding state per instance in a hook would keep a change from
+ * reaching the other lines.
  */
 
-// createJSONStorage を使わず自前で組むのは、読み取りを必ず parseSettings に通すため。
-// localStorage の値は壊れうるので、JSON.parse の結果をそのまま信じない。
+// Hand-rolled instead of createJSONStorage so every read goes through parseSettings.
+// A localStorage value can be broken, so the result of JSON.parse is not trusted.
 const settingsStorage: SyncStorage<Settings> = {
   getItem: (key, initialValue) => {
     if (typeof window === "undefined") return initialValue
@@ -29,7 +30,8 @@ const settingsStorage: SyncStorage<Settings> = {
     if (typeof window === "undefined") return
     window.localStorage.removeItem(key)
   },
-  // 同一端末の別タブでも設定を揃える(端末ごとの設定なので、タブごとにずれる理由がない)
+  // Keep other tabs on the same device in step: the settings belong to the device,
+  // so there is no reason for tabs to disagree
   subscribe: (key, callback, initialValue) => {
     if (typeof window === "undefined") return undefined
 
@@ -44,10 +46,10 @@ const settingsStorage: SyncStorage<Settings> = {
 }
 
 /**
- * getOnInit は既定の false のまま。SSR とクライアントの初回描画がどちらも
- * DEFAULT_SETTINGS になるので hydration mismatch が起きない。
- * 代わりにマウント後に保存値へ切り替わるため、設定を画面に効かせる箇所では
- * 一瞬既定の表示になりうる。
+ * getOnInit stays at its default of false: SSR and the first client render both use
+ * DEFAULT_SETTINGS, so there is no hydration mismatch. The cost is that the stored
+ * value only arrives after mount, so anywhere a setting drives the display it may
+ * show the default for an instant.
  */
 export const settingsAtom = atomWithStorage<Settings>(
   SETTINGS_STORAGE_KEY,
@@ -55,7 +57,7 @@ export const settingsAtom = atomWithStorage<Settings>(
   settingsStorage,
 )
 
-/** 変更したい項目だけ渡して更新する。項目が増えても呼び出し側の形は変わらない。 */
+/** Update by passing only the fields that change; adding settings leaves callers alone. */
 export const updateSettingsAtom = atom(null, (get, set, patch: Partial<Settings>) => {
   set(settingsAtom, { ...get(settingsAtom), ...patch })
 })

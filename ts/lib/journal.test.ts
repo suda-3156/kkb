@@ -18,8 +18,9 @@ import type {
   TransferFormValues,
 } from "@/lib/schema"
 
-// 簡易フォームの借方/貸方の向きは型では守れないため、ここが実質の仕様書になる。
-// backend の貸借検証 (ErrUnbalancedEntries) に落ちない入力を作れることも併せて確認する。
+// Types cannot enforce the debit/credit direction of the simple forms, so these
+// cases are the real specification. They also confirm the built input survives the
+// backend's balance check (ErrUnbalancedEntries).
 
 const debitOf = (entries: JournalEntryInput[]) =>
   entries.filter((e) => e.kind === JournalEntryKind.Debit)
@@ -36,14 +37,14 @@ describe("buildExpenseEntries", () => {
     paymentId: "lac_cash",
   }
 
-  it("費用科目を借方、支払い方法を貸方に置く", () => {
+  it("debits the expense account and credits the payment method", () => {
     expect(buildExpenseEntries(values)).toEqual([
       { ledgerAccountId: "lac_food", amount: 1200, kind: JournalEntryKind.Debit },
       { ledgerAccountId: "lac_cash", amount: 1200, kind: JournalEntryKind.Credit },
     ])
   })
 
-  it("貸借が一致する", () => {
+  it("balances debits against credits", () => {
     const entries = buildExpenseEntries(values)
     expect(sum(debitOf(entries))).toBe(sum(creditOf(entries)))
   })
@@ -58,7 +59,7 @@ describe("buildRevenueEntries", () => {
     sourceId: "lac_salary",
   }
 
-  it("入金先口座を借方、収入科目を貸方に置く", () => {
+  it("debits the receiving account and credits the revenue account", () => {
     expect(buildRevenueEntries(values)).toEqual([
       { ledgerAccountId: "lac_bank", amount: 250000, kind: JournalEntryKind.Debit },
       { ledgerAccountId: "lac_salary", amount: 250000, kind: JournalEntryKind.Credit },
@@ -80,14 +81,14 @@ describe("buildTransferEntries", () => {
     toId: "lac_cash",
   }
 
-  it("振替先を借方、振替元を貸方に置く", () => {
+  it("debits the destination and credits the source", () => {
     expect(buildTransferEntries(values)).toEqual([
       { ledgerAccountId: "lac_cash", amount: 50000, kind: JournalEntryKind.Debit },
       { ledgerAccountId: "lac_bank", amount: 50000, kind: JournalEntryKind.Credit },
     ])
   })
 
-  it("振替元と振替先を入れ替えると向きも入れ替わる", () => {
+  it("swaps the direction when source and destination are swapped", () => {
     const reversed = buildTransferEntries({ ...values, fromId: values.toId, toId: values.fromId })
     expect(reversed).toEqual([
       { ledgerAccountId: "lac_bank", amount: 50000, kind: JournalEntryKind.Debit },
@@ -97,7 +98,7 @@ describe("buildTransferEntries", () => {
 })
 
 describe("buildTransactionEntries", () => {
-  it("行ごとに指定された借方/貸方をそのまま保つ", () => {
+  it("keeps the direction chosen for each line", () => {
     const values: TransactionFormValues = {
       date: "2026-08-02",
       desc: "クレカ払いの分割",
@@ -118,7 +119,7 @@ describe("buildTransactionEntries", () => {
     expect(sum(debitOf(entries))).toBe(sum(creditOf(entries)))
   })
 
-  it("行の順序を保つ", () => {
+  it("preserves the order of the lines", () => {
     const values: TransactionFormValues = {
       date: "2026-08-02",
       desc: "順序",
@@ -132,7 +133,7 @@ describe("buildTransactionEntries", () => {
 })
 
 describe("build*Input", () => {
-  it("date / desc を GraphQL の date / description に写す", () => {
+  it("maps date and desc onto the GraphQL date and description", () => {
     const input = buildExpenseInput({
       date: "2026-08-02",
       desc: "昼食",
@@ -160,12 +161,12 @@ describe("build*Input", () => {
     ],
   }
 
-  it("create には id / updatedAt を含めない", () => {
+  it("omits id and updatedAt when creating", () => {
     expect(buildCreateTransactionInput(values)).not.toHaveProperty("id")
     expect(buildCreateTransactionInput(values)).not.toHaveProperty("updatedAt")
   })
 
-  it("update は楽観的ロック用に対象の id / updatedAt を引き継ぐ", () => {
+  it("carries id and updatedAt through an update for optimistic locking", () => {
     const input = buildUpdateTransactionInput(values, {
       id: "txn_1",
       updatedAt: "2026-08-01T10:00:00Z",
@@ -204,7 +205,7 @@ describe("toTransactionFormValues", () => {
     ],
   }
 
-  it("取得した取引を詳細フォームの値に戻す", () => {
+  it("turns a fetched transaction back into detailed form values", () => {
     expect(toTransactionFormValues(txn)).toEqual({
       date: "2026-08-02",
       desc: "昼食",
@@ -215,7 +216,7 @@ describe("toTransactionFormValues", () => {
     })
   })
 
-  it("build と往復しても仕訳が変わらない", () => {
+  it("round-trips through build without changing the entries", () => {
     const input = buildUpdateTransactionInput(toTransactionFormValues(txn), txn)
 
     expect(input.entries).toEqual([

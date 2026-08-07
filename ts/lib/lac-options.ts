@@ -2,11 +2,11 @@ import { LedgerAccountKind } from "@/graph/graphql"
 import type { AccountOrder } from "@/lib/settings"
 
 /**
- * 勘定科目コンボボックスの候補を組み立てる純粋関数群。
+ * Pure functions that assemble the candidate list for the ledger account combobox.
  *
- * Base UI の Combobox は `items` に「グループの配列」を渡すと、入力に応じて
- * グループ単位で絞り込んだうえで空グループを落とす。逆に手で items を描画すると
- * 絞り込みが一切効かないため、候補の形はここで作って必ず `items` に渡す。
+ * Base UI's Combobox filters an `items` array of groups on its own, dropping the
+ * groups that end up empty. Rendering the items by hand disables filtering
+ * entirely, so the shape is built here and always handed to `items`.
  */
 
 export type AccountOption = {
@@ -16,11 +16,12 @@ export type AccountOption = {
   isGroup: boolean
   createdAt: string
   /**
-   * 最後にこの科目を使った取引の取引日。未使用なら null。
-   * nullable なフィールドは codegen が optional にするので undefined も受ける。
+   * Transaction date of the most recent transaction using this account, or null
+   * when it has never been used. Codegen makes nullable fields optional, so
+   * undefined has to be accepted too.
    */
   lastUsedAt?: string | null
-  /** その取引を記録した時刻。取引日が同着のときだけ見る。 */
+  /** When that transaction was recorded. Only consulted when dates tie. */
   lastRecordedAt?: string | null
 }
 
@@ -29,7 +30,7 @@ export type AccountGroup = {
   items: AccountOption[]
 }
 
-/** 表示順。貸借対照表・損益計算書の並びに合わせている。 */
+/** Display order, matching how a balance sheet and an income statement read. */
 export const KIND_ORDER: LedgerAccountKind[] = [
   LedgerAccountKind.Asset,
   LedgerAccountKind.Liability,
@@ -46,7 +47,7 @@ export const KIND_LABELS: Record<LedgerAccountKind, string> = {
   [LedgerAccountKind.Equity]: "純資産",
 }
 
-/** 時刻文字列を比較用の数値にする。未設定・壊れた値は「最も古い」に倒す。 */
+/** Turn a timestamp into a comparable number. Missing or broken values sort oldest. */
 const timeValue = (value: string | null | undefined): number => {
   if (!value) return Number.NEGATIVE_INFINITY
   const parsed = Date.parse(value)
@@ -54,28 +55,33 @@ const timeValue = (value: string | null | undefined): number => {
 }
 
 /**
- * 昇順比較。差分ではなく大小で返すのは、両方が -Infinity(= 値なし)のときに
- * 引き算が NaN になり、比較関数として壊れるため。
+ * Ascending comparison. It returns an ordering rather than a difference because
+ * subtracting two -Infinity values (both missing) yields NaN, which breaks a
+ * comparator silently.
  */
 const compareAsc = (a: number, b: number): number => (a === b ? 0 : a < b ? -1 : 1)
 
 /**
- * 作成順。**サーバの返す順ではない**。
+ * Creation order. **Not the order the server returns.**
  *
- * `public_id` は完全ランダムなので、サーバの既定の並び(public_id 昇順)は
- * 安定なだけで作成順ではない。作成順で見せるにはここで並べ替えるしかない。
+ * `public_id` is fully random, so the server's default ordering (public_id
+ * ascending) is merely stable, not chronological. Showing creation order means
+ * sorting here.
  */
 const byCreatedAt = (a: AccountOption, b: AccountOption): number =>
   compareAsc(timeValue(a.createdAt), timeValue(b.createdAt))
 
 /**
- * 直近に使った順。取引日の降順で並べ、**同じ日に使った科目は記録時刻の降順**で解く。
+ * Most recently used first: transaction date descending, **ties broken by when
+ * the transaction was recorded**.
  *
- * 取引日は日単位なので同着が必ず出る。しかも同着は「今日使った科目」に集中する
- * ため、第 2 キーが無いと一番効いてほしい上位が並ばない。
+ * The date has day granularity, so ties are guaranteed - and they pile up on the
+ * accounts used today, which is exactly where the ordering matters most. Without
+ * a second key the top of the list would not be ordered at all.
  *
- * 一度も使っていない科目は取引日が null で、常に末尾。未使用同士は作成順にする
- * (サーバの返す順はランダムなので、最後のキーを置かないと並びが安定しない)。
+ * Accounts never used have a null date and always sort last. Among those, fall
+ * back to creation order: the server's order is random, so without a final key
+ * the list would not be stable.
  */
 const byLastUsed = (a: AccountOption, b: AccountOption): number => {
   const aUsedAt = a.lastUsedAt ?? null
@@ -84,7 +90,7 @@ const byLastUsed = (a: AccountOption, b: AccountOption): number => {
   if (aUsedAt !== bUsedAt) {
     if (aUsedAt === null) return 1
     if (bUsedAt === null) return -1
-    // 取引日は YYYY-MM-DD なので文字列比較がそのまま日付順になる
+    // Dates are YYYY-MM-DD, so string comparison is already chronological
     return aUsedAt < bUsedAt ? 1 : -1
   }
 
@@ -95,14 +101,14 @@ const byLastUsed = (a: AccountOption, b: AccountOption): number => {
 export type LastUsedFields = Pick<AccountOption, "lastUsedAt" | "lastRecordedAt">
 
 /**
- * 取引を 1 件記録したときの、その科目の直近利用の進め方。
+ * How an account's last use advances when one transaction is recorded.
  *
- * サーバは全取引の MAX を返すが、記録した直後にそれを取り直すと、入力を続けて
- * いる最中に往復が入る。**同じ MAX の規則をクライアント側で 1 件ぶんだけ進める**
- * ことで、取り直さずに並びを合わせる。
+ * The server reports the MAX over every transaction. Re-fetching that right after
+ * recording would put a round trip in the middle of data entry, so **the same MAX
+ * rule is applied on the client for the single new transaction** instead.
  *
- * 進まない場合(過去日の取引を後から入れたときなど)は null を返す。MAX は下がら
- * ないので、書き戻してはいけない。
+ * Returns null when nothing advances - back-dating a transaction, for instance.
+ * A MAX never decreases, so a non-advancing value must not be written back.
  */
 export const bumpLastUsed = (
   current: LastUsedFields | null | undefined,
@@ -113,24 +119,25 @@ export const bumpLastUsed = (
   const currentDate = current?.lastUsedAt ?? null
   if (currentDate === null) return next
 
-  // 取引日は YYYY-MM-DD なので文字列比較がそのまま日付順になる
+  // Dates are YYYY-MM-DD, so string comparison is already chronological
   if (used.date !== currentDate) return used.date > currentDate ? next : null
 
-  // 同じ取引日なら記録時刻の方で進む。ここが並びの第 2 キーそのもの。
+  // Same date: advance on the recorded time, which is the tiebreaker above
   return timeValue(used.recordedAt) > timeValue(current?.lastRecordedAt) ? next : null
 }
 
 /**
- * クエリ結果を種別ごとのグループに束ねる。
+ * Group the query result by account kind.
  *
- * - null / undefined のノードは落とす(GraphQL の nodes が nullable なため)
- * - グループ科目 (`isGroup`) は仕訳に使えないので落とす
- * - 並びは KIND_ORDER。**並べ替えは種別グループの中だけ**で、グループ自体の
- *   並びは順序設定によらず KIND_ORDER のまま
- * - 候補が 0 件の種別はグループごと落とす
+ * - Drops null and undefined nodes (the GraphQL `nodes` field is nullable)
+ * - Drops group accounts (`isGroup`), which cannot appear in a journal entry
+ * - Groups follow KIND_ORDER. **Sorting happens only inside a group**; the order
+ *   of the groups themselves never depends on the ordering setting
+ * - Drops kinds that end up with no candidates
  *
- * `kind` を指定した場合はその種別だけが対象になる。サーバ側でも絞っているが、
- * Apollo のキャッシュから別種別が混ざっても表示が壊れないようここでも絞る。
+ * Passing `kind` narrows the result to that kind. The server filters too, but
+ * filtering again here keeps the display intact if Apollo's cache mixes in
+ * accounts of another kind.
  */
 export const buildAccountGroups = (
   nodes: readonly (AccountOption | null | undefined)[] | null | undefined,
@@ -147,7 +154,7 @@ export const buildAccountGroups = (
   return kinds
     .map((k) => ({
       value: k,
-      // sort は破壊的なので filter の結果(新しい配列)に対してだけ呼ぶ
+      // sort mutates, so only call it on the fresh array filter returns
       items: options.filter((option) => option.kind === k).sort(compare),
     }))
     .filter((group) => group.items.length > 0)

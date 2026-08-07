@@ -1,17 +1,20 @@
-// 金額入力欄の電卓機能。入力テキストを四則演算の式として評価する。
+// Calculator behaviour for the amount field: evaluate the typed text as an
+// arithmetic expression.
 //
-// 文法(再帰下降):
+// Grammar (recursive descent):
 //   expr   := term (('+' | '-') term)*
 //   term   := factor (('*' | '/') factor)*
 //   factor := ('+' | '-')* primary
 //   primary := number | '(' expr ')'
 //
-// eval や Function は使わない。金額欄はユーザー自身の入力しか通らないが、
-// 式の受理範囲を文法で閉じておくほうが挙動を説明しやすい。
+// No eval, no Function. Only the user's own input ever reaches this field, but
+// pinning what is accepted to a grammar makes the behaviour easier to explain.
 
 /**
- * 全角・記号のゆれを ASCII の演算子に寄せ、桁区切りと空白を落とす。
- * NFKC が全角英数字と ＋－＊／（）を変換し、残る ×÷−ー を個別に潰す。
+ * Fold full-width forms and symbol variants onto ASCII operators, and drop digit
+ * separators and whitespace. NFKC handles full-width alphanumerics, the four
+ * arithmetic signs and parentheses; the multiplication, division, minus and
+ * long-vowel variants left over are folded one by one below.
  */
 const normalize = (input: string): string =>
   input
@@ -33,7 +36,7 @@ const tokenize = (src: string): Token[] | null => {
     if (/[\d.]/.test(ch)) {
       let j = i
       while (j < src.length && /[\d.]/.test(src[j])) j++
-      // "1.2.3" や "." は Number が NaN にするので、ここで弾かれる
+      // Number() yields NaN for "1.2.3" or ".", so those are rejected here
       const value = Number(src.slice(i, j))
       if (!Number.isFinite(value)) return null
       tokens.push({ type: "num", value })
@@ -53,7 +56,7 @@ const tokenize = (src: string): Token[] | null => {
   return tokens
 }
 
-/** 数式として評価する。式が未完成・不正なら null(例外は投げない)。 */
+/** Evaluate as an expression. Returns null when incomplete or invalid; never throws. */
 const parse = (tokens: Token[]): number | null => {
   let pos = 0
 
@@ -94,7 +97,7 @@ const parse = (tokens: Token[]): number | null => {
         left *= right
       } else if (eat("/")) {
         const right = factor()
-        // 0 除算は Infinity になるので式ごと不正扱いにする
+        // Division by zero yields Infinity, so reject the whole expression
         if (right === null || right === 0) return null
         left /= right
       } else {
@@ -126,12 +129,12 @@ const parse = (tokens: Token[]): number | null => {
   }
 
   const value = expr()
-  // 余りトークン(例 "1 2" や "(1+2))")は不正
+  // Leftover tokens ("1 2", "(1+2))") make the expression invalid
   if (value === null || pos !== tokens.length || !Number.isFinite(value)) return null
   return value
 }
 
-/** 式を評価する。数字だけの入力もそのまま通る。評価できなければ null。 */
+/** Evaluate an expression. A bare number passes through. Returns null if it cannot. */
 export const evaluateExpression = (input: string): number | null => {
   const src = normalize(input)
   if (src === "") return null
@@ -141,13 +144,14 @@ export const evaluateExpression = (input: string): number | null => {
 }
 
 /**
- * 金額欄向けの評価。金額は整数なので、割り算などで生じた端数は四捨五入する
- * (例 "1000/3" → 333)。丸め位置を 1 箇所に閉じ込めるため、UI 側では丸めない。
+ * Evaluation for the amount field. Amounts are integers, so a fraction produced by
+ * division is rounded here ("1000/3" -> 333). Rounding lives in this one place;
+ * the UI never rounds.
  */
 export const evaluateAmount = (input: string): number | null => {
   const value = evaluateExpression(input)
   return value === null ? null : Math.round(value)
 }
 
-/** 演算子・括弧を含むか。式として確定操作が要るかの判定に使う。 */
+/** Whether the text holds an operator or parenthesis, i.e. needs an explicit commit. */
 export const containsOperator = (input: string): boolean => /[+\-*/()]/.test(normalize(input))

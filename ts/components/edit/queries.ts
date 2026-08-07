@@ -2,11 +2,12 @@ import { gql } from "@apollo/client"
 import { graphql } from "@/graph"
 
 /**
- * 取引を記録した直後に、勘定科目の直近利用をキャッシュへ書き戻すための断片。
+ * Fragment used to write an account's last use back into the cache right after a
+ * transaction is recorded.
  *
- * codegen の `graphql()` ではなく `gql` を使うのは、client-preset の fragment 型が
- * マスクされていて `cache.writeFragment` にそのまま渡せないため。書き込むのは
- * 3 フィールドだけなので、型の後ろ盾が無くても見通しは落ちない。
+ * It uses `gql` rather than codegen's `graphql()` because client-preset masks its
+ * fragment types, which `cache.writeFragment` will not accept. Only three fields are
+ * written, so losing the type is not much of a loss.
  */
 export const LedgerAccountLastUsedFragment = gql`
   fragment LedgerAccountLastUsed on LedgerAccount {

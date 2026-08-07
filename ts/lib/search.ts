@@ -1,19 +1,22 @@
 /**
- * 勘定科目の絞り込み。日本語入力で「打った通りに当たらない」のを減らすための、
- * 表記ゆれに寛容な照合。
+ * Matching for the ledger account combobox: forgiving enough that what the user
+ * types finds the account they mean, whichever script they type it in.
  *
- * 照合は 2 つの空間で行う。
+ * Matching runs in two spaces.
  *
- * 1. **正規化空間** — 全半角・かなカナ・記号を揃えただけの文字列。漢字はそのまま
- *    なので、漢字で打つ場合の飛ばし読み(「水熱」→「水道光熱費」)はここで当たる。
- * 2. **ローマ字空間** — かなをローマ字へ落とした文字列。かなと英字をまたぐ照合が
- *    ここで当たる(「ぱy」→「PayPay」、「kurejitto」→「クレジットカード」)。
+ * 1. **Normalized space** - width, kana/katakana and punctuation folded together.
+ *    Kanji are left as they are, so typing kanji and skipping characters
+ *    ("水熱" matching "水道光熱費") lands here.
+ * 2. **Romaji space** - kana projected onto latin letters. Queries that cross
+ *    between kana and latin land here ("ぱy" matching "PayPay", "kurejitto"
+ *    matching "クレジットカード").
  *
- * **漢字の読みは扱わない。** 「しょくひ」→「食費」は文字列だけからは導けず、辞書か
- * 形態素解析が要る。ここに持ち込むと数 MB 級の依存になるので、別の手段に任せる。
+ * **Kanji readings are out of scope.** "しょくひ" cannot reach "食費" from the
+ * strings alone; that needs a dictionary or a morphological analyzer, which would
+ * cost megabytes of dependency. Something else has to solve it.
  */
 
-/** ゃゅょ などを伴う 2 文字のかな。1 文字より先に引く。 */
+/** Two-character kana with a small ya/yu/yo. Looked up before single characters. */
 const DIGRAPH_ROMAJI: Record<string, string> = {
   きゃ: "kya",
   きゅ: "kyu",
@@ -51,7 +54,7 @@ const DIGRAPH_ROMAJI: Record<string, string> = {
   ぴゃ: "pya",
   ぴゅ: "pyu",
   ぴょ: "pyo",
-  // 外来語に使う組み。カナ科目名(クレジット、ティッシュ)で実際に出る。
+  // Combinations used for loanwords. Katakana account names really do contain these.
   ふぁ: "fa",
   ふぃ: "fi",
   ふぇ: "fe",
@@ -73,8 +76,9 @@ const DIGRAPH_ROMAJI: Record<string, string> = {
 }
 
 /**
- * 1 文字のかな。「し」を shi ではなく si に寄せるなど、**ゆれのある音は片方に統一**
- * する。打つ側のゆれは canonicalizeRomaji が同じ形へ畳むので、両側が揃う。
+ * Single kana. Sounds that have more than one spelling are **collapsed onto one**
+ * - "si" rather than "shi", for instance. Whatever the user types is folded the
+ * same way by canonicalizeRomaji, so both sides meet.
  */
 const KANA_ROMAJI: Record<string, string> = {
   あ: "a",
@@ -151,7 +155,7 @@ const KANA_ROMAJI: Record<string, string> = {
   ぺ: "pe",
   ぽ: "po",
   ゔ: "bu",
-  // 単独で出てきた小書き文字。拗音は DIGRAPH_ROMAJI が先に食う。
+  // Small kana standing on their own. Digraphs are consumed by DIGRAPH_ROMAJI first.
   ぁ: "a",
   ぃ: "i",
   ぅ: "u",
@@ -161,13 +165,13 @@ const KANA_ROMAJI: Record<string, string> = {
   ゅ: "yu",
   ょ: "yo",
   ゎ: "wa",
-  // 促音・長音は落とす。どちらも「直前/直後の文字の繰り返し」にしかならず、
-  // 繰り返しは最後に畳むので、書き出しても結果は変わらない。
+  // Gemination and long vowels are dropped: both only ever repeat a neighbouring
+  // letter, and repeats are collapsed at the end anyway.
   っ: "",
   ー: "",
 }
 
-/** ローマ字入力のゆれ。長いものから先に当てる。 */
+/** Alternative romaji spellings. Longer ones are applied first. */
 const ROMAJI_VARIANTS: [RegExp, string][] = [
   [/shi/g, "si"],
   [/sha/g, "sya"],
@@ -188,12 +192,13 @@ const ROMAJI_VARIANTS: [RegExp, string][] = [
   [/fu/g, "hu"],
 ]
 
-/** 照合の邪魔にしかならない区切り。 */
+/** Separators that only get in the way of matching. */
 const IGNORED = /[\s・･,、.。_/\\()（）\-‐―[\]{}"'`]/g
 
 /**
- * 全半角・大文字小文字・かなカナ・区切り記号を揃える。長音符は残す(ローマ字へ
- * 落とすときに消えるが、かなのまま比べる側では「かーど」の形を保ちたい)。
+ * Fold width, case, kana script and separators. The long-vowel mark survives: it
+ * disappears on the way to romaji, but the kana-space comparison wants to keep
+ * the shape of a word like "かーど".
  */
 export const normalize = (value: string): string =>
   value
@@ -202,7 +207,7 @@ export const normalize = (value: string): string =>
     .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
     .replace(IGNORED, "")
 
-/** ローマ字のゆれを畳み、連続する同じ文字を 1 つにする(促音・長音・nn の吸収)。 */
+/** Fold romaji spellings and collapse runs of one letter (gemination, long vowels, "nn"). */
 const canonicalizeRomaji = (value: string): string => {
   let result = value
   for (const [pattern, replacement] of ROMAJI_VARIANTS) {
@@ -212,9 +217,9 @@ const canonicalizeRomaji = (value: string): string => {
 }
 
 /**
- * ローマ字空間へ落とす。かなはローマ字にし、**それ以外(英数字・漢字)はそのまま
- * 残す**。漢字が残るのは、読みが分からない以上そこは正規化空間の照合に任せる、
- * という割り切り。
+ * Project onto romaji: kana become latin letters and **everything else (latin,
+ * digits, kanji) is left untouched**. Kanji survive because their reading is
+ * unknown here - matching them is the normalized space's job.
  */
 export const toRomajiKey = (value: string): string => {
   const normalized = normalize(value)
@@ -237,7 +242,7 @@ export const toRomajiKey = (value: string): string => {
   return canonicalizeRomaji(result)
 }
 
-/** needle の文字が haystack にこの順で現れるか(間に何が挟まってもよい)。 */
+/** Whether needle's characters appear in haystack in order, gaps allowed. */
 const isSubsequence = (haystack: string, needle: string): boolean => {
   let index = 0
   for (const char of haystack) {
@@ -248,10 +253,12 @@ const isSubsequence = (haystack: string, needle: string): boolean => {
 }
 
 /**
- * 候補のラベルが入力に一致するか。空の入力はすべて通す(絞り込み前の状態)。
+ * Whether a candidate's label matches the query. An empty query matches
+ * everything (nothing has been narrowed yet).
  *
- * 飛ばし読み(部分列)を許すのは**正規化空間だけ**。ローマ字空間は 1 文字が 2〜3 字
- * に膨らむので、部分列まで許すとほとんどの候補が当たってしまう。
+ * Skipping characters (subsequence) is allowed **only in the normalized space**.
+ * One kana becomes two or three letters in romaji, so allowing it there would
+ * match almost every candidate.
  */
 export const matchesQuery = (label: string, query: string): boolean => {
   const q = normalize(query)

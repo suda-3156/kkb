@@ -12,8 +12,8 @@ import { AmountKeypad } from "./keypad"
 // biome-ignore lint/suspicious/noExplicitAny: shared generic helper
 type AnyForm = ReturnType<typeof useForm<any>>
 
-// 未編集時は桁区切り表示(例 47,000)。編集中は入力テキストをそのまま保持する
-// (四則演算の式を打てるようにするため)。
+// When not being edited the amount shows with digit separators (47,000). While
+// editing, the raw text is kept as typed so an arithmetic expression can be entered.
 const formatDisplay = (value: number): string => {
   if (value == null || Number.isNaN(value)) return ""
   return value.toLocaleString()
@@ -30,7 +30,7 @@ export const AmountField = ({
   disabled?: boolean
   hideLabel?: boolean
 }) => {
-  // 編集中の生テキスト。null = 非編集(フォームの値を表示)
+  // Raw text while editing. null means not editing, so the form value is shown
   const [draft, setDraft] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const isMobile = useIsMobile()
@@ -40,22 +40,22 @@ export const AmountField = ({
       name={name}
       control={form.control}
       render={({ field, fieldState }) => {
-        // 式として評価できる間はフォームの値も追随させる(仕訳の借方・貸方合計が
-        // 入力中に更新される)。"1200+" のような途中の状態では直前の値を保ち、
-        // blur / 完了 のタイミングで確定させる。
+        // Keep the form value in step while the text still evaluates, so the debit
+        // and credit totals update as the user types. An incomplete state such as
+        // "1200+" keeps the previous value and commits on blur or on done.
         const edit = (next: string) => {
           setDraft(next)
           const value = next.trim() === "" ? Number.NaN : evaluateAmount(next)
           if (value !== null) field.onChange(value)
         }
 
-        // キーパッド操作。再レンダリング後にキャレット位置を戻す
+        // Keypad input. Restore the caret after the re-render
         const editWithCaret = ({ value, caret }: TextEdit) => {
           edit(value)
           requestAnimationFrame(() => inputRef.current?.setSelectionRange(caret, caret))
         }
 
-        // キャレット位置は DOM 側が持つ。取れなければ末尾に足す
+        // The DOM owns the caret position; append at the end when it is unavailable
         const selection = () => {
           const value = draft ?? ""
           const el = inputRef.current
@@ -73,7 +73,7 @@ export const AmountField = ({
           setDraft(null)
         }
 
-        // 式をその場で計算して置き換える(電卓の = )
+        // Evaluate the expression in place and replace the text (the calculator's =)
         const equals = () => {
           if (draft === null) return
           const value = evaluateAmount(draft)
@@ -89,9 +89,10 @@ export const AmountField = ({
             {!hideLabel && <FieldLabel>金額</FieldLabel>}
             <Input
               type="text"
-              // モバイルでは OS の仮想キーボードを抑止し、自前のキーパッドで入力する
-              // (数字キーパッドには四則演算の記号が無いため)。フォーカス・キャレットは
-              // 保たれる。端末が inputMode="none" を無視する場合は readOnly が代替手段。
+              // On mobile, suppress the OS keyboard and take input from our own
+              // keypad instead: the numeric keyboard offers no arithmetic operators.
+              // Focus and caret survive. If a device ignores inputMode="none",
+              // readOnly is the fallback.
               inputMode={isMobile ? "none" : "numeric"}
               placeholder="0"
               autoComplete="off"
@@ -106,7 +107,7 @@ export const AmountField = ({
                 const value = field.value
                 setDraft(value == null || Number.isNaN(value) ? "" : String(value))
                 if (isMobile) {
-                  // キーパッドで隠れないように入力欄を画面中央へ寄せる
+                  // Scroll the field toward the middle so the keypad does not cover it
                   const el = e.currentTarget
                   requestAnimationFrame(() => el.scrollIntoView({ block: "center" }))
                 }
@@ -117,7 +118,7 @@ export const AmountField = ({
               }}
               onKeyDown={(e) => {
                 if (e.key !== "Enter" || draft === null || !containsOperator(draft)) return
-                // 式の入力中の Enter は送信ではなく計算に使う
+                // While an expression is open, Enter evaluates rather than submits
                 e.preventDefault()
                 equals()
               }}

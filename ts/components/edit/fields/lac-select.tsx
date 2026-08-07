@@ -81,7 +81,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
 
   const { accountOrder } = useAtomValue(settingsAtom)
 
-  // fetchMore のたびに配列が作り直されるので、参照を安定させて再フィルタを避ける
+  // fetchMore rebuilds the array every time; keep the reference stable to avoid refiltering
   const groups = React.useMemo(
     () => buildAccountGroups(data?.ledgerAccounts.nodes, kind, accountOrder),
     [data, kind, accountOrder],
@@ -105,15 +105,16 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
           <Combobox
             items={groups}
             autoHighlight
-            // 既定のフィルタは Intl.Collator の部分一致で、かなカナや英字をまたぐ
-            // 打ち方に当たらない。差し替えは filter prop でしかできない。
+            // The default filter is an Intl.Collator substring match, which misses
+            // anything typed across kana scripts or latin. The filter prop is the
+            // only way to replace it.
             filter={(item: AccountOption | null, query: string) =>
               matchesQuery(item?.name ?? "", query)
             }
             value={findById(field.value)}
             onValueChange={(val: AccountOption | null) => field.onChange(val?.id ?? null)}
             itemToStringLabel={(item) => item?.name ?? ""}
-            // items は再取得のたびに別インスタンスになるため、選択状態は id で判定する
+            // items is a new instance after every fetch, so selection is decided by id
             itemToStringValue={(item) => item?.id ?? ""}
             isItemEqualToValue={(item, value) => item?.id === value?.id}
           >
@@ -131,7 +132,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
               {!isInitialLoading && (
                 <>
                   <ComboboxEmpty>科目が見つかりません</ComboboxEmpty>
-                  {/* 絞り込みは Collection を通したときだけ効く。手で items を描画してはいけない */}
+                  {/* Filtering only works through Collection. Never render the items by hand */}
                   <ComboboxList>
                     {(group: AccountGroup) => (
                       <ComboboxGroup key={group.value} items={group.items}>

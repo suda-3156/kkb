@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { LedgerAccountKind } from "@/graph/graphql"
 import { type AccountOption, buildAccountGroups, bumpLastUsed, KIND_ORDER } from "@/lib/lac-options"
 
-// Base UI の絞り込みは items に渡したグループ構造をそのまま辿るため、
-// ここで作る形が候補表示の仕様そのものになる。
+// Base UI walks the group structure handed to `items` as-is when it filters, so
+// the shape built here is the specification of what the user sees.
 
 type Overrides = Partial<Omit<AccountOption, "id" | "name" | "kind">>
 
@@ -23,7 +23,7 @@ const account = (
   ...overrides,
 })
 
-// createdAt は id の順に新しくしてある(lac_1 が最初に作られた科目)。
+// createdAt increases with the id (lac_1 is the account created first).
 const cash = account("lac_1", "現金", LedgerAccountKind.Asset, {
   createdAt: "2026-01-01T00:00:00Z",
 })
@@ -41,7 +41,7 @@ const assetGroup = account("lac_5", "資産グループ", LedgerAccountKind.Asse
   createdAt: "2026-01-05T00:00:00Z",
 })
 
-/** 直近利用のある資産科目。取引日と記録時刻だけを指定する。 */
+/** An asset account with a last use. Only the date and recorded time matter. */
 const used = (id: string, lastUsedAt: string, lastRecordedAt: string, createdAt?: string) =>
   account(id, id, LedgerAccountKind.Asset, {
     lastUsedAt,
@@ -50,7 +50,7 @@ const used = (id: string, lastUsedAt: string, lastRecordedAt: string, createdAt?
   })
 
 describe("buildAccountGroups", () => {
-  it("種別ごとにまとめ、KIND_ORDER の順に並べる", () => {
+  it("groups by kind and orders the groups by KIND_ORDER", () => {
     const groups = buildAccountGroups([salary, food, cash])
 
     expect(groups.map((g) => g.value)).toEqual([
@@ -63,49 +63,49 @@ describe("buildAccountGroups", () => {
     )
   })
 
-  // 既定は作成順。サーバの返す順は public_id 昇順 = ランダムなので、
-  // 「作成順」を名乗る以上ここで並べ替えないと嘘になる。
-  it("グループ内を作成順に並べる(サーバの返した順ではない)", () => {
+  // Creation order is the default. The server returns public_id ascending, which is
+  // random, so calling it "creation order" is a lie unless it is sorted here.
+  it("orders each group by creation time, not by what the server returned", () => {
     const groups = buildAccountGroups([bank, cash])
 
     expect(groups[0]?.items.map((i) => i.id)).toEqual(["lac_1", "lac_2"])
   })
 
-  it("候補が 0 件の種別はグループごと落とす", () => {
+  it("drops a kind entirely when it has no candidates", () => {
     const groups = buildAccountGroups([cash])
 
     expect(groups).toHaveLength(1)
     expect(groups[0]?.value).toBe(LedgerAccountKind.Asset)
   })
 
-  it("グループ科目は仕訳に使えないので候補から外す", () => {
+  it("excludes group accounts, which cannot appear in a journal entry", () => {
     const groups = buildAccountGroups([assetGroup, cash])
 
     expect(groups[0]?.items).toEqual([cash])
   })
 
-  it("グループ科目しかない種別は空グループとして落ちる", () => {
+  it("drops a kind that holds only group accounts", () => {
     expect(buildAccountGroups([assetGroup])).toEqual([])
   })
 
-  it("null / undefined のノードを落とす", () => {
+  it("drops null and undefined nodes", () => {
     const groups = buildAccountGroups([null, cash, undefined])
 
     expect(groups[0]?.items).toEqual([cash])
   })
 
-  it("nodes が null でも空配列を返す", () => {
+  it("returns an empty array when nodes is null", () => {
     expect(buildAccountGroups(null)).toEqual([])
     expect(buildAccountGroups(undefined)).toEqual([])
   })
 
-  it("kind を指定するとその種別だけを返す", () => {
+  it("returns only the requested kind", () => {
     const groups = buildAccountGroups([cash, food, salary], LedgerAccountKind.Expense)
 
     expect(groups).toEqual([{ value: LedgerAccountKind.Expense, items: [food] }])
   })
 
-  it("kind を指定した種別に候補が無ければ空配列を返す", () => {
+  it("returns an empty array when the requested kind has no candidates", () => {
     expect(buildAccountGroups([cash], LedgerAccountKind.Revenue)).toEqual([])
   })
 })
@@ -114,39 +114,39 @@ describe("buildAccountGroups - lastUsed", () => {
   const ordered = (nodes: AccountOption[]) =>
     buildAccountGroups(nodes, undefined, "lastUsed")[0]?.items.map((i) => i.id)
 
-  it("取引日の降順に並べる", () => {
+  it("orders by transaction date, most recent first", () => {
     const old = used("old", "2026-07-01", "2026-07-01T10:00:00Z")
     const recent = used("recent", "2026-08-06", "2026-08-06T10:00:00Z")
 
     expect(ordered([old, recent])).toEqual(["recent", "old"])
   })
 
-  // 取引日は日単位なので同着が出る。しかも同着は「今日使った科目」に集中するため、
-  // ここが解けないと一番効いてほしい上位が並ばない。
-  it("同じ取引日は記録時刻の降順で解く", () => {
+  // The date has day granularity, so ties happen - and they pile up on the accounts
+  // used today, which is exactly where the ordering matters most.
+  it("breaks a date tie by recorded time, most recent first", () => {
     const morning = used("morning", "2026-08-06", "2026-08-06T09:00:00Z")
     const night = used("night", "2026-08-06", "2026-08-06T23:00:00Z")
 
     expect(ordered([morning, night])).toEqual(["night", "morning"])
   })
 
-  it("取引日が新しければ記録が古くても上に来る", () => {
-    // 8/6 の取引を 8/1 にさかのぼって記録した、という並び
+  it("ranks a newer transaction date above an older one even if recorded earlier", () => {
+    // A transaction dated 8/6 that was recorded back on 8/1
     const backdated = used("backdated", "2026-08-06", "2026-08-01T10:00:00Z")
     const recorded = used("recorded", "2026-08-05", "2026-08-07T10:00:00Z")
 
     expect(ordered([backdated, recorded])).toEqual(["backdated", "recorded"])
   })
 
-  it("一度も使っていない科目は末尾に回す", () => {
+  it("sorts never-used accounts last", () => {
     const unused = account("unused", "未使用", LedgerAccountKind.Asset)
     const usedOnce = used("used", "2026-07-01", "2026-07-01T10:00:00Z")
 
     expect(ordered([unused, usedOnce])).toEqual(["used", "unused"])
   })
 
-  // 未使用同士に順序の根拠が無いと、サーバの返すランダム順がそのまま出る。
-  it("未使用同士は作成順に並べる", () => {
+  // Without a final key, never-used accounts would keep the server's random order.
+  it("orders never-used accounts by creation time", () => {
     const later = account("later", "後", LedgerAccountKind.Asset, {
       createdAt: "2026-02-01T00:00:00Z",
     })
@@ -157,14 +157,14 @@ describe("buildAccountGroups - lastUsed", () => {
     expect(ordered([later, earlier])).toEqual(["earlier", "later"])
   })
 
-  it("取引日も記録時刻も同じなら作成順に並べる", () => {
+  it("falls back to creation time when date and recorded time both tie", () => {
     const later = used("later", "2026-08-06", "2026-08-06T10:00:00Z", "2026-02-01T00:00:00Z")
     const earlier = used("earlier", "2026-08-06", "2026-08-06T10:00:00Z", "2026-01-01T00:00:00Z")
 
     expect(ordered([later, earlier])).toEqual(["earlier", "later"])
   })
 
-  it("並べ替えは種別グループの中だけで、グループ自体は KIND_ORDER のまま", () => {
+  it("sorts only inside a group and leaves the group order at KIND_ORDER", () => {
     const oldAsset = account("lac_1", "現金", LedgerAccountKind.Asset, {
       lastUsedAt: "2026-07-01",
       lastRecordedAt: "2026-07-01T10:00:00Z",
@@ -179,7 +179,7 @@ describe("buildAccountGroups - lastUsed", () => {
     expect(groups.map((g) => g.value)).toEqual([LedgerAccountKind.Asset, LedgerAccountKind.Expense])
   })
 
-  it("入力の配列を破壊しない", () => {
+  it("does not mutate the input array", () => {
     const first = used("first", "2026-07-01", "2026-07-01T10:00:00Z")
     const second = used("second", "2026-08-06", "2026-08-06T10:00:00Z")
     const nodes = [first, second]
@@ -190,26 +190,26 @@ describe("buildAccountGroups - lastUsed", () => {
   })
 })
 
-// サーバの MAX と同じ規則を、記録した 1 件ぶんだけ手元で進める。
-// 規則がずれると、再取得した瞬間に並びが飛ぶ形で表面化する。
+// Applies the server's MAX rule locally for the one transaction just recorded.
+// If the rule drifts, the list jumps the moment the data is fetched again.
 describe("bumpLastUsed", () => {
   const now = { date: "2026-08-06", recordedAt: "2026-08-06T12:00:00Z" }
 
-  it("一度も使っていない科目はそのまま採用する", () => {
+  it("takes the new value for an account never used before", () => {
     expect(bumpLastUsed(null, now)).toEqual({
       lastUsedAt: "2026-08-06",
       lastRecordedAt: "2026-08-06T12:00:00Z",
     })
   })
 
-  it("キャッシュに直近利用がまだ無い科目も採用する", () => {
+  it("takes the new value when the cache holds no last use yet", () => {
     expect(bumpLastUsed({ lastUsedAt: null, lastRecordedAt: null }, now)).toEqual({
       lastUsedAt: "2026-08-06",
       lastRecordedAt: "2026-08-06T12:00:00Z",
     })
   })
 
-  it("取引日が新しければ進む", () => {
+  it("advances on a newer transaction date", () => {
     const current = { lastUsedAt: "2026-08-01", lastRecordedAt: "2026-08-01T10:00:00Z" }
 
     expect(bumpLastUsed(current, now)).toEqual({
@@ -218,14 +218,14 @@ describe("bumpLastUsed", () => {
     })
   })
 
-  // MAX は下がらない。過去日の取引を後から入れても直近利用は動かない。
-  it("過去日の取引を記録しても進めない", () => {
+  // A MAX never decreases: back-dating a transaction leaves the last use alone.
+  it("does not advance when the transaction is back-dated", () => {
     const current = { lastUsedAt: "2026-08-10", lastRecordedAt: "2026-08-10T10:00:00Z" }
 
     expect(bumpLastUsed(current, now)).toBeNull()
   })
 
-  it("同じ取引日なら記録時刻だけ進む", () => {
+  it("advances only the recorded time when the date is unchanged", () => {
     const current = { lastUsedAt: "2026-08-06", lastRecordedAt: "2026-08-06T09:00:00Z" }
 
     expect(bumpLastUsed(current, now)).toEqual({
@@ -234,7 +234,7 @@ describe("bumpLastUsed", () => {
     })
   })
 
-  it("同じ取引日で記録時刻も進まないなら書き戻さない", () => {
+  it("writes nothing back when neither date nor recorded time advances", () => {
     const current = { lastUsedAt: "2026-08-06", lastRecordedAt: "2026-08-06T18:00:00Z" }
 
     expect(bumpLastUsed(current, now)).toBeNull()

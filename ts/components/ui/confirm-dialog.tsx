@@ -12,8 +12,8 @@ import {
 } from "./dialog"
 
 /**
- * 取り消せない操作の確認ダイアログ。呼び出し側が open を持つ制御コンポーネント。
- * 取引の削除は物理削除なので、実行前に必ずここを通す。
+ * Confirmation dialog for an action that cannot be undone. Controlled: the caller
+ * owns `open`. Deleting a transaction is a hard delete, so it always goes through here.
  */
 export const ConfirmDialog = ({
   open,

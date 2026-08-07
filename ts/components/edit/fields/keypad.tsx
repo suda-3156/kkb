@@ -6,13 +6,13 @@ import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-// モバイル(画面幅 < 640px)の金額入力で使う電卓キーパッド。
-// input 側は inputMode="none" で OS の仮想キーボードを抑止しているので、
-// 数字も演算子もここからしか入らない。
+// Calculator keypad for the amount field on mobile (viewport < 640px).
+// The input suppresses the OS keyboard with inputMode="none", so digits and
+// operators can only arrive from here.
 //
-// ボタンを押しても input のフォーカスが外れないよう、コンテナの pointerdown を
-// preventDefault する(click は発火する)。フォーカスが外れると draft が確定し、
-// キーパッド自体が閉じてしまうため。
+// The container preventDefaults pointerdown so pressing a button never blurs the
+// input (click still fires). Losing focus would commit the draft and close the
+// keypad itself.
 
 type KeyDef =
   | { kind: "insert"; label: string; text: string; className?: string }
@@ -51,10 +51,10 @@ export const AmountKeypad = ({
   onEquals,
   onDone,
 }: {
-  /** 金額欄が編集中か。閉じるときのスライドアウトのためにマウントは保つ */
+  /** Whether the amount field is being edited. Stays mounted so it can slide out */
   open: boolean
   expression: string
-  /** 式として評価できていれば計算結果。数字だけ / 未評価なら null */
+  /** The result when the text evaluates; null for a bare number or an invalid one */
   preview: number | null
   onInsert: (text: string) => void
   onBackspace: () => void

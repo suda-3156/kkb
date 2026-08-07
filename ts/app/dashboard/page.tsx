@@ -13,19 +13,19 @@ export default function DashboardPage() {
     // Single unified grid: 1 col → 2 col (md) → 3 col (lg)
     // max-w-7xl keeps the layout from stretching too wide on ultra-wide screens
     <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-4 pt-16 md:grid-cols-2 lg:grid-cols-3">
-      {/* ── Card 1: 支出サマリー (今週 / 今月 / 今年) ── lg: 左2列 */}
+      {/* Card 1: spending summary (this week / month / year) - 2 left columns at lg */}
       <ExpenseSummary />
 
-      {/* ── Card 2: 今月の収支 ── lg: 右1列 */}
+      {/* Card 2: this month's balance - 1 right column at lg */}
       <MonthlyBalance />
 
-      {/* ── Card 3: 支出カテゴリ内訳 ── lg: 左1列 */}
+      {/* Card 3: spending by category - 1 left column at lg */}
       <ExpenseCategoryBreakdown />
 
-      {/* ── Card 4: 月次支出推移 ── lg: 右2列 */}
+      {/* Card 4: monthly spending trend - 2 right columns at lg */}
       <MonthlyExpenseTrend />
 
-      {/* ── Card 5: 最近の取引 ── full width */}
+      {/* Card 5: recent transactions - full width */}
       <RecentTransactions />
     </div>
   )

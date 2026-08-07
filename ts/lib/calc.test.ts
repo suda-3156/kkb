@@ -10,8 +10,8 @@ describe("evaluateExpression", () => {
     ["1200/4", 300],
     ["1,200+3,400", 4600],
     ["1200 + 340", 1540],
-    ["1 200", 1200], // 空白は桁区切りと同じ扱いで落とす
-    ["100+200*3", 700], // 乗除が先
+    ["1 200", 1200], // whitespace is dropped like a digit separator
+    ["100+200*3", 700], // multiplication and division bind tighter
     ["(100+200)*3", 900],
     ["-500+800", 300],
     ["1200.5+0.5", 1201],
@@ -21,10 +21,10 @@ describe("evaluateExpression", () => {
   })
 
   it.each([
-    ["１２００＋３４０", 1540], // 全角
+    ["１２００＋３４０", 1540], // full-width
     ["1200×3", 3600],
     ["1200÷4", 300],
-    ["1200ー340", 860], // IME の長音記号を負号として扱う
+    ["1200ー340", 860], // the IME long-vowel mark counts as a minus sign
     ["1200−340", 860], // U+2212
   ])("normalizes %s to %d", (input, expected) => {
     expect(evaluateExpression(input)).toBe(expected)
@@ -33,10 +33,10 @@ describe("evaluateExpression", () => {
   it.each([
     [""],
     ["   "],
-    ["1200+"], // 式の途中
+    ["1200+"], // incomplete expression
     ["+"],
     ["*300"],
-    ["1200/0"], // 0 除算
+    ["1200/0"], // division by zero
     ["(1200+300"],
     ["1200+300)"],
     ["1.2.3"],
@@ -50,14 +50,14 @@ describe("evaluateExpression", () => {
 })
 
 describe("evaluateAmount", () => {
-  it("四捨五入して整数にする", () => {
+  it("rounds to an integer", () => {
     expect(evaluateAmount("1000/3")).toBe(333)
     expect(evaluateAmount("2000/3")).toBe(667)
     expect(evaluateAmount("1200.4")).toBe(1200)
     expect(evaluateAmount("1200.5")).toBe(1201)
   })
 
-  it("評価できない入力は null", () => {
+  it("returns null for input it cannot evaluate", () => {
     expect(evaluateAmount("1200+")).toBeNull()
     expect(evaluateAmount("")).toBeNull()
   })

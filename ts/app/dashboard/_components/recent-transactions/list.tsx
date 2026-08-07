@@ -25,7 +25,7 @@ type Props = {
 export const RecentTransactionList = ({ items }: Props) => {
   const openEditModal = useSetAtom(openModalAtom)
   const { remove, loading } = useTransaction()
-  // 削除確認中の取引。null = 確認ダイアログを出していない
+  // The transaction awaiting delete confirmation; null means no dialog is open
   const [target, setTarget] = useState<RecentTransactionItem | null>(null)
 
   if (items.length === 0) {
@@ -36,8 +36,9 @@ export const RecentTransactionList = ({ items }: Props) => {
     <>
       <div className="divide-y">
         {items.map((tx) => (
-          // 行のクリックで編集、右端のボタンで削除。button の入れ子は不正なので、
-          // 行は div にしてクリック領域と削除ボタンを兄弟に置く。
+          // Clicking the row edits, the button at the end deletes. Nesting buttons is
+          // invalid, so the row is a div with the click target and the delete button
+          // as siblings.
           <div
             key={tx.id}
             className="group flex items-center pr-3 transition-colors hover:bg-muted/60"
@@ -69,7 +70,7 @@ export const RecentTransactionList = ({ items }: Props) => {
               </span>
             </button>
 
-            {/* モバイル(< sm)は hover が無いので常時表示。それ以上では行に触れたときだけ出す */}
+            {/* Mobile (< sm) has no hover, so keep it visible; above that, reveal on the row */}
             <Button
               type="button"
               variant="ghost"
