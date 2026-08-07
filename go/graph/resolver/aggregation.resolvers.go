@@ -10,6 +10,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/dataloader"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
 )
@@ -17,7 +18,7 @@ import (
 // LedgerAccount is the resolver for the ledgerAccount field.
 // The LedgerAccount is already fully populated during aggregation; return it directly.
 func (r *accountAmountSummaryResolver) LedgerAccount(ctx context.Context, obj *model.AccountAmountSummary) (*model.LedgerAccount, error) {
-	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.LedgerAccount.IntID)
+	thunk := dataloader.For(ctx).LedgerAccountLoader.Load(ctx, obj.LedgerAccount.IntID)
 	lac, err := thunk()
 	if err != nil {
 		return nil, err

@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"github.com/suda-3156/kkb/go/internal/aggregation"
-	"github.com/suda-3156/kkb/go/internal/dataloader"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
@@ -15,19 +14,22 @@ import (
 // here.
 
 type Resolver struct {
-	agg     *aggregation.AggregationManager
-	lac     *ledgeraccount.LedgerAccountManager
-	tnx     *transaction.TransactionManager
-	loaders *dataloader.Loaders
+	agg *aggregation.AggregationManager
+	lac *ledgeraccount.LedgerAccountManager
+	tnx *transaction.TransactionManager
 }
 
 func New(db *database.DB, em *encryption.EncryptionManager) *Resolver {
-	lac := ledgeraccount.New(db, em)
-
 	return &Resolver{
-		agg:     aggregation.New(db, em),
-		lac:     lac,
-		tnx:     transaction.New(db, em),
-		loaders: dataloader.New(lac),
+		agg: aggregation.New(db, em),
+		lac: ledgeraccount.New(db, em),
+		tnx: transaction.New(db, em),
 	}
+}
+
+// LedgerAccountManager exposes the manager the dataloader middleware batches
+// through. The loaders are built per request rather than held here, so that
+// they cannot outlive one request; see dataloader.Middleware.
+func (r *Resolver) LedgerAccountManager() *ledgeraccount.LedgerAccountManager {
+	return r.lac
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/dataloader"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
 	"github.com/suda-3156/kkb/go/internal/transaction"
@@ -17,7 +18,7 @@ import (
 
 // LedgerAccount is the resolver for the ledgerAccount field.
 func (r *journalEntryResolver) LedgerAccount(ctx context.Context, obj *model.JournalEntry) (*model.LedgerAccount, error) {
-	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.LedgerAccount.IntID)
+	thunk := dataloader.For(ctx).LedgerAccountLoader.Load(ctx, obj.LedgerAccount.IntID)
 	lac, err := thunk()
 	if err != nil {
 		return nil, err

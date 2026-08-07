@@ -7,9 +7,12 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/dataloader"
+	"github.com/suda-3156/kkb/go/internal/date"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/prid"
 )
@@ -19,12 +22,41 @@ func (r *ledgerAccountResolver) Parent(ctx context.Context, obj *model.LedgerAcc
 	if obj.Parent == nil {
 		return nil, nil
 	}
-	thunk := r.loaders.LedgerAccountLoader.Load(ctx, obj.Parent.IntID)
+	thunk := dataloader.For(ctx).LedgerAccountLoader.Load(ctx, obj.Parent.IntID)
 	lac, err := thunk()
 	if err != nil {
 		return nil, err
 	}
 	return lac, nil
+}
+
+// LastUsedAt is the resolver for the lastUsedAt field.
+func (r *ledgerAccountResolver) LastUsedAt(ctx context.Context, obj *model.LedgerAccount) (*date.Date, error) {
+	lastUsed, err := r.lastUsed(ctx, obj)
+	if err != nil || lastUsed == nil {
+		return nil, err
+	}
+	return &lastUsed.Date, nil
+}
+
+// LastRecordedAt is the resolver for the lastRecordedAt field.
+func (r *ledgerAccountResolver) LastRecordedAt(ctx context.Context, obj *model.LedgerAccount) (*time.Time, error) {
+	lastUsed, err := r.lastUsed(ctx, obj)
+	if err != nil || lastUsed == nil {
+		return nil, err
+	}
+	return &lastUsed.RecordedAt, nil
+}
+
+// lastUsed loads the last use of one account. Both fields go through the same
+// loader, so asking for both costs one query for the whole list, not two.
+// A never-used account yields nil, which both fields render as null.
+func (r *ledgerAccountResolver) lastUsed(
+	ctx context.Context,
+	obj *model.LedgerAccount,
+) (*ledgeraccount.LastUsed, error) {
+	thunk := dataloader.For(ctx).LedgerAccountLastUsedLoader.Load(ctx, obj.IntID)
+	return thunk()
 }
 
 // CreateLedgerAccount is the resolver for the createLedgerAccount field.

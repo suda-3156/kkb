@@ -1,16 +1,65 @@
 "use client"
 
+import type { ApolloCache } from "@apollo/client"
 import { useMutation } from "@apollo/client/react"
 import { useSetAtom } from "jotai/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { CreateTransactionInput, UpdateTransactionInput } from "@/graph/graphql"
-import { CreateTransactionDoc, DeleteTransactionDoc, UpdateTransactionDoc } from "./queries"
+import { bumpLastUsed, type LastUsedFields } from "@/lib/lac-options"
+import {
+  CreateTransactionDoc,
+  DeleteTransactionDoc,
+  LedgerAccountLastUsedFragment,
+  UpdateTransactionDoc,
+} from "./queries"
 import { closeModalAtom } from "./state"
 
 type Messages = {
   success: string
   error: string
+}
+
+/** 直近利用の書き戻しに要るぶんだけの、mutation の返り値の形。 */
+type RecordedTransaction = {
+  date: string
+  createdAt: string
+  entries: { ledgerAccount: { id: string } }[]
+}
+
+/**
+ * 記録した取引に出てくる科目の直近利用を、キャッシュ上で進める。
+ *
+ * これが無いと、いま入力した科目が「最近使った順」の先頭に来るのはページを
+ * 読み直した後になる。取引日・記録時刻・科目はどれも mutation の返り値にある
+ * ので、サーバへ取りに戻る必要はない。
+ *
+ * 科目を**外した**取引を更新した場合、外された側の直近利用は下がりうるが、それは
+ * 手元の情報からは決められない(その科目の他の取引を知らない)。下げずに放置し、
+ * 次の再取得で合わせる。並びが少し古いだけで、壊れはしない。
+ */
+const bumpAccountsLastUsed = (cache: ApolloCache, transaction: RecordedTransaction) => {
+  for (const entry of transaction.entries) {
+    const id = cache.identify({ __typename: "LedgerAccount", id: entry.ledgerAccount.id })
+    if (!id) continue
+
+    const current = cache.readFragment<LastUsedFields>({
+      id,
+      fragment: LedgerAccountLastUsedFragment,
+    })
+
+    const next = bumpLastUsed(current, {
+      date: transaction.date,
+      recordedAt: transaction.createdAt,
+    })
+    if (!next) continue
+
+    cache.writeFragment({
+      id,
+      fragment: LedgerAccountLastUsedFragment,
+      data: { __typename: "LedgerAccount", id: entry.ledgerAccount.id, ...next },
+    })
+  }
 }
 
 /**
@@ -19,8 +68,16 @@ type Messages = {
  * 入力値 → input への変換は `lib/journal.ts` の純粋関数側にある。
  */
 export const useTransaction = () => {
-  const [createTransaction, { loading: creating }] = useMutation(CreateTransactionDoc)
-  const [updateTransaction, { loading: updating }] = useMutation(UpdateTransactionDoc)
+  const [createTransaction, { loading: creating }] = useMutation(CreateTransactionDoc, {
+    update: (cache, { data }) => {
+      if (data?.createTransaction) bumpAccountsLastUsed(cache, data.createTransaction)
+    },
+  })
+  const [updateTransaction, { loading: updating }] = useMutation(UpdateTransactionDoc, {
+    update: (cache, { data }) => {
+      if (data?.updateTransaction) bumpAccountsLastUsed(cache, data.updateTransaction)
+    },
+  })
   const [deleteTransaction, { loading: deleting }] = useMutation(DeleteTransactionDoc)
   const close = useSetAtom(closeModalAtom)
   const router = useRouter()

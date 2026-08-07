@@ -1,8 +1,10 @@
 import { useQuery } from "@apollo/client/react"
+import { useAtomValue } from "jotai"
 import * as React from "react"
 import { Controller, type useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { LoadingInline } from "@/components/loading"
+import { settingsAtom } from "@/components/settings/state"
 import {
   Combobox,
   ComboboxCollection,
@@ -35,6 +37,9 @@ const GetLedgerAccountsForComboboxDoc = graphql(/* GraphQL */ `
         name
         kind
         isGroup
+        createdAt
+        lastUsedAt
+        lastRecordedAt
       }
       pageInfo {
         hasNextPage
@@ -73,10 +78,12 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
     }
   }, [loading, data, fetchMore, kind, error])
 
+  const { accountOrder } = useAtomValue(settingsAtom)
+
   // fetchMore のたびに配列が作り直されるので、参照を安定させて再フィルタを避ける
   const groups = React.useMemo(
-    () => buildAccountGroups(data?.ledgerAccounts.nodes, kind),
-    [data, kind],
+    () => buildAccountGroups(data?.ledgerAccounts.nodes, kind, accountOrder),
+    [data, kind, accountOrder],
   )
 
   const findById = React.useCallback(

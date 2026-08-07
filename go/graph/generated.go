@@ -89,14 +89,16 @@ type ComplexityRoot struct {
 	}
 
 	LedgerAccount struct {
-		ArchivedAt func(childComplexity int) int
-		CreatedAt  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		IsGroup    func(childComplexity int) int
-		Kind       func(childComplexity int) int
-		Name       func(childComplexity int) int
-		Parent     func(childComplexity int) int
-		UpdatedAt  func(childComplexity int) int
+		ArchivedAt     func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		IsGroup        func(childComplexity int) int
+		Kind           func(childComplexity int) int
+		LastRecordedAt func(childComplexity int) int
+		LastUsedAt     func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Parent         func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	LedgerAccountConnection struct {
@@ -198,6 +200,9 @@ type JournalEntryResolver interface {
 }
 type LedgerAccountResolver interface {
 	Parent(ctx context.Context, obj *model.LedgerAccount) (*model.LedgerAccount, error)
+
+	LastUsedAt(ctx context.Context, obj *model.LedgerAccount) (*date.Date, error)
+	LastRecordedAt(ctx context.Context, obj *model.LedgerAccount) (*time.Time, error)
 }
 type MutationResolver interface {
 	CreateLedgerAccount(ctx context.Context, input model.CreateLedgerAccountInput) (*model.LedgerAccount, error)
@@ -378,6 +383,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LedgerAccount.Kind(childComplexity), true
+	case "LedgerAccount.lastRecordedAt":
+		if e.complexity.LedgerAccount.LastRecordedAt == nil {
+			break
+		}
+
+		return e.complexity.LedgerAccount.LastRecordedAt(childComplexity), true
+	case "LedgerAccount.lastUsedAt":
+		if e.complexity.LedgerAccount.LastUsedAt == nil {
+			break
+		}
+
+		return e.complexity.LedgerAccount.LastUsedAt(childComplexity), true
 	case "LedgerAccount.name":
 		if e.complexity.LedgerAccount.Name == nil {
 			break
@@ -1027,6 +1044,13 @@ type LedgerAccount implements Node {
   archivedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
+
+  # 最後にこの科目を使った取引の取引日。一度も使われていなければ null。
+  lastUsedAt: Date
+  # 最後にこの科目を使った取引が記録された時刻。
+  # lastUsedAt は日単位なので同着が出る(同じ日に使った科目は全部並ぶ)。
+  # その同着を解くための第 2 キーとして使う。
+  lastRecordedAt: DateTime
 }
 
 type LedgerAccountConnection {
@@ -1533,6 +1557,10 @@ func (ec *executionContext) fieldContext_AccountAmountSummary_ledgerAccount(_ co
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -1638,6 +1666,10 @@ func (ec *executionContext) fieldContext_AccountBalance_ledgerAccount(_ context.
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -1743,6 +1775,10 @@ func (ec *executionContext) fieldContext_ChildAccountBreakdown_parent(_ context.
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2009,6 +2045,10 @@ func (ec *executionContext) fieldContext_JournalEntry_ledgerAccount(_ context.Co
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2143,6 +2183,10 @@ func (ec *executionContext) fieldContext_LedgerAccount_parent(_ context.Context,
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2324,6 +2368,64 @@ func (ec *executionContext) fieldContext_LedgerAccount_updatedAt(_ context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _LedgerAccount_lastUsedAt(ctx context.Context, field graphql.CollectedField, obj *model.LedgerAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LedgerAccount_lastUsedAt,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.LedgerAccount().LastUsedAt(ctx, obj)
+		},
+		nil,
+		ec.marshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LedgerAccount_lastUsedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LedgerAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LedgerAccount_lastRecordedAt(ctx context.Context, field graphql.CollectedField, obj *model.LedgerAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LedgerAccount_lastRecordedAt,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.LedgerAccount().LastRecordedAt(ctx, obj)
+		},
+		nil,
+		ec.marshalODateTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LedgerAccount_lastRecordedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LedgerAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LedgerAccountConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.LedgerAccountConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2399,6 +2501,10 @@ func (ec *executionContext) fieldContext_LedgerAccountConnection_nodes(_ context
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2543,6 +2649,10 @@ func (ec *executionContext) fieldContext_LedgerAccountEdge_node(_ context.Contex
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2591,6 +2701,10 @@ func (ec *executionContext) fieldContext_Mutation_createLedgerAccount(ctx contex
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2650,6 +2764,10 @@ func (ec *executionContext) fieldContext_Mutation_updateLedgerAccount(ctx contex
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2709,6 +2827,10 @@ func (ec *executionContext) fieldContext_Mutation_archiveLedgerAccount(ctx conte
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -2768,6 +2890,10 @@ func (ec *executionContext) fieldContext_Mutation_unarchiveLedgerAccount(ctx con
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -3597,6 +3723,10 @@ func (ec *executionContext) fieldContext_Query_ledgerAccount(ctx context.Context
 				return ec.fieldContext_LedgerAccount_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_LedgerAccount_updatedAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_LedgerAccount_lastUsedAt(ctx, field)
+			case "lastRecordedAt":
+				return ec.fieldContext_LedgerAccount_lastRecordedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerAccount", field.Name)
 		},
@@ -6635,6 +6765,72 @@ func (ec *executionContext) _LedgerAccount(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "lastUsedAt":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LedgerAccount_lastUsedAt(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "lastRecordedAt":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LedgerAccount_lastRecordedAt(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
