@@ -1,0 +1,64 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task -l --sort none
+    silent: true
+
+  test:
+    desc: "Run TS tests \t usage: `task <prefix>:test -- <path>` or `task <prefix>:test`"
+    dir: .
+    cmds:
+      # `bun run test` runs vitest. Plain `bun test` picks Bun's own runner, which
+      # does not implement the vitest API the suite uses and always fails.
+      - bun run test {{ .CLI_ARGS }}
+    silent: true
+
+  lint:
+    desc: "Run Biome \t usage: `task <prefix>:lint`"
+    dir: .
+    cmds:
+      - bun run lint
+    silent: true
+
+  typecheck:
+    desc: "Type-check without emitting \t usage: `task <prefix>:typecheck`"
+    dir: .
+    cmds:
+      - bunx tsc --noEmit
+    silent: true
+
+  build:
+    desc: "Build the Next.js app \t usage: `task <prefix>:build`"
+    dir: .
+    cmds:
+      - bun run build
+    silent: true
+
+  generate:
+    desc: "Regenerate the GraphQL client and fail if it is out of date \t usage: `task <prefix>:generate`"
+    dir: .
+    cmds:
+      # Same shape as the Go side: compare the working tree before and after so the
+      # check stays usable while other work is uncommitted.
+      - |
+        before=$(git status --porcelain -- .)
+        bun run generate
+        after=$(git status --porcelain -- .)
+        if [ "$before" != "$after" ]; then
+          echo "Generated files are out of date. Review the diff and commit it."
+          git --no-pager diff --stat -- .
+          exit 1
+        fi
+    silent: true
+
+  check:
+    desc: "Run every TS check: typecheck, lint, test, generate, build \t usage: `task <prefix>:check`"
+    cmds:
+      - task: typecheck
+      - task: lint
+      - task: test
+      - task: generate
+      - task: build
+    silent: true
