@@ -25,6 +25,7 @@ import {
   buildAccountGroups,
   KIND_LABELS,
 } from "@/lib/lac-options"
+import { matchesQuery } from "@/lib/search"
 
 // biome-ignore lint/suspicious/noExplicitAny: shared generic helper
 type AnyForm = ReturnType<typeof useForm<any>>
@@ -104,6 +105,11 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
           <Combobox
             items={groups}
             autoHighlight
+            // 既定のフィルタは Intl.Collator の部分一致で、かなカナや英字をまたぐ
+            // 打ち方に当たらない。差し替えは filter prop でしかできない。
+            filter={(item: AccountOption | null, query: string) =>
+              matchesQuery(item?.name ?? "", query)
+            }
             value={findById(field.value)}
             onValueChange={(val: AccountOption | null) => field.onChange(val?.id ?? null)}
             itemToStringLabel={(item) => item?.name ?? ""}
