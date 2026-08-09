@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/resolver"
+	"github.com/suda-3156/kkb/go/internal/dataloader"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/serverenv"
@@ -64,10 +65,10 @@ func New(ctx context.Context, cfg *Config, env *serverenv.ServerEnv) (*Server, e
 }
 
 func (s *Server) Handler(ctx context.Context) http.Handler {
+	res := resolver.New(s.env.Database(), s.em)
+
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
-		Resolvers: resolver.New(
-			s.env.Database(), s.em,
-		),
+		Resolvers:  res,
 		Complexity: graph.ComplexityConfig(),
 	}))
 
@@ -87,7 +88,9 @@ func (s *Server) Handler(ctx context.Context) http.Handler {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", srv)
+	// The loaders have to be per request: they cache without expiry, so one set
+	// shared by the whole process would keep serving pre-mutation values.
+	mux.Handle("/query", dataloader.Middleware(res.LedgerAccountManager())(srv))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   s.cfg.AllowedOrigins,

@@ -2,6 +2,7 @@
 import { useQuery } from "@apollo/client/react"
 import type { SelectRootChangeEventDetails } from "@base-ui/react/select"
 import { useAtomValue, useSetAtom } from "jotai"
+import * as ResponsiveDialog from "@/components/ui/responsive-dialog"
 import {
   Select,
   SelectContent,
@@ -14,7 +15,6 @@ import type { GetTransactionForModalQuery } from "@/graph/graphql"
 import { LoadingInline } from "../loading"
 import { closeModalAtom, type ModalView, modalStateAtom, openModalAtom } from "./state"
 import { ExpenseForm, LedgerAccountForm, RevenueForm, TransactionForm, TransferForm } from "./view"
-import * as EditWrapper from "./wrapper"
 
 const GetTransactionDoc = graphql(/* GraphQL */ `
   query GetTransactionForModal($id: ID!) {
@@ -67,14 +67,14 @@ export const EditModal = () => {
   }
 
   return (
-    <EditWrapper.Container open={state.open} onOpenChange={handleOpenChange}>
-      <EditWrapper.Content
+    <ResponsiveDialog.Container open={state.open} onOpenChange={handleOpenChange}>
+      <ResponsiveDialog.Content
         className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
         showCloseButton={false}
       >
-        <EditWrapper.Header>
+        <ResponsiveDialog.Header>
           <SelectView />
-        </EditWrapper.Header>
+        </ResponsiveDialog.Header>
 
         {loading ? (
           <div className="flex h-48 items-center justify-center">
@@ -87,8 +87,8 @@ export const EditModal = () => {
         ) : (
           viewMap(state.view ?? "fallback", data)
         )}
-      </EditWrapper.Content>
-    </EditWrapper.Container>
+      </ResponsiveDialog.Content>
+    </ResponsiveDialog.Container>
   )
 }
 

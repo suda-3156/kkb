@@ -17,6 +17,13 @@ type LedgerAccount implements Node {
   archivedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
+
+  # 最後にこの科目を使った取引の取引日。一度も使われていなければ null。
+  lastUsedAt: Date
+  # 最後にこの科目を使った取引が記録された時刻。
+  # lastUsedAt は日単位なので同着が出る(同じ日に使った科目は全部並ぶ)。
+  # その同着を解くための第 2 キーとして使う。
+  lastRecordedAt: DateTime
 }
 
 type LedgerAccountConnection {

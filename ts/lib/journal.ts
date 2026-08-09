@@ -13,16 +13,17 @@ import type {
 } from "@/lib/schema"
 
 /**
- * フォームの入力値を GraphQL の取引 input に変換する純粋関数群。
+ * Pure functions turning form values into the GraphQL transaction input.
  *
- * 簡易フォーム(費用・収入・振替)は借方/貸方の向きを UI 側で固定しているが、
- * その向きは型では守れないため、ここに集約して単体テストの対象にする。
+ * The simple forms (expense, revenue, transfer) fix the debit/credit direction in
+ * the UI. Types cannot enforce that direction, so it is gathered here where unit
+ * tests can hold it.
  */
 
 export type TransactionDetail = NonNullable<GetTransactionForModalQuery["transaction"]>
 
 /**
- * 同額の借方 1 行・貸方 1 行を組む。金額が同じなので貸借は必ず一致する。
+ * Build one debit and one credit line of equal amount, so the entry always balances.
  */
 const entryPair = (
   debitAccountId: string,
@@ -33,19 +34,19 @@ const entryPair = (
   { ledgerAccountId: creditAccountId, amount, kind: JournalEntryKind.Credit },
 ]
 
-/** 費用: 費用科目を借方、支払い方法(資産)を貸方に置く。 */
+/** Expense: the expense account is debited, the asset paying for it is credited. */
 export const buildExpenseEntries = (values: ExpenseFormValues): JournalEntryInput[] =>
   entryPair(values.categoryId, values.paymentId, values.amount)
 
-/** 収入: 入金先(資産)を借方、収入科目を貸方に置く。 */
+/** Revenue: the receiving asset is debited, the revenue account is credited. */
 export const buildRevenueEntries = (values: RevenueFormValues): JournalEntryInput[] =>
   entryPair(values.depositId, values.sourceId, values.amount)
 
-/** 振替: 振替先(資産)を借方、振替元(資産)を貸方に置く。 */
+/** Transfer: the destination asset is debited, the source asset is credited. */
 export const buildTransferEntries = (values: TransferFormValues): JournalEntryInput[] =>
   entryPair(values.toId, values.fromId, values.amount)
 
-/** 詳細フォーム: 借方/貸方の向きはユーザーが行ごとに指定済み。 */
+/** Detailed form: the user has already chosen the direction of every line. */
 export const buildTransactionEntries = (values: TransactionFormValues): JournalEntryInput[] =>
   values.entries.map((e) => ({
     ledgerAccountId: e.lacId,
@@ -80,9 +81,9 @@ export const buildCreateTransactionInput = (
 })
 
 /**
- * 更新は楽観的ロックのため id と updatedAt を必要とする。
- * 取得済みの取引が無ければ更新できないので、呼び出し側でフォールバックせず
- * ここで型として要求する。
+ * Updating needs id and updatedAt for optimistic locking. Without an already
+ * fetched transaction there is nothing to update, so this is required by the type
+ * rather than papered over with a fallback at the call site.
  */
 export const buildUpdateTransactionInput = (
   values: TransactionFormValues,
@@ -95,7 +96,7 @@ export const buildUpdateTransactionInput = (
   updatedAt: target.updatedAt,
 })
 
-/** 編集モードの初期値: 取得した取引を詳細フォームの値に戻す(build* の逆変換)。 */
+/** Edit mode defaults: turn a fetched transaction back into detailed form values. */
 export const toTransactionFormValues = (txn: TransactionDetail): TransactionFormValues => ({
   date: txn.date,
   desc: txn.description,

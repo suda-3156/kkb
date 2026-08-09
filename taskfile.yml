@@ -9,10 +9,21 @@ includes:
     taskfile: ./go/taskfile.yml
     dir: ./go
 
+  ts:
+    taskfile: ./ts/taskfile.yml
+    dir: ./ts
+
 tasks:
   default:
     cmds:
       - task -l --sort none
+    silent: true
+
+  check:
+    desc: Run every check for both go and ts. Run this before calling work done
+    cmds:
+      - task: go:check
+      - task: ts:check
     silent: true
 
   start:db:

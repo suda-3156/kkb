@@ -1,5 +1,5 @@
 // If the viewport is wider than the MOBILE_BREAKPOINT in @hooks/use-mobile,
-// the edit modal is a dialog, otherwise it's a full-screen page.
+// a modal is a dialog, otherwise it's a full-screen page.
 // This wrapper component abstracts over the two cases.
 
 import type { DialogRootChangeEventDetails } from "@base-ui/react/dialog"

@@ -63,6 +63,11 @@ models:
     fields:
       parent:
         resolver: true
+      # Derived from journal entries, so they are not part of the model struct.
+      lastUsedAt:
+        resolver: true
+      lastRecordedAt:
+        resolver: true
 
   JournalEntry:
     model:

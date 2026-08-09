@@ -2,10 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Trash2 } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { type UseFieldArrayRemove, useFieldArray, useForm } from "react-hook-form"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Footer } from "@/components/ui/responsive-dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/graphql"
@@ -19,12 +21,13 @@ import { todayString } from "@/lib/timeutils"
 import { cn } from "@/lib/utils"
 import { AmountField, DateField, SelectLedgerAccountField, TextField } from "../fields"
 import { useTransaction } from "../use-transaction"
-import { Footer } from "../wrapper"
 
 export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }) => {
-  const { create, update, loading } = useTransaction()
+  // Renamed because remove collides with useFieldArray's line removal
+  const { create, update, remove: removeTransaction, loading } = useTransaction()
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
-  // 取得済みの取引があれば編集モード
+  // A fetched transaction means edit mode
   const txn = data?.transaction
 
   const form = useForm<TransactionFormValues>({
@@ -110,11 +113,38 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
 
       <Summary form={form} />
 
-      <Footer>
+      <Footer className={cn(txn && "sm:justify-between")}>
+        {txn && (
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={loading}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            <Trash2 />
+            削除
+          </Button>
+        )}
         <Button type="submit" disabled={loading}>
           {loading ? <LoadingInline text="送信中..." /> : "確定"}
         </Button>
       </Footer>
+
+      {txn && (
+        <ConfirmDialog
+          open={confirmingDelete}
+          onOpenChange={setConfirmingDelete}
+          title="この取引を削除しますか?"
+          description={`${txn.date} ${txn.description} — 削除すると元に戻せません。`}
+          confirmLabel="削除する"
+          destructive
+          loading={loading}
+          onConfirm={() => {
+            setConfirmingDelete(false)
+            removeTransaction(txn.id, { success: "削除しました", error: "削除に失敗しました" })
+          }}
+        />
+      )}
     </form>
   )
 }
@@ -188,7 +218,7 @@ const DebitCreditToggle = ({
 }
 
 const Summary = ({ form }: { form: ReturnType<typeof useForm<TransactionFormValues>> }) => {
-  // 借方・貸方合計
+  // Debit and credit totals
   const watchedEntries = form.watch("entries")
   const debitTotal = watchedEntries
     .filter((e) => e.kind === JournalEntryKind.Debit)

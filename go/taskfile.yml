@@ -31,3 +31,41 @@ tasks:
         fi
         golangci-lint run {{ .CLI_ARGS }}
     silent: true
+
+  build:
+    desc: "Compile every Go package \t usage: `task <prefix>:build`"
+    dir: .
+    cmds:
+      - go build ./...
+    silent: true
+
+  generate:
+    desc: "Regenerate ent/gqlgen output and fail if it is out of date \t usage: `task <prefix>:generate`"
+    dir: .
+    cmds:
+      # Compare the working tree before and after, not against a clean tree: the
+      # check has to be usable while other work is uncommitted. Only files that
+      # `go generate` itself touches may differ.
+      #
+      # Always run the whole `./...`: the `//go:generate` directives use
+      # `go run -mod=mod`, so generating also resolves tool versions into go.mod.
+      # Generating one package at a time leaves the output and go.mod disagreeing.
+      - |
+        before=$(git status --porcelain -- .)
+        go generate ./...
+        after=$(git status --porcelain -- .)
+        if [ "$before" != "$after" ]; then
+          echo "Generated files are out of date. Review the diff and commit it."
+          git --no-pager diff --stat -- .
+          exit 1
+        fi
+    silent: true
+
+  check:
+    desc: "Run every Go check: build, lint, test, generate \t usage: `task <prefix>:check`"
+    cmds:
+      - task: build
+      - task: lint
+      - task: test
+      - task: generate
+    silent: true
