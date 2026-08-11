@@ -70,7 +70,7 @@ export const MonthlyExpenseBarChart = ({ dataPoints }: Props) => {
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null
               const month = payload[0].payload.month as string
-              const total = (payload as { value: number }[]).reduce((s, p) => s + p.value, 0)
+              const total = payload.reduce((s, p) => s + (p.value as number), 0)
               return (
                 <div className="rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
                   <p className="mb-1 font-medium">{month}</p>
