@@ -133,6 +133,7 @@ export const AmountField = ({
                 open={draft !== null}
                 expression={draft ?? ""}
                 preview={preview}
+                inputRef={inputRef}
                 onInsert={(text) => {
                   const { value, start, end } = selection()
                   editWithCaret(insertAt(value, start, end, text))
@@ -143,7 +144,14 @@ export const AmountField = ({
                 }}
                 onClear={() => editWithCaret({ value: "", caret: 0 })}
                 onEquals={equals}
-                onDone={() => inputRef.current?.blur()}
+                // Committing has to be explicit. blur() does nothing when focus has
+                // already left the input, which is exactly the state iOS leaves the
+                // field in, and the keypad then had no way to close. Blur as well, so
+                // the next tap on the input fires onFocus and reopens the keypad.
+                onDone={() => {
+                  commit()
+                  inputRef.current?.blur()
+                }}
               />
             )}
           </Field>
