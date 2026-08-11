@@ -95,6 +95,13 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
   // Only show spinner on initial load; fetchMore loading does not block the UI
   const isInitialLoading = loading && !data
 
+  // Base UI does not handle Tab at all: it lets the browser move focus, then closing
+  // restores the input to the selected label — an empty string while only a highlight
+  // exists. Track the highlight so Tab can confirm the candidate the user is looking
+  // at, the same as Enter already does. Cleared for us when the list closes, because
+  // Base UI emits an undefined highlight along with the reset of the active index.
+  const highlightedRef = React.useRef<AccountOption | null>(null)
+
   return (
     <Controller
       name={name}
@@ -113,6 +120,9 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
             }
             value={findById(field.value)}
             onValueChange={(val: AccountOption | null) => field.onChange(val?.id ?? null)}
+            onItemHighlighted={(item: AccountOption | null | undefined) => {
+              highlightedRef.current = item ?? null
+            }}
             itemToStringLabel={(item) => item?.name ?? ""}
             // items is a new instance after every fetch, so selection is decided by id
             itemToStringValue={(item) => item?.id ?? ""}
@@ -122,6 +132,13 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
               className="w-[90%]"
               aria-invalid={fieldState.invalid}
               placeholder="科目を選択"
+              // Tabbing out of a field commits its highlighted candidate. Shift+Tab
+              // counts too: either direction means the user is done with this field.
+              onKeyDown={(event) => {
+                if (event.key !== "Tab") return
+                const item = highlightedRef.current
+                if (item) field.onChange(item.id)
+              }}
             />
             <ComboboxContent>
               {isInitialLoading && (
