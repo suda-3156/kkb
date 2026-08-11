@@ -64,6 +64,12 @@ function ComboboxInput({
             data-slot="input-group-button"
             className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
             disabled={disabled}
+            // Combobox.Trigger already sets tabIndex -1 when the input sits outside
+            // the popup, but Base UI's Button injects tabIndex 0 unconditionally and
+            // that lands on the trigger as an external prop, which wins the merge.
+            // Without this, every combobox costs an extra Tab press. The list still
+            // opens from the input with ArrowDown, so the button is mouse-only.
+            tabIndex={-1}
           />
         )}
         {showClear && <ComboboxClear disabled={disabled} />}
