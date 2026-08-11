@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { CombinedGraphQLErrors } from "@apollo/client/errors"
-import { useMutation, useQuery } from "@apollo/client/react"
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
   createOnDropHandler,
   type DragTarget,
@@ -11,29 +11,33 @@ import {
   renamingFeature,
   selectionFeature,
   syncDataLoaderFeature,
-} from "@headless-tree/core"
-import { useTree } from "@headless-tree/react"
-import * as React from "react"
-import { toast } from "sonner"
-import type { GetLedgerAccountsQuery } from "@/graph/graphql"
+} from "@headless-tree/core";
+import { useTree } from "@headless-tree/react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
+import type { GetLedgerAccountsQuery } from "@/graph/graphql";
 import {
   ArchiveLedgerAccountDoc,
   CreateLedgerAccountDoc,
   GetLedgerAccountsDoc,
   UnarchiveLedgerAccountDoc,
   UpdateLedgerAccountDoc,
-} from "./queries"
-import { buildTree, type Node } from "./types"
+} from "./queries";
+import { buildTree, type Node } from "./types";
 
 export const useLedgerAccount = () => {
   const { data, error, loading, fetchMore } = useQuery<GetLedgerAccountsQuery>(
     GetLedgerAccountsDoc,
     { variables: { first: 100 } },
-  )
-  const [archiveLedgerAccount] = useMutation(ArchiveLedgerAccountDoc)
-  const [unarchiveLedgerAccount] = useMutation(UnarchiveLedgerAccountDoc)
-  const [updateLedgerAccount] = useMutation(UpdateLedgerAccountDoc)
-  const [createLedgerAccount] = useMutation(CreateLedgerAccountDoc)
+  );
+  const [archiveLedgerAccount] = useMutation(ArchiveLedgerAccountDoc);
+  const [unarchiveLedgerAccount] = useMutation(UnarchiveLedgerAccountDoc);
+  const [updateLedgerAccount] = useMutation(UpdateLedgerAccountDoc);
+  const [createLedgerAccount] = useMutation(CreateLedgerAccountDoc);
+  // The dashboard renders account names from server components, which the Apollo
+  // cache cannot reach. Refresh the route so those re-render against fresh data.
+  const router = useRouter();
 
   React.useEffect(() => {
     if (!loading && data?.ledgerAccounts.pageInfo.hasNextPage) {
@@ -42,15 +46,15 @@ export const useLedgerAccount = () => {
           first: 100,
           after: data.ledgerAccounts.pageInfo.endCursor,
         },
-      })
+      });
     }
 
     if (!loading && error) {
-      toast.error("科目の情報の取得に失敗しました")
+      toast.error("科目の情報の取得に失敗しました");
     }
-  }, [loading, data, fetchMore, error])
+  }, [loading, data, fetchMore, error]);
 
-  const nodes = React.useMemo(() => buildTree(data), [data])
+  const nodes = React.useMemo(() => buildTree(data), [data]);
 
   const handleArchive = async (id: string, archived: boolean) => {
     try {
@@ -64,26 +68,29 @@ export const useLedgerAccount = () => {
             variables: { id },
             refetchQueries: ["GetLedgerAccounts"],
             awaitRefetchQueries: true,
-          }))
+          }));
+      router.refresh();
     } catch (e) {
       if (CombinedGraphQLErrors.is(e)) {
         switch (e.errors[0]?.extensions?.code) {
           case "PARENT_IS_ARCHIVED":
-            toast.error("親科目がアーカイブされているため、科目をアンアーカイブできませんでした")
-            return
+            toast.error(
+              "親科目がアーカイブされているため、科目をアンアーカイブできませんでした",
+            );
+            return;
         }
       }
-      console.log("error", e)
-      toast.error("科目を更新できませんでした")
+      console.log("error", e);
+      toast.error("科目を更新できませんでした");
     }
-  }
+  };
 
   const handleChangeParent = async (id: string, newParentId: string) => {
     // Synthetic root nodes carry no updatedAt, so they cannot be optimistically locked.
-    const updatedAt = nodes[id]?.updatedAt
+    const updatedAt = nodes[id]?.updatedAt;
     if (!updatedAt) {
-      toast.error("科目を更新できませんでした")
-      return
+      toast.error("科目を更新できませんでした");
+      return;
     }
 
     try {
@@ -98,26 +105,29 @@ export const useLedgerAccount = () => {
         },
         refetchQueries: ["GetLedgerAccounts"],
         awaitRefetchQueries: true,
-      })
+      });
+      router.refresh();
     } catch (e) {
       if (CombinedGraphQLErrors.is(e)) {
         switch (e.errors[0]?.extensions?.code) {
           case "PARENT_IS_ARCHIVED":
-            toast.error("親科目がアーカイブされているため、科目の親を変更できませんでした")
-            return
+            toast.error(
+              "親科目がアーカイブされているため、科目の親を変更できませんでした",
+            );
+            return;
         }
       }
-      console.log("error", e)
-      toast.error("科目を更新できませんでした")
+      console.log("error", e);
+      toast.error("科目を更新できませんでした");
     }
-  }
+  };
 
   const handleRename = async (id: string, newName: string) => {
     // Synthetic root nodes carry no updatedAt, so they cannot be optimistically locked.
-    const updatedAt = nodes[id]?.updatedAt
+    const updatedAt = nodes[id]?.updatedAt;
     if (!updatedAt) {
-      toast.error("科目を更新できませんでした")
-      return
+      toast.error("科目を更新できませんでした");
+      return;
     }
 
     try {
@@ -131,16 +141,21 @@ export const useLedgerAccount = () => {
         },
         refetchQueries: ["GetLedgerAccounts"],
         awaitRefetchQueries: true,
-      })
+      });
+      router.refresh();
     } catch (e) {
-      console.log("error", e)
-      toast.error("科目を更新できませんでした")
+      console.log("error", e);
+      toast.error("科目を更新できませんでした");
     }
-  }
+  };
 
-  const handleCreate = async (parentId: string, name: string, isGroup = false) => {
-    const kind = nodes[parentId].kind
-    if (!kind) return
+  const handleCreate = async (
+    parentId: string,
+    name: string,
+    isGroup = false,
+  ) => {
+    const kind = nodes[parentId].kind;
+    if (!kind) return;
     try {
       const result = await createLedgerAccount({
         variables: {
@@ -153,13 +168,13 @@ export const useLedgerAccount = () => {
         },
         refetchQueries: ["GetLedgerAccounts"],
         awaitRefetchQueries: true,
-      })
-      return result.data?.createLedgerAccount
+      });
+      return result.data?.createLedgerAccount;
     } catch (e) {
-      console.log("error", e)
-      toast.error("科目を作成できませんでした")
+      console.log("error", e);
+      toast.error("科目を作成できませんでした");
     }
-  }
+  };
 
   const tree = useTree<Node>({
     rootItemId: "__root__",
@@ -167,26 +182,28 @@ export const useLedgerAccount = () => {
     isItemFolder: (item) => item.getItemData().isGroup,
 
     canDropForeignDragObject: (_, target) => {
-      if (!target.item.isFolder()) return false
-      if (target.item.getId() === "__root__") return false
-      const node = target.item.getItemData()
-      if (node.archivedAt) return false
-      return true
+      if (!target.item.isFolder()) return false;
+      if (target.item.getId() === "__root__") return false;
+      const node = target.item.getItemData();
+      if (node.archivedAt) return false;
+      return true;
     },
     onDropForeignDragObject: async (dataTransfer, target) => {
-      let isGroup = false
+      let isGroup = false;
       try {
-        const parsed = JSON.parse(dataTransfer.getData("text/plain"))
-        isGroup = parsed.isGroup ?? false
+        const parsed = JSON.parse(dataTransfer.getData("text/plain"));
+        isGroup = parsed.isGroup ?? false;
       } catch {
-        return
+        return;
       }
-      const name = isGroup ? "新しいフォルダ" : "新しい科目"
-      const result = await handleCreate(target.item.getId(), name, isGroup)
+      const name = isGroup ? "新しいフォルダ" : "新しい科目";
+      const result = await handleCreate(target.item.getId(), name, isGroup);
 
       if (!result) {
-        toast.warning("ツリーの更新に失敗しました。ページをリロードしてください。")
-        return
+        toast.warning(
+          "ツリーの更新に失敗しました。ページをリロードしてください。",
+        );
+        return;
       }
 
       nodes[result.id] = {
@@ -199,49 +216,55 @@ export const useLedgerAccount = () => {
           id: result.parent?.id || null,
         },
         children: [],
-      }
+      };
 
       insertItemsAtTarget([result?.id], target, (item, newChildrenIds) => {
-        nodes[(item as ItemInstance<Node>).getId()].children = newChildrenIds as string[]
-      })
+        nodes[(item as ItemInstance<Node>).getId()].children =
+          newChildrenIds as string[];
+      });
     },
 
     canReorder: true,
     canDrag: (items) => items.every((item) => !item.getId().startsWith("__")),
     canDrop: (items, target) => {
-      if (!target.item.isFolder()) return false
-      if (items.length !== 1) return false
+      if (!target.item.isFolder()) return false;
+      if (items.length !== 1) return false;
 
-      const [item] = items
-      if (!item) return false
+      const [item] = items;
+      if (!item) return false;
 
-      if (item.getId() === target.item.getId()) return false
-      if (item.getItemData().parent?.id === target.item.getId()) return false
+      if (item.getId() === target.item.getId()) return false;
+      if (item.getItemData().parent?.id === target.item.getId()) return false;
 
-      if (item.getItemData().kind !== target.item.getItemData().kind) return false
+      if (item.getItemData().kind !== target.item.getItemData().kind)
+        return false;
 
-      if (target.item.getItemData().archivedAt) return false
+      if (target.item.getItemData().archivedAt) return false;
 
-      return true
+      return true;
     },
     onDrop: async (items, target) => {
-      const [item] = items
-      if (!item) return
+      const [item] = items;
+      if (!item) return;
 
       createOnDropHandler((parentItem, newChildren) => {
-        nodes[(parentItem as ItemInstance<Node>).getId()].children = newChildren as string[]
-      })(items as unknown as ItemInstance<unknown>[], target as unknown as DragTarget<unknown>)
+        nodes[(parentItem as ItemInstance<Node>).getId()].children =
+          newChildren as string[];
+      })(
+        items as unknown as ItemInstance<unknown>[],
+        target as unknown as DragTarget<unknown>,
+      );
 
-      nodes[item.getId()].parent = { id: target.item.getId() }
+      nodes[item.getId()].parent = { id: target.item.getId() };
 
-      await handleChangeParent(item.getId(), target.item.getId())
+      await handleChangeParent(item.getId(), target.item.getId());
     },
 
     canRename: (item) => !item.getId().startsWith("__"),
     onRename: (item, value) => {
-      console.log("rename", item.getId(), value)
-      nodes[item.getId()].name = value
-      handleRename(item.getId(), value)
+      console.log("rename", item.getId(), value);
+      nodes[item.getId()].name = value;
+      handleRename(item.getId(), value);
     },
 
     dataLoader: {
@@ -249,8 +272,13 @@ export const useLedgerAccount = () => {
       getChildren: (itemId) => nodes[itemId].children,
     },
     indent: 16,
-    features: [syncDataLoaderFeature, selectionFeature, renamingFeature, dragAndDropFeature],
-  })
+    features: [
+      syncDataLoaderFeature,
+      selectionFeature,
+      renamingFeature,
+      dragAndDropFeature,
+    ],
+  });
 
-  return { tree, handleArchive }
-}
+  return { tree, handleArchive };
+};
