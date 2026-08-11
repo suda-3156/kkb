@@ -2,6 +2,7 @@
 
 import { Delete } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
+import * as React from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -45,6 +46,7 @@ export const AmountKeypad = ({
   open,
   expression,
   preview,
+  inputRef,
   onInsert,
   onBackspace,
   onClear,
@@ -56,12 +58,52 @@ export const AmountKeypad = ({
   expression: string
   /** The result when the text evaluates; null for a bare number or an invalid one */
   preview: number | null
+  /** The amount input, so touching it is not mistaken for leaving the field */
+  inputRef: React.RefObject<HTMLInputElement | null>
   onInsert: (text: string) => void
   onBackspace: () => void
   onClear: () => void
   onEquals: () => void
   onDone: () => void
 }) => {
+  const rootRef = React.useRef<HTMLFieldSetElement | null>(null)
+
+  // The listener below has to reach the current onDone without resubscribing on
+  // every keystroke, and onDone is a new closure on each render.
+  const onDoneRef = React.useRef(onDone)
+  React.useEffect(() => {
+    onDoneRef.current = onDone
+  })
+
+  // The input's own blur cannot be the only thing that ends the edit: iOS does not
+  // reliably fire it when another field is activated, and Base UI's combobox trigger
+  // deliberately takes no focus on touch, so tapping `>` moves focus nowhere at all.
+  // Either symptom left the keypad stranded on screen. Anything that takes focus
+  // elsewhere, or any tap outside both the input and the keypad, also ends the edit.
+  //
+  // `click` rather than `pointerdown`: a scroll gesture must not dismiss the keypad.
+  React.useEffect(() => {
+    if (!open) {
+      return
+    }
+    const end = (event: Event) => {
+      const target = event.target as Node | null
+      if (!target) {
+        return
+      }
+      if (rootRef.current?.contains(target) || inputRef.current?.contains(target)) {
+        return
+      }
+      onDoneRef.current()
+    }
+    document.addEventListener("focusin", end, true)
+    document.addEventListener("click", end, true)
+    return () => {
+      document.removeEventListener("focusin", end, true)
+      document.removeEventListener("click", end, true)
+    }
+  }, [open, inputRef])
+
   if (typeof document === "undefined") return null
 
   const run = (key: KeyDef) => {
@@ -76,6 +118,7 @@ export const AmountKeypad = ({
       {open && (
         <motion.fieldset
           key="amount-keypad"
+          ref={rootRef}
           aria-label="電卓キーパッド"
           className="fixed inset-x-0 bottom-0 z-60 border-t bg-background shadow-lg"
           onPointerDown={(e) => e.preventDefault()}
