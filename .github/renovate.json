@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>suda-3156/renovate-config"]
+  "extends": ["github>suda-3156/renovate-config"],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mysql"],
+      "allowedVersions": "<9",
+      "description": "Match Cloud SQL (MYSQL_8_4)"
+    }
+  ]
 }
