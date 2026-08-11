@@ -1,8 +1,8 @@
 import { ReceiptText } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { graphql } from "@/graph"
-import {
-  type DashboardRecentTransactionsQuery,
+import type {
+  DashboardRecentTransactionsQuery,
   JournalEntryKind,
   LedgerAccountKind,
 } from "@/graph/graphql"
@@ -38,46 +38,30 @@ type EntryInput = {
 const classifyTransaction = (
   entries: EntryInput[],
 ): Pick<RecentTransactionItem, "type" | "categoryName" | "amount"> => {
-  const isExpense = entries.some(
-    (e) => e.kind === JournalEntryKind.Debit && e.ledgerAccount.kind === LedgerAccountKind.Expense,
-  )
+  const isExpense = entries.some((e) => e.kind === "DEBIT" && e.ledgerAccount.kind === "EXPENSE")
   if (isExpense) {
-    const account = entries.find(
-      (e) =>
-        e.kind === JournalEntryKind.Debit && e.ledgerAccount.kind === LedgerAccountKind.Expense,
-    )
+    const account = entries.find((e) => e.kind === "DEBIT" && e.ledgerAccount.kind === "EXPENSE")
     return {
       type: "expense",
       categoryName: account?.ledgerAccount.name ?? "支出",
-      amount: entries
-        .filter((e) => e.kind === JournalEntryKind.Debit)
-        .reduce((s, e) => s + e.amount, 0),
+      amount: entries.filter((e) => e.kind === "DEBIT").reduce((s, e) => s + e.amount, 0),
     }
   }
 
-  const isRevenue = entries.some(
-    (e) => e.kind === JournalEntryKind.Credit && e.ledgerAccount.kind === LedgerAccountKind.Revenue,
-  )
+  const isRevenue = entries.some((e) => e.kind === "CREDIT" && e.ledgerAccount.kind === "REVENUE")
   if (isRevenue) {
-    const account = entries.find(
-      (e) =>
-        e.kind === JournalEntryKind.Credit && e.ledgerAccount.kind === LedgerAccountKind.Revenue,
-    )
+    const account = entries.find((e) => e.kind === "CREDIT" && e.ledgerAccount.kind === "REVENUE")
     return {
       type: "revenue",
       categoryName: account?.ledgerAccount.name ?? "収入",
-      amount: entries
-        .filter((e) => e.kind === JournalEntryKind.Credit)
-        .reduce((s, e) => s + e.amount, 0),
+      amount: entries.filter((e) => e.kind === "CREDIT").reduce((s, e) => s + e.amount, 0),
     }
   }
 
   return {
     type: "other",
     categoryName: "その他",
-    amount: entries
-      .filter((e) => e.kind === JournalEntryKind.Debit)
-      .reduce((s, e) => s + e.amount, 0),
+    amount: entries.filter((e) => e.kind === "DEBIT").reduce((s, e) => s + e.amount, 0),
   }
 }
 

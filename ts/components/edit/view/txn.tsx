@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Footer } from "@/components/ui/responsive-dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { type GetTransactionForModalQuery, JournalEntryKind } from "@/graph/graphql"
+import type { GetTransactionForModalQuery } from "@/graph/graphql"
 import {
   buildCreateTransactionInput,
   buildUpdateTransactionInput,
@@ -36,8 +36,8 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
       date: todayString(),
       desc: "",
       entries: [
-        { lacId: "", amount: Number.NaN, kind: JournalEntryKind.Debit },
-        { lacId: "", amount: Number.NaN, kind: JournalEntryKind.Credit },
+        { lacId: "", amount: Number.NaN, kind: "DEBIT" },
+        { lacId: "", amount: Number.NaN, kind: "CREDIT" },
       ],
     },
   })
@@ -90,7 +90,7 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => append({ lacId: "", amount: Number.NaN, kind: JournalEntryKind.Debit })}
+          onClick={() => append({ lacId: "", amount: Number.NaN, kind: "DEBIT" })}
         >
           <Plus className="mr-1 size-3.5" />
           行を追加
@@ -197,10 +197,7 @@ const DebitCreditToggle = ({
   const kind = form.watch(`entries.${index}.kind`)
 
   const toggleKind = () => {
-    form.setValue(
-      `entries.${index}.kind`,
-      kind === JournalEntryKind.Debit ? JournalEntryKind.Credit : JournalEntryKind.Debit,
-    )
+    form.setValue(`entries.${index}.kind`, kind === "DEBIT" ? "CREDIT" : "DEBIT")
   }
 
   return (
@@ -209,10 +206,10 @@ const DebitCreditToggle = ({
       variant="outline"
       size="default"
       onClick={toggleKind}
-      className={cn(kind === JournalEntryKind.Debit ? "bg-red-100" : "bg-blue-100")}
+      className={cn(kind === "DEBIT" ? "bg-red-100" : "bg-blue-100")}
     >
       {" "}
-      {kind === JournalEntryKind.Debit ? "借方" : "貸方"}
+      {kind === "DEBIT" ? "借方" : "貸方"}
     </Button>
   )
 }
@@ -221,10 +218,10 @@ const Summary = ({ form }: { form: ReturnType<typeof useForm<TransactionFormValu
   // Debit and credit totals
   const watchedEntries = form.watch("entries")
   const debitTotal = watchedEntries
-    .filter((e) => e.kind === JournalEntryKind.Debit)
+    .filter((e) => e.kind === "DEBIT")
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
   const creditTotal = watchedEntries
-    .filter((e) => e.kind === JournalEntryKind.Credit)
+    .filter((e) => e.kind === "CREDIT")
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
   const isBalanced = debitTotal > 0 && debitTotal === creditTotal
 

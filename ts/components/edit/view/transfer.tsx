@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { Footer } from "@/components/ui/responsive-dialog"
-import { LedgerAccountKind } from "@/graph/graphql"
 import { buildTransferInput } from "@/lib/journal"
 import { type TransferFormValues, transferSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
@@ -51,19 +50,9 @@ export const TransferForm = () => {
         placeholder="メモを入力"
       />
 
-      <SelectLedgerAccountField
-        form={form}
-        label="振替元口座"
-        name="fromId"
-        kind={LedgerAccountKind.Asset}
-      />
+      <SelectLedgerAccountField form={form} label="振替元口座" name="fromId" kind={"ASSET"} />
 
-      <SelectLedgerAccountField
-        form={form}
-        label="振替先口座"
-        name="toId"
-        kind={LedgerAccountKind.Asset}
-      />
+      <SelectLedgerAccountField form={form} label="振替先口座" name="toId" kind={"ASSET"} />
 
       <Footer>
         <Button type="submit" disabled={loading}>

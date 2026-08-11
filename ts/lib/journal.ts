@@ -1,9 +1,8 @@
-import {
-  type CreateTransactionInput,
-  type GetTransactionForModalQuery,
-  type JournalEntryInput,
-  JournalEntryKind,
-  type UpdateTransactionInput,
+import type {
+  CreateTransactionInput,
+  GetTransactionForModalQuery,
+  JournalEntryInput,
+  UpdateTransactionInput,
 } from "@/graph/graphql"
 import type {
   ExpenseFormValues,
@@ -30,8 +29,8 @@ const entryPair = (
   creditAccountId: string,
   amount: number,
 ): JournalEntryInput[] => [
-  { ledgerAccountId: debitAccountId, amount, kind: JournalEntryKind.Debit },
-  { ledgerAccountId: creditAccountId, amount, kind: JournalEntryKind.Credit },
+  { ledgerAccountId: debitAccountId, amount, kind: "DEBIT" },
+  { ledgerAccountId: creditAccountId, amount, kind: "CREDIT" },
 ]
 
 /** Expense: the expense account is debited, the asset paying for it is credited. */

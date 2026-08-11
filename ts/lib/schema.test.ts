@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { JournalEntryKind } from "@/graph/graphql"
 import { expenseSchema, ledgerAccountSchema, transactionSchema } from "@/lib/schema"
 
 const debit = (lacId: string, amount: number) => ({
   lacId,
   amount,
-  kind: JournalEntryKind.Debit,
+  kind: "DEBIT",
 })
 const credit = (lacId: string, amount: number) => ({
   lacId,
   amount,
-  kind: JournalEntryKind.Credit,
+  kind: "CREDIT",
 })
 
 describe("transactionSchema — double-entry balance (frontend mirror of ErrUnbalancedEntries)", () => {

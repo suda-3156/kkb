@@ -1,4 +1,4 @@
-import { LedgerAccountKind } from "@/graph/graphql"
+import type { LedgerAccountKind } from "@/graph/graphql"
 import type { AccountOrder } from "@/lib/settings"
 
 /**
@@ -32,19 +32,19 @@ export type AccountGroup = {
 
 /** Display order, matching how a balance sheet and an income statement read. */
 export const KIND_ORDER: LedgerAccountKind[] = [
-  LedgerAccountKind.Asset,
-  LedgerAccountKind.Liability,
-  LedgerAccountKind.Expense,
-  LedgerAccountKind.Revenue,
-  LedgerAccountKind.Equity,
+  "ASSET",
+  "LIABILITY",
+  "EXPENSE",
+  "REVENUE",
+  "EQUITY",
 ]
 
 export const KIND_LABELS: Record<LedgerAccountKind, string> = {
-  [LedgerAccountKind.Asset]: "資産",
-  [LedgerAccountKind.Liability]: "負債",
-  [LedgerAccountKind.Expense]: "費用",
-  [LedgerAccountKind.Revenue]: "収益",
-  [LedgerAccountKind.Equity]: "純資産",
+  ASSET: "資産",
+  LIABILITY: "負債",
+  EXPENSE: "費用",
+  REVENUE: "収益",
+  EQUITY: "純資産",
 }
 
 /** Turn a timestamp into a comparable number. Missing or broken values sort oldest. */

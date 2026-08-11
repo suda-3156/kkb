@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { type JournalEntryInput, JournalEntryKind, LedgerAccountKind } from "@/graph/graphql"
+import type { JournalEntryInput } from "@/graph/graphql"
 import {
   buildCreateTransactionInput,
   buildExpenseEntries,
@@ -22,10 +22,8 @@ import type {
 // cases are the real specification. They also confirm the built input survives the
 // backend's balance check (ErrUnbalancedEntries).
 
-const debitOf = (entries: JournalEntryInput[]) =>
-  entries.filter((e) => e.kind === JournalEntryKind.Debit)
-const creditOf = (entries: JournalEntryInput[]) =>
-  entries.filter((e) => e.kind === JournalEntryKind.Credit)
+const debitOf = (entries: JournalEntryInput[]) => entries.filter((e) => e.kind === "DEBIT")
+const creditOf = (entries: JournalEntryInput[]) => entries.filter((e) => e.kind === "CREDIT")
 const sum = (entries: JournalEntryInput[]) => entries.reduce((acc, e) => acc + e.amount, 0)
 
 describe("buildExpenseEntries", () => {
@@ -39,8 +37,8 @@ describe("buildExpenseEntries", () => {
 
   it("debits the expense account and credits the payment method", () => {
     expect(buildExpenseEntries(values)).toEqual([
-      { ledgerAccountId: "lac_food", amount: 1200, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_cash", amount: 1200, kind: JournalEntryKind.Credit },
+      { ledgerAccountId: "lac_food", amount: 1200, kind: "DEBIT" },
+      { ledgerAccountId: "lac_cash", amount: 1200, kind: "CREDIT" },
     ])
   })
 
@@ -61,8 +59,8 @@ describe("buildRevenueEntries", () => {
 
   it("debits the receiving account and credits the revenue account", () => {
     expect(buildRevenueEntries(values)).toEqual([
-      { ledgerAccountId: "lac_bank", amount: 250000, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_salary", amount: 250000, kind: JournalEntryKind.Credit },
+      { ledgerAccountId: "lac_bank", amount: 250000, kind: "DEBIT" },
+      { ledgerAccountId: "lac_salary", amount: 250000, kind: "CREDIT" },
     ])
   })
 
@@ -83,16 +81,16 @@ describe("buildTransferEntries", () => {
 
   it("debits the destination and credits the source", () => {
     expect(buildTransferEntries(values)).toEqual([
-      { ledgerAccountId: "lac_cash", amount: 50000, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_bank", amount: 50000, kind: JournalEntryKind.Credit },
+      { ledgerAccountId: "lac_cash", amount: 50000, kind: "DEBIT" },
+      { ledgerAccountId: "lac_bank", amount: 50000, kind: "CREDIT" },
     ])
   })
 
   it("swaps the direction when source and destination are swapped", () => {
     const reversed = buildTransferEntries({ ...values, fromId: values.toId, toId: values.fromId })
     expect(reversed).toEqual([
-      { ledgerAccountId: "lac_bank", amount: 50000, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_cash", amount: 50000, kind: JournalEntryKind.Credit },
+      { ledgerAccountId: "lac_bank", amount: 50000, kind: "DEBIT" },
+      { ledgerAccountId: "lac_cash", amount: 50000, kind: "CREDIT" },
     ])
   })
 })
@@ -103,18 +101,18 @@ describe("buildTransactionEntries", () => {
       date: "2026-08-02",
       desc: "クレカ払いの分割",
       entries: [
-        { lacId: "lac_food", amount: 800, kind: JournalEntryKind.Debit },
-        { lacId: "lac_daily", amount: 200, kind: JournalEntryKind.Debit },
-        { lacId: "lac_card", amount: 1000, kind: JournalEntryKind.Credit },
+        { lacId: "lac_food", amount: 800, kind: "DEBIT" },
+        { lacId: "lac_daily", amount: 200, kind: "DEBIT" },
+        { lacId: "lac_card", amount: 1000, kind: "CREDIT" },
       ],
     }
 
     const entries = buildTransactionEntries(values)
 
     expect(entries).toEqual([
-      { ledgerAccountId: "lac_food", amount: 800, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_daily", amount: 200, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_card", amount: 1000, kind: JournalEntryKind.Credit },
+      { ledgerAccountId: "lac_food", amount: 800, kind: "DEBIT" },
+      { ledgerAccountId: "lac_daily", amount: 200, kind: "DEBIT" },
+      { ledgerAccountId: "lac_card", amount: 1000, kind: "CREDIT" },
     ])
     expect(sum(debitOf(entries))).toBe(sum(creditOf(entries)))
   })
@@ -124,8 +122,8 @@ describe("buildTransactionEntries", () => {
       date: "2026-08-02",
       desc: "順序",
       entries: [
-        { lacId: "a", amount: 1, kind: JournalEntryKind.Credit },
-        { lacId: "b", amount: 1, kind: JournalEntryKind.Debit },
+        { lacId: "a", amount: 1, kind: "CREDIT" },
+        { lacId: "b", amount: 1, kind: "DEBIT" },
       ],
     }
     expect(buildTransactionEntries(values).map((e) => e.ledgerAccountId)).toEqual(["a", "b"])
@@ -146,8 +144,8 @@ describe("build*Input", () => {
       date: "2026-08-02",
       description: "昼食",
       entries: [
-        { ledgerAccountId: "lac_food", amount: 1200, kind: JournalEntryKind.Debit },
-        { ledgerAccountId: "lac_cash", amount: 1200, kind: JournalEntryKind.Credit },
+        { ledgerAccountId: "lac_food", amount: 1200, kind: "DEBIT" },
+        { ledgerAccountId: "lac_cash", amount: 1200, kind: "CREDIT" },
       ],
     })
   })
@@ -156,8 +154,8 @@ describe("build*Input", () => {
     date: "2026-08-02",
     desc: "メモ",
     entries: [
-      { lacId: "a", amount: 100, kind: JournalEntryKind.Debit },
-      { lacId: "b", amount: 100, kind: JournalEntryKind.Credit },
+      { lacId: "a", amount: 100, kind: "DEBIT" },
+      { lacId: "b", amount: 100, kind: "CREDIT" },
     ],
   }
 
@@ -177,8 +175,8 @@ describe("build*Input", () => {
       date: "2026-08-02",
       description: "メモ",
       entries: [
-        { ledgerAccountId: "a", amount: 100, kind: JournalEntryKind.Debit },
-        { ledgerAccountId: "b", amount: 100, kind: JournalEntryKind.Credit },
+        { ledgerAccountId: "a", amount: 100, kind: "DEBIT" },
+        { ledgerAccountId: "b", amount: 100, kind: "CREDIT" },
       ],
       updatedAt: "2026-08-01T10:00:00Z",
     })
@@ -194,13 +192,13 @@ describe("toTransactionFormValues", () => {
     entries: [
       {
         amount: 1200,
-        kind: JournalEntryKind.Debit,
-        ledgerAccount: { id: "lac_food", name: "食費", kind: LedgerAccountKind.Expense },
+        kind: "DEBIT",
+        ledgerAccount: { id: "lac_food", name: "食費", kind: "EXPENSE" },
       },
       {
         amount: 1200,
-        kind: JournalEntryKind.Credit,
-        ledgerAccount: { id: "lac_cash", name: "現金", kind: LedgerAccountKind.Asset },
+        kind: "CREDIT",
+        ledgerAccount: { id: "lac_cash", name: "現金", kind: "ASSET" },
       },
     ],
   }
@@ -210,8 +208,8 @@ describe("toTransactionFormValues", () => {
       date: "2026-08-02",
       desc: "昼食",
       entries: [
-        { lacId: "lac_food", amount: 1200, kind: JournalEntryKind.Debit },
-        { lacId: "lac_cash", amount: 1200, kind: JournalEntryKind.Credit },
+        { lacId: "lac_food", amount: 1200, kind: "DEBIT" },
+        { lacId: "lac_cash", amount: 1200, kind: "CREDIT" },
       ],
     })
   })
@@ -220,8 +218,8 @@ describe("toTransactionFormValues", () => {
     const input = buildUpdateTransactionInput(toTransactionFormValues(txn), txn)
 
     expect(input.entries).toEqual([
-      { ledgerAccountId: "lac_food", amount: 1200, kind: JournalEntryKind.Debit },
-      { ledgerAccountId: "lac_cash", amount: 1200, kind: JournalEntryKind.Credit },
+      { ledgerAccountId: "lac_food", amount: 1200, kind: "DEBIT" },
+      { ledgerAccountId: "lac_cash", amount: 1200, kind: "CREDIT" },
     ])
     expect(input.date).toBe(txn.date)
     expect(input.description).toBe(txn.description)

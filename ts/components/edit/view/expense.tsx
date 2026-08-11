@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Footer } from "@/components/ui/responsive-dialog"
-import { LedgerAccountKind } from "@/graph/graphql"
 import { buildExpenseInput } from "@/lib/journal"
 import { type ExpenseFormValues, expenseSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
@@ -48,19 +47,9 @@ export const ExpenseForm = () => {
         placeholder="メモを入力"
       />
 
-      <SelectLedgerAccountField
-        form={form}
-        label="費用科目"
-        name="categoryId"
-        kind={LedgerAccountKind.Expense}
-      />
+      <SelectLedgerAccountField form={form} label="費用科目" name="categoryId" kind={"EXPENSE"} />
 
-      <SelectLedgerAccountField
-        form={form}
-        label="支払い方法"
-        name="paymentId"
-        kind={LedgerAccountKind.Asset}
-      />
+      <SelectLedgerAccountField form={form} label="支払い方法" name="paymentId" kind={"ASSET"} />
 
       <Footer>
         <Button type="submit" disabled={loading}>

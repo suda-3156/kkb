@@ -79,6 +79,13 @@ export const useLedgerAccount = () => {
   }
 
   const handleChangeParent = async (id: string, newParentId: string) => {
+    // Synthetic root nodes carry no updatedAt, so they cannot be optimistically locked.
+    const updatedAt = nodes[id]?.updatedAt
+    if (!updatedAt) {
+      toast.error("科目を更新できませんでした")
+      return
+    }
+
     try {
       await updateLedgerAccount({
         variables: {
@@ -86,7 +93,7 @@ export const useLedgerAccount = () => {
             id,
             parentId: newParentId?.startsWith("__") ? null : newParentId,
             unsetParent: !!newParentId?.startsWith("__"),
-            updatedAt: nodes[id].updatedAt,
+            updatedAt,
           },
         },
         refetchQueries: ["GetLedgerAccounts"],
@@ -106,13 +113,20 @@ export const useLedgerAccount = () => {
   }
 
   const handleRename = async (id: string, newName: string) => {
+    // Synthetic root nodes carry no updatedAt, so they cannot be optimistically locked.
+    const updatedAt = nodes[id]?.updatedAt
+    if (!updatedAt) {
+      toast.error("科目を更新できませんでした")
+      return
+    }
+
     try {
       await updateLedgerAccount({
         variables: {
           input: {
             id,
             name: newName,
-            updatedAt: nodes[id].updatedAt,
+            updatedAt,
           },
         },
         refetchQueries: ["GetLedgerAccounts"],

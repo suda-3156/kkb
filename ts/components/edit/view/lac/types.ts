@@ -1,5 +1,4 @@
-import type { GetLedgerAccountsQuery } from "@/graph/graphql"
-import { LedgerAccountKind } from "@/graph/graphql"
+import type { GetLedgerAccountsQuery, LedgerAccountKind } from "@/graph/graphql"
 
 export type Node = {
   id: string
@@ -21,35 +20,35 @@ export const buildTree = (data: GetLedgerAccountsQuery | undefined): Record<stri
       name: "Expense",
       isGroup: true,
       children: [],
-      kind: LedgerAccountKind.Expense,
+      kind: "EXPENSE",
     },
     __revenue__: {
       id: "__revenue__",
       name: "Revenue",
       isGroup: true,
       children: [],
-      kind: LedgerAccountKind.Revenue,
+      kind: "REVENUE",
     },
     __liability__: {
       id: "__liability__",
       name: "Liability",
       isGroup: true,
       children: [],
-      kind: LedgerAccountKind.Liability,
+      kind: "LIABILITY",
     },
     __asset__: {
       id: "__asset__",
       name: "Asset",
       isGroup: true,
       children: [],
-      kind: LedgerAccountKind.Asset,
+      kind: "ASSET",
     },
     __equity__: {
       id: "__equity__",
       name: "Equity",
       isGroup: true,
       children: [],
-      kind: LedgerAccountKind.Equity,
+      kind: "EQUITY",
     },
     __root__: {
       id: "__root__",

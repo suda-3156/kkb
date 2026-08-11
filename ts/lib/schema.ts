@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { JournalEntryKind } from "../graph/graphql"
 
 const dateSchema = z
   .string()
@@ -41,7 +40,7 @@ export const transferSchema = z.object({
 export const journalEntrySchema = z.object({
   lacId: z.string().min(1, "勘定科目を選択してください"),
   amount: amountSchema,
-  kind: z.enum([JournalEntryKind.Debit, JournalEntryKind.Credit]),
+  kind: z.enum(["DEBIT", "CREDIT"]),
 })
 
 export const transactionSchema = z
@@ -52,10 +51,10 @@ export const transactionSchema = z
   })
   .superRefine((data, ctx) => {
     const debitTotal = data.entries
-      .filter((e) => e.kind === JournalEntryKind.Debit)
+      .filter((e) => e.kind === "DEBIT")
       .reduce((sum, e) => sum + e.amount, 0)
     const creditTotal = data.entries
-      .filter((e) => e.kind === JournalEntryKind.Credit)
+      .filter((e) => e.kind === "CREDIT")
       .reduce((sum, e) => sum + e.amount, 0)
     if (debitTotal !== creditTotal || debitTotal === 0) {
       ctx.addIssue({

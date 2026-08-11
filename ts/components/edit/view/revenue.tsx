@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form"
 import { LoadingInline } from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { Footer } from "@/components/ui/responsive-dialog"
-import { LedgerAccountKind } from "@/graph/graphql"
 import { buildRevenueInput } from "@/lib/journal"
 import { type RevenueFormValues, revenueSchema } from "@/lib/schema"
 import { todayString } from "@/lib/timeutils"
@@ -51,19 +50,9 @@ export const RevenueForm = () => {
         placeholder="メモを入力"
       />
 
-      <SelectLedgerAccountField
-        form={form}
-        label="収入科目"
-        name="sourceId"
-        kind={LedgerAccountKind.Revenue}
-      />
+      <SelectLedgerAccountField form={form} label="収入科目" name="sourceId" kind={"REVENUE"} />
 
-      <SelectLedgerAccountField
-        form={form}
-        label="入金先口座"
-        name="depositId"
-        kind={LedgerAccountKind.Asset}
-      />
+      <SelectLedgerAccountField form={form} label="入金先口座" name="depositId" kind={"ASSET"} />
 
       <Footer>
         <Button type="submit" disabled={loading}>

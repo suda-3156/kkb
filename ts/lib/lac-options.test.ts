@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { LedgerAccountKind } from "@/graph/graphql"
+import type { LedgerAccountKind } from "@/graph/graphql"
 import { type AccountOption, buildAccountGroups, bumpLastUsed, KIND_ORDER } from "@/lib/lac-options"
 
 // Base UI walks the group structure handed to `items` as-is when it filters, so
@@ -24,26 +24,26 @@ const account = (
 })
 
 // createdAt increases with the id (lac_1 is the account created first).
-const cash = account("lac_1", "現金", LedgerAccountKind.Asset, {
+const cash = account("lac_1", "現金", "ASSET", {
   createdAt: "2026-01-01T00:00:00Z",
 })
-const bank = account("lac_2", "銀行", LedgerAccountKind.Asset, {
+const bank = account("lac_2", "銀行", "ASSET", {
   createdAt: "2026-01-02T00:00:00Z",
 })
-const food = account("lac_3", "食費", LedgerAccountKind.Expense, {
+const food = account("lac_3", "食費", "EXPENSE", {
   createdAt: "2026-01-03T00:00:00Z",
 })
-const salary = account("lac_4", "給与", LedgerAccountKind.Revenue, {
+const salary = account("lac_4", "給与", "REVENUE", {
   createdAt: "2026-01-04T00:00:00Z",
 })
-const assetGroup = account("lac_5", "資産グループ", LedgerAccountKind.Asset, {
+const assetGroup = account("lac_5", "資産グループ", "ASSET", {
   isGroup: true,
   createdAt: "2026-01-05T00:00:00Z",
 })
 
 /** An asset account with a last use. Only the date and recorded time matter. */
 const used = (id: string, lastUsedAt: string, lastRecordedAt: string, createdAt?: string) =>
-  account(id, id, LedgerAccountKind.Asset, {
+  account(id, id, "ASSET", {
     lastUsedAt,
     lastRecordedAt,
     ...(createdAt ? { createdAt } : {}),
@@ -53,11 +53,7 @@ describe("buildAccountGroups", () => {
   it("groups by kind and orders the groups by KIND_ORDER", () => {
     const groups = buildAccountGroups([salary, food, cash])
 
-    expect(groups.map((g) => g.value)).toEqual([
-      LedgerAccountKind.Asset,
-      LedgerAccountKind.Expense,
-      LedgerAccountKind.Revenue,
-    ])
+    expect(groups.map((g) => g.value)).toEqual(["ASSET", "EXPENSE", "REVENUE"])
     expect(groups.map((g) => g.value)).toEqual(
       KIND_ORDER.filter((k) => groups.some((g) => g.value === k)),
     )
@@ -75,7 +71,7 @@ describe("buildAccountGroups", () => {
     const groups = buildAccountGroups([cash])
 
     expect(groups).toHaveLength(1)
-    expect(groups[0]?.value).toBe(LedgerAccountKind.Asset)
+    expect(groups[0]?.value).toBe("ASSET")
   })
 
   it("excludes group accounts, which cannot appear in a journal entry", () => {
@@ -100,13 +96,13 @@ describe("buildAccountGroups", () => {
   })
 
   it("returns only the requested kind", () => {
-    const groups = buildAccountGroups([cash, food, salary], LedgerAccountKind.Expense)
+    const groups = buildAccountGroups([cash, food, salary], "EXPENSE")
 
-    expect(groups).toEqual([{ value: LedgerAccountKind.Expense, items: [food] }])
+    expect(groups).toEqual([{ value: "EXPENSE", items: [food] }])
   })
 
   it("returns an empty array when the requested kind has no candidates", () => {
-    expect(buildAccountGroups([cash], LedgerAccountKind.Revenue)).toEqual([])
+    expect(buildAccountGroups([cash], "REVENUE")).toEqual([])
   })
 })
 
@@ -139,7 +135,7 @@ describe("buildAccountGroups - lastUsed", () => {
   })
 
   it("sorts never-used accounts last", () => {
-    const unused = account("unused", "未使用", LedgerAccountKind.Asset)
+    const unused = account("unused", "未使用", "ASSET")
     const usedOnce = used("used", "2026-07-01", "2026-07-01T10:00:00Z")
 
     expect(ordered([unused, usedOnce])).toEqual(["used", "unused"])
@@ -147,10 +143,10 @@ describe("buildAccountGroups - lastUsed", () => {
 
   // Without a final key, never-used accounts would keep the server's random order.
   it("orders never-used accounts by creation time", () => {
-    const later = account("later", "後", LedgerAccountKind.Asset, {
+    const later = account("later", "後", "ASSET", {
       createdAt: "2026-02-01T00:00:00Z",
     })
-    const earlier = account("earlier", "先", LedgerAccountKind.Asset, {
+    const earlier = account("earlier", "先", "ASSET", {
       createdAt: "2026-01-01T00:00:00Z",
     })
 
@@ -165,18 +161,18 @@ describe("buildAccountGroups - lastUsed", () => {
   })
 
   it("sorts only inside a group and leaves the group order at KIND_ORDER", () => {
-    const oldAsset = account("lac_1", "現金", LedgerAccountKind.Asset, {
+    const oldAsset = account("lac_1", "現金", "ASSET", {
       lastUsedAt: "2026-07-01",
       lastRecordedAt: "2026-07-01T10:00:00Z",
     })
-    const newExpense = account("lac_3", "食費", LedgerAccountKind.Expense, {
+    const newExpense = account("lac_3", "食費", "EXPENSE", {
       lastUsedAt: "2026-08-06",
       lastRecordedAt: "2026-08-06T10:00:00Z",
     })
 
     const groups = buildAccountGroups([newExpense, oldAsset], undefined, "lastUsed")
 
-    expect(groups.map((g) => g.value)).toEqual([LedgerAccountKind.Asset, LedgerAccountKind.Expense])
+    expect(groups.map((g) => g.value)).toEqual(["ASSET", "EXPENSE"])
   })
 
   it("does not mutate the input array", () => {
