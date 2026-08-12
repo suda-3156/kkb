@@ -30,7 +30,7 @@ import { matchesQuery } from "@/lib/search"
 // biome-ignore lint/suspicious/noExplicitAny: shared generic helper
 type AnyForm = ReturnType<typeof useForm<any>>
 
-const GetLedgerAccountsForComboboxDoc = graphql(/* GraphQL */ `
+export const GetLedgerAccountsForComboboxDoc = graphql(/* GraphQL */ `
   query GetLedgerAccountsForCombobox($first: Int!, $after: ID, $kind: LedgerAccountKind) {
     ledgerAccounts(first: $first, after: $after, kind: $kind) {
       nodes {
