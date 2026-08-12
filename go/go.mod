@@ -17,6 +17,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0
 	github.com/vektah/gqlparser/v2 v2.5.36
 	google.golang.org/protobuf v1.36.11
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -126,7 +127,6 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/grpc v1.83.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 tool (

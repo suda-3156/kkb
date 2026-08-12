@@ -29,18 +29,19 @@ import (
 	"github.com/suda-3156/kkb/go/internal/transaction"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/mysql"
+	"gopkg.in/yaml.v3"
 )
 
 const (
-	// Pinned to the same digest as the db service in docker-compose.yml.
-	mysqlImage = "mysql:8.4@sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb"
+	// The service in docker-compose.yml whose image these tests reuse.
+	composeDBService = "db"
 
 	dbName     = "kkb_test"
 	dbUser     = "test_user"
 	dbPassword = "test_password"
 
 	// The wrapper key is created in a throwaway directory by the FILESYSTEM key
-	// manager, mirroring what tools/seed does for local development.
+	// manager.
 	wrapperKeyGroup = "system"
 	wrapperKeyName  = "ledger-encryption-key"
 
@@ -86,6 +87,11 @@ func run(m *testing.M) (int, error) {
 		return 0, err
 	}
 
+	image, err := mysqlImage()
+	if err != nil {
+		return 0, err
+	}
+
 	scripts, err := migrationScripts()
 	if err != nil {
 		return 0, err
@@ -94,7 +100,7 @@ func run(m *testing.M) (int, error) {
 	startCtx, cancel := context.WithTimeout(ctx, startupTimeout)
 	defer cancel()
 
-	ctr, err := mysql.Run(startCtx, mysqlImage,
+	ctr, err := mysql.Run(startCtx, image,
 		mysql.WithDatabase(dbName),
 		mysql.WithUsername(dbUser),
 		mysql.WithPassword(dbPassword),
@@ -177,19 +183,63 @@ func requireDocker(ctx context.Context) error {
 	return nil
 }
 
+// repoRoot returns the repository root, resolved from this file's own location
+// so that it does not depend on the directory the tests were started from.
+func repoRoot() (string, error) {
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", fmt.Errorf("cannot locate the dbtest package on disk")
+	}
+
+	// .../main/go/internal/dbtest/main_test.go -> .../main
+	return filepath.Join(filepath.Dir(thisFile), "..", "..", ".."), nil
+}
+
+// mysqlImage reads the image from docker-compose.yml rather than pinning a
+// second copy of the digest here. Renovate keeps that file current through its
+// docker-compose manager, and it has no manager that can see a Go constant, so
+// a constant would silently fall behind.
+func mysqlImage() (string, error) {
+	root, err := repoRoot()
+	if err != nil {
+		return "", err
+	}
+
+	path := filepath.Join(root, "docker-compose.yml")
+
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read %s: %w", path, err)
+	}
+
+	var compose struct {
+		Services map[string]struct {
+			Image string `yaml:"image"`
+		} `yaml:"services"`
+	}
+	if err := yaml.Unmarshal(raw, &compose); err != nil {
+		return "", fmt.Errorf("parse %s: %w", path, err)
+	}
+
+	image := compose.Services[composeDBService].Image
+	if image == "" {
+		return "", fmt.Errorf("%s: service %q has no image", path, composeDBService)
+	}
+
+	return image, nil
+}
+
 // migrationScripts returns db/migrations/*.sql in filename order. Atlas names
 // files with a fixed-width timestamp prefix, so lexical order is apply order.
 // The list is globbed rather than enumerated so that new migrations are picked
 // up without touching this file. atlas.sum is not a .sql file and is skipped.
 func migrationScripts() ([]string, error) {
-	_, thisFile, _, ok := runtime.Caller(0)
-	if !ok {
-		return nil, fmt.Errorf("cannot locate the dbtest package on disk")
+	root, err := repoRoot()
+	if err != nil {
+		return nil, err
 	}
 
-	// .../main/go/internal/dbtest/main_test.go -> .../main
-	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "..", "..")
-	dir := filepath.Join(repoRoot, "db", "migrations")
+	dir := filepath.Join(root, "db", "migrations")
 
 	scripts, err := filepath.Glob(filepath.Join(dir, "*.sql"))
 	if err != nil {
@@ -202,9 +252,9 @@ func migrationScripts() ([]string, error) {
 	return scripts, nil
 }
 
-// newEncryptionManager builds the encryption stack the managers need, following
-// the same steps as tools/seed: create a wrapper key in the FILESYSTEM key
-// manager, then let the encryption manager mint its own DEK on first refresh.
+// newEncryptionManager builds the encryption stack the managers need: create a
+// wrapper key in the FILESYSTEM key manager, then let the encryption manager
+// mint its own DEK on first refresh.
 func newEncryptionManager(ctx context.Context, keysRoot string) (*encryption.EncryptionManager, error) {
 	km, err := keys.NewFilesystem(ctx, &keys.Config{
 		Type:           "FILESYSTEM",
