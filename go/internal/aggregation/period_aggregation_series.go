@@ -3,14 +3,19 @@ package aggregation
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
+	ents "github.com/suda-3156/kkb/go/ent/schema"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
 )
 
 const dateFmt = "2006-01-02"
 
+// GetPeriodAggregationSeries aggregates the range once and cuts the result into
+// buckets, rather than querying once per bucket: a daily series over a year is
+// two round trips, not two per day.
 func (m *AggregationManager) GetPeriodAggregationSeries(
 	ctx context.Context,
 	startDate date.Date,
@@ -22,19 +27,82 @@ func (m *AggregationManager) GetPeriodAggregationSeries(
 		return nil, fmt.Errorf("period aggregation series: %w", err)
 	}
 
-	var dataPoints []*graph.PeriodAggregation
-	for _, p := range periods {
-		agg, err := m.GetPeriodAggregation(ctx, p.start, p.end)
+	// An endDate before startDate covers nothing, so there is nothing to ask the
+	// database for.
+	if len(periods) == 0 {
+		return &graph.PeriodAggregationSeries{Granularity: granularity}, nil
+	}
+
+	rows, err := m.sumByDate(ctx, startDate, endDate)
+	if err != nil {
+		return nil, fmt.Errorf("period aggregation series: %w", err)
+	}
+
+	var kinds map[int]ents.LedgerAccountKind
+	if len(rows) > 0 {
+		kinds, err = m.ledgerAccountKinds(ctx, rows)
 		if err != nil {
 			return nil, fmt.Errorf("period aggregation series: %w", err)
 		}
-		dataPoints = append(dataPoints, agg)
+	}
+
+	dataPoints, err := foldPeriodAggregationSeries(periods, rows, kinds)
+	if err != nil {
+		return nil, fmt.Errorf("period aggregation series: %w", err)
 	}
 
 	return &graph.PeriodAggregationSeries{
 		Granularity: granularity,
 		DataPoints:  dataPoints,
 	}, nil
+}
+
+// foldPeriodAggregationSeries hands each bucket the rows that fall inside it and
+// folds it on its own, so a bucket of a series goes through exactly the same
+// arithmetic as a single-period aggregation does.
+//
+// A bucket without rows is folded from no rows rather than dropped. The
+// database only returns the dates it has, but the series has to stay a
+// partition of the requested range: a chart reads the i-th data point as the
+// i-th bucket, so a missing month would silently shift every later point.
+func foldPeriodAggregationSeries(
+	periods []period,
+	rows []datedLacAmountRow,
+	kinds map[int]ents.LedgerAccountKind,
+) ([]*graph.PeriodAggregation, error) {
+	byPeriod := make([][]lacAmountRow, len(periods))
+	for _, row := range rows {
+		i, ok := bucketOf(periods, row.Date)
+		if !ok {
+			return nil, fmt.Errorf("no bucket covers %s", row.Date)
+		}
+		byPeriod[i] = append(byPeriod[i], row.undated())
+	}
+
+	dataPoints := make([]*graph.PeriodAggregation, 0, len(periods))
+	for i, p := range periods {
+		agg, err := foldPeriodAggregation(p.start, p.end, byPeriod[i], kinds)
+		if err != nil {
+			return nil, err
+		}
+		dataPoints = append(dataPoints, agg)
+	}
+
+	return dataPoints, nil
+}
+
+// bucketOf returns the index of the bucket holding the given date. The buckets
+// tile the range in ascending order, so a binary search over their ends finds
+// it. Dates are compared as strings, the same way the query that produced the
+// row compared them.
+func bucketOf(periods []period, d string) (int, bool) {
+	i := sort.Search(len(periods), func(i int) bool {
+		return periods[i].end.String() >= d
+	})
+	if i == len(periods) || periods[i].start.String() > d {
+		return 0, false
+	}
+	return i, true
 }
 
 // period is one bucket of the series, both ends inclusive.

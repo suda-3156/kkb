@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
@@ -20,25 +21,32 @@ type lacAmountRow struct {
 	Kind            string `json:"kind"` // "DEBIT" or "CREDIT"
 }
 
+// datedLacAmountRow is a lacAmountRow that remembers the transaction date its
+// amount was booked on. Carrying the date is what lets one query serve a whole
+// series of periods: the rows are cut into buckets afterwards, in Go.
+type datedLacAmountRow struct {
+	Date            string `json:"date"`
+	LedgerAccountID int    `json:"ledger_account_journal_entries"`
+	Sum             int32  `json:"sum"`
+	Kind            string `json:"kind"`
+}
+
+func (r datedLacAmountRow) undated() lacAmountRow {
+	return lacAmountRow{
+		LedgerAccountID: r.LedgerAccountID,
+		Sum:             r.Sum,
+		Kind:            r.Kind,
+	}
+}
+
 func (m *AggregationManager) GetPeriodAggregation(
 	ctx context.Context,
 	startDate date.Date,
 	endDate date.Date,
 ) (*graph.PeriodAggregation, error) {
-	// Sum journal entry amounts per ledger account, filtered by transaction date.
-	var rows []lacAmountRow
-	err := m.db.Client.JournalEntry.Query().
-		Where(
-			journalentry.HasTransactionWith(
-				transaction.DateGTE(startDate),
-				transaction.DateLTE(endDate),
-			),
-		).
-		GroupBy(journalentry.LedgerAccountColumn, journalentry.FieldKind).
-		Aggregate(ent.Sum(journalentry.FieldAmount)).
-		Scan(ctx, &rows)
+	rows, err := m.sumByDate(ctx, startDate, endDate)
 	if err != nil {
-		return nil, fmt.Errorf("period aggregation: aggregate journal entries: %w", err)
+		return nil, fmt.Errorf("period aggregation: %w", err)
 	}
 
 	// Return an empty aggregation when there are no entries in the range.
@@ -46,10 +54,89 @@ func (m *AggregationManager) GetPeriodAggregation(
 		return emptyPeriodAggregation(startDate, endDate), nil
 	}
 
-	// Fetch the kind of every ledger account involved; the arithmetic below
-	// keys off it.
+	kinds, err := m.ledgerAccountKinds(ctx, rows)
+	if err != nil {
+		return nil, fmt.Errorf("period aggregation: %w", err)
+	}
+
+	// One period, so every row belongs to the same bucket. Folding per account
+	// is what nets the dates back together.
+	undated := make([]lacAmountRow, 0, len(rows))
+	for _, row := range rows {
+		undated = append(undated, row.undated())
+	}
+
+	agg, err := foldPeriodAggregation(startDate, endDate, undated, kinds)
+	if err != nil {
+		return nil, fmt.Errorf("period aggregation: %w", err)
+	}
+	return agg, nil
+}
+
+// sumByDate sums journal entry amounts per (transaction date, ledger account,
+// entry kind) over the whole range, in a single round trip.
+//
+// The finest bucket a series can ask for is a day, so a day is as far as the
+// database needs to aggregate. Everything coarser is folded from these rows in
+// Go, which keeps the bucket boundaries defined in exactly one place
+// (splitPeriods) instead of once there and once in SQL.
+func (m *AggregationManager) sumByDate(
+	ctx context.Context,
+	startDate date.Date,
+	endDate date.Date,
+) ([]datedLacAmountRow, error) {
+	// The dates live on transactions, so the aggregation has to join. ent has no
+	// query builder for that, so the join is added to the selector from inside
+	// the first aggregate function - the documented escape hatch, the same one
+	// LastUsedByIDs uses. Grouping by a joined column works because the
+	// generated scan runs the aggregate functions first and appends the query's
+	// own group fields to the GROUP BY afterwards.
+	txns := sql.Table(transaction.Table)
+
+	var rows []datedLacAmountRow
+	err := m.db.Client.JournalEntry.Query().
+		GroupBy(journalentry.LedgerAccountColumn, journalentry.FieldKind).
+		Aggregate(
+			func(s *sql.Selector) string {
+				s.Join(txns).On(s.C(journalentry.TransactionColumn), txns.C(transaction.FieldID))
+				// transaction.date is char(10), so this is a string comparison.
+				// ISO 8601 dates sort lexically the way they sort as dates,
+				// which is what makes the range mean what it reads like.
+				s.Where(sql.And(
+					sql.GTE(txns.C(transaction.FieldDate), startDate.String()),
+					sql.LTE(txns.C(transaction.FieldDate), endDate.String()),
+				))
+				s.GroupBy(txns.C(transaction.FieldDate))
+				return sql.As(txns.C(transaction.FieldDate), "date")
+			},
+			ent.Sum(journalentry.FieldAmount),
+		).
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("aggregate journal entries: %w", err)
+	}
+
+	return rows, nil
+}
+
+// ledgerAccountKinds returns the kind of every ledger account the rows mention,
+// which is what the arithmetic keys off.
+//
+// Archived accounts are looked up too: they take no new entries, but the ones
+// they already carry still belong in the aggregation of a past period.
+func (m *AggregationManager) ledgerAccountKinds(
+	ctx context.Context,
+	rows []datedLacAmountRow,
+) (map[int]ents.LedgerAccountKind, error) {
+	// An account appears once per (date, entry kind), so the IDs need deduping
+	// before they become an IN list.
+	seen := make(map[int]struct{}, len(rows))
 	lacIDs := make([]int, 0, len(rows))
 	for _, row := range rows {
+		if _, ok := seen[row.LedgerAccountID]; ok {
+			continue
+		}
+		seen[row.LedgerAccountID] = struct{}{}
 		lacIDs = append(lacIDs, row.LedgerAccountID)
 	}
 
@@ -57,7 +144,7 @@ func (m *AggregationManager) GetPeriodAggregation(
 		Where(ledgeraccount.IDIn(lacIDs...)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("period aggregation: query ledger accounts: %w", err)
+		return nil, fmt.Errorf("query ledger accounts: %w", err)
 	}
 
 	kinds := make(map[int]ents.LedgerAccountKind, len(ledgerAccounts))
@@ -65,11 +152,7 @@ func (m *AggregationManager) GetPeriodAggregation(
 		kinds[lac.ID] = lac.Kind
 	}
 
-	agg, err := foldPeriodAggregation(startDate, endDate, rows, kinds)
-	if err != nil {
-		return nil, fmt.Errorf("period aggregation: %w", err)
-	}
-	return agg, nil
+	return kinds, nil
 }
 
 func emptyPeriodAggregation(startDate, endDate date.Date) *graph.PeriodAggregation {
