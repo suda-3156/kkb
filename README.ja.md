@@ -131,7 +131,7 @@ IAP の使用を調査する中で、IAP 付きサービスを 2 つに分ける
 
 ```sh
 direnv allow
-mise trust & mise install # mise を使う場合
+mise trust && mise install # mise を使う場合
 task init
 task start:all
 ```
