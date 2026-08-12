@@ -23,10 +23,30 @@ database or a browser do not belong in it.
 If you cannot make it pass, say so plainly and report what fails. Never describe
 work as finished with a red check.
 
+## Tests that need a real database
+
+```
+task go:test:integration   # go/internal/dbtest, needs Docker
+```
+
+These live in `go/internal/dbtest` behind the `integration` build tag, in
+`_test.go` files only, so every other Go task skips the package entirely. They
+run a MySQL container (testcontainers-go) whose schema comes from
+`db/migrations/*.sql`, and they are for the things a pure test cannot reach:
+real SQL semantics, state that spans requests, whether a migration actually
+applies.
+
+They are **local only** and deliberately outside `task check` and CI. Green there
+does not mean they ran. When a change touches SQL or schema, run them and say
+whether they passed.
+
+`task go:lint` type-checks them with the tag on, so a compile error in them
+still fails `task check` without needing Docker.
+
 ## Ask before doing these
 
-**Starting Docker.** Some verification needs a real database (`task start:all`).
-Ask first and wait for an answer.
+**Starting Docker.** Some verification needs a real database (`task start:all`,
+`task go:test:integration`). Ask first and wait for an answer.
 
 **Generating a migration** (`task db:schema:diff`, `task db:schema:create`).
 Atlas records a checksum in `db/migrations/atlas.sum`, so two migrations

@@ -1,6 +1,13 @@
 # Reference: https://github.com/golangci/golangci-lint/blob/01976885c399cf1ed32ba76b0ad4787fdbc7539f/.golangci.reference.yml
 version: "2"
 
+run:
+  # internal/dbtest is behind this tag, so `go build ./...` never compiles it.
+  # Linting with the tag on is what keeps those tests from rotting: `task lint`
+  # type-checks them without needing Docker.
+  build-tags:
+    - integration
+
 linters:
   # standard preset contains these: errcheck, govet, ineffassign, staticcheck, unused
   default: standard

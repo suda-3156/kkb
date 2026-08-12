@@ -20,6 +20,22 @@ tasks:
         go test -v {{ .CLI_ARGS }}
     silent: true
 
+  test:integration:
+    desc: "Run Go tests that need a real MySQL server (Docker required, not part of `check`) \t usage: `task <prefix>:test:integration`"
+    dir: .
+    cmds:
+      # These live behind the `integration` build tag in internal/dbtest, so
+      # they are invisible to every other task. Docker has to be running.
+      #
+      # -count=1 disables the test cache on purpose: the point of this task is
+      # to have actually talked to a database, and a cached pass looks the same
+      # as a real one.
+      - |
+        export ENV=test
+        export PURPOSE=test
+        go test -tags integration -count=1 -v ./internal/dbtest/...
+    silent: true
+
   lint:
     desc: "Run Go linters \t usage: `task <prefix>:lint -- <package_path>` or `task <prefix>:lint`"
     dir: .
