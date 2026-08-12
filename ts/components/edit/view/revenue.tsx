@@ -41,14 +41,7 @@ export const RevenueForm = () => {
         <AmountField name="amount" form={form} />
       </div>
 
-      <TextField
-        name="desc"
-        form={form}
-        label="メモ"
-        required
-        maxLength={300}
-        placeholder="メモを入力"
-      />
+      <TextField name="desc" form={form} label="メモ" maxLength={300} placeholder="メモを入力" />
 
       <SelectLedgerAccountField form={form} label="収入科目" name="sourceId" kind={"REVENUE"} />
 

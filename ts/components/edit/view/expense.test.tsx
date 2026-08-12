@@ -145,28 +145,17 @@ const pick = async (
   await user.tab()
 }
 
-test("an empty form sends nothing", async () => {
+// Every message here comes from the zod schema. They are only reachable while
+// no field carries the native `required` attribute: one of those makes the
+// browser refuse the submit and show its own message instead, and the errors of
+// the other fields never render at all.
+test("an empty form reports every missing field and sends nothing", async () => {
   const { user, countOf } = setup()
 
   await user.click(screen.getByRole("button", { name: "確定" }))
 
-  expect(countOf("CreateTransaction")).toBe(0)
-})
-
-// Only the account fields are asserted here. The memo carries a native
-// `required` and the form no `noValidate`, so with it empty the browser blocks
-// submission outright: no submit event fires, react-hook-form never runs, and
-// none of the messages below can appear. Filling it first is what lets the
-// form's own validation be seen at all.
-test("the accounts have to be chosen, and nothing is sent until they are", async () => {
-  const { user, countOf } = setup()
-
-  await user.type(screen.getByPlaceholderText("メモを入力"), "ランチ")
-  await user.type(screen.getByPlaceholderText("0"), "1200")
-
-  await user.click(screen.getByRole("button", { name: "確定" }))
-
-  expect(await screen.findByText("費用科目を選択してください")).toBeInTheDocument()
+  expect(await screen.findByText("説明は必須です")).toBeInTheDocument()
+  expect(screen.getByText("費用科目を選択してください")).toBeInTheDocument()
   expect(screen.getByText("支払い方法を選択してください")).toBeInTheDocument()
   expect(countOf("CreateTransaction")).toBe(0)
 })
