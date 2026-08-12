@@ -90,7 +90,7 @@ jobs:
 
       # No environment setup here: nothing under ./go reads an environment
       # variable from a test. Should that change, export the few variables the
-      # test needs rather than sourcing .env.test wholesale.
+      # test needs rather than sourcing an env file wholesale.
       - name: Run Tests
         run: |
           go test ./... -json > test-report.json

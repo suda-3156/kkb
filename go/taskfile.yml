@@ -11,8 +11,6 @@ tasks:
     dir: .
     cmds:
       - |
-        export ENV=test
-        export PURPOSE=test
         if [ -z "{{ .CLI_ARGS }}" ]; then
           go test -v ./...
           exit 0
@@ -30,10 +28,7 @@ tasks:
       # -count=1 disables the test cache on purpose: the point of this task is
       # to have actually talked to a database, and a cached pass looks the same
       # as a real one.
-      - |
-        export ENV=test
-        export PURPOSE=test
-        go test -tags integration -count=1 -v ./internal/dbtest/...
+      - go test -tags integration -count=1 -v ./internal/dbtest/...
     silent: true
 
   lint:
