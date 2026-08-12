@@ -1,14 +1,19 @@
 # KKB
 
-A self-hosted, double-entry bookkeeping household budget app. Single-user, running on Google Cloud.
+A double-entry bookkeeping household budget app built for a single user. It runs on Google Cloud, and its Terraform code is managed in a separate private repository.
 
 [日本語版 README はこちら](./README.ja.md)
 
 ## Motivation
 
-I used to track my spending with a Notion template. It emulates a relational database on top of Notion, so it got slower and slower as records piled up. Existing budget apps were not an option either: their UIs are fixed, and I couldn't put the numbers I care about where I wanted them.
+I used to use an existing budget app, but I couldn't customize the screen layout, and I couldn't put the numbers I wanted to see where I could see them easily.
 
-Since I can write code, both problems have the same root fix — use a real RDB and build the UI myself. The dashboard shows this week's / this month's / this year's spending first (at the very top on mobile), because keeping spending visible is the whole point of the app.
+So I moved to a budget template in Notion, but because it builds a database on top of Notion, it got slower as the amount of data grew.
+
+I figured both problems could be solved by using a real RDB and building the UI myself, so I started development.
+
+The first version I built was a budget app on Cloudflare, using Next.js and Hono.js. I got something working, but I hadn't thought through actually using and operating it day to day, so it ended up awkward to use. One cause, I concluded, was that I hadn't planned well enough for what features I'd need or how I'd use them, so I decided to rebuild it while learning things like requirements definition.
+For the rebuild, I also felt I lacked technical skills at the time, so I built the current version while teaching myself GCP, Go, and Terraform.
 
 ## Architecture
 
@@ -32,7 +37,7 @@ flowchart LR
 | Frontend | TypeScript, Next.js, React, Apollo Client |
 | API | GraphQL (+ GraphQL Codegen) |
 | DB | MySQL 8.4 (Cloud SQL) |
-| Cloud | GCP — Cloud Run, Cloud SQL, KMS, Secret Manager, IAP |
+| Cloud | GCP: Cloud Run, Cloud SQL, KMS, Secret Manager, IAP |
 | IaC | Terraform |
 | CI/CD | GitHub Actions (lint, test; tag-triggered deploy via Workload Identity Federation) |
 
@@ -40,83 +45,76 @@ flowchart LR
 
 | Path | Contents |
 |---|---|
-| `go/` | Backend — gqlgen resolvers, ent schema, internal packages (`aggregation`, `encryption`, `ledger_account`, `transaction`, `dataloader`, `serverenv`, …) |
-| `ts/` | Frontend — Next.js app |
-| `schema/` | GraphQL schema shared by backend and frontend codegen |
+| `go/` | Backend. gqlgen resolvers, the ent schema, and internal packages (`aggregation`, `encryption`, `ledger_account`, `transaction`, `dataloader`, `serverenv` and others) |
+| `ts/` | Frontend. The Next.js app |
+| `schema/` | The GraphQL schema, shared by backend and frontend codegen |
 | `containers/` | Dockerfiles for the deployed images |
 | `db/` | Local MySQL (Docker) files |
 
 Infrastructure is defined with Terraform and managed in a separate private repository.
 
-## Design decisions
+## Design
 
-Why things are the way they are — including the options I rejected.
+### Data model: double-entry bookkeeping
 
-### Why double-entry bookkeeping
-
-A simple income/expense ledger cannot represent my real money flows accurately. Charging a transit IC card is not an expense — it is a transfer between assets. Paying by credit card creates a liability first; the expense settles later. Double-entry bookkeeping models all of these with one uniform mechanism:
+A transaction is represented as a header plus a set of journal lines, posted to accounts, where debits and credits balance.
 
 | Entity | Role |
 |---|---|
-| `LedgerAccount` | Accounts — assets, liabilities, income, expenses |
-| `Transaction` | Transaction header — date, memo |
-| `JournalEntry` | Journal lines — debit/credit, amount |
-| `LedgerEncryptionKey` | Per-period data encryption key (see [encryption](#envelope-encryption-with-a-time-based-dek)) |
+| `LedgerAccount` | An account: asset, liability, income or expense |
+| `Transaction` | Transaction header: date and memo |
+| `JournalEntry` | A journal line: debit or credit, and an amount |
+| `LedgerEncryptionKey` | The data encryption key for each period (see [Encryption](#encryption-envelope-encryption-with-a-time-based-dek)) |
 
-You don't need to know bookkeeping to use the app: dedicated input screens for expenses, income, and asset transfers generate the journal entries for you.
+A simple income-and-expense model gets complicated when you try to accurately represent things like asset transfers, such as charging an e-money card, or liabilities. Double-entry bookkeeping is a model that has been used for a long time to handle every kind of money movement, and its conventions are widely shared. I judged that using it would hold up against future changes in use cases, so I built the model on top of double-entry bookkeeping.
 
-### Why GraphQL
+### API: GraphQL
 
-I wanted to rearrange screens freely — the original complaint about existing apps. With GraphQL the client decides the shape of the data, so most UI changes touch only the frontend. gqlgen (schema-first, code-generated) on the server, Apollo Client + GraphQL Codegen on the client keep both ends type-safe from a single schema.
+For the problem of wanting to freely rearrange the screen layout, I chose GraphQL because, with it, rearranging is a frontend-only change and needs no new endpoint. Based on `schema/`, gqlgen generates code on the server side, and Apollo Client and GraphQL Codegen generate it on the client side.
 
-### Why MySQL
+### Database: MySQL 8.4
 
-The workload is plain CRUD from a single user — no complex analytical queries, no concurrency to speak of. MySQL is simple and fast, and that is exactly what was needed; PostgreSQL's richer feature set had no use case here.
+The workload is simple CRUD by a single user. There are no complex analytical queries, and there's effectively no concurrency. I judged that simple MySQL is sufficient for these requirements.
 
-### Why ent (and Atlas)
+### Persistence: ent, Atlas
 
-- **sqlc** was rejected: queries are compiled statically, but the app needs dynamically composed SQL (filters and conditions assembled at runtime).
-- **GORM** was rejected for its weak type safety.
-- **ent** generates a fully typed query builder from a schema defined in Go, which covers dynamic queries without giving up type safety.
-- **Atlas** integrates with ent — SQL schemas and migrations are generated from the ent schema, so there is a single source of truth.
+Using the schema in `go/ent/schema` as the source, ent generates a fully typed query builder from it, and Atlas generates the SQL schema and migrations from the same definitions.
 
-### Why IAP instead of app-layer auth
+Because filters and conditions change per screen, I ruled out **sqlc**, which compiles queries statically. **GORM** can handle dynamic queries, but it gives up type safety. For these reasons, I adopted ent.
 
-This is a single-user app, so user management is pure overhead. I initially planned app-layer authentication, but combining it with envelope encryption — at the time the DEK was tied to the user — made the design more complex than my knowledge could handle. So I delegated authentication to Cloud IAP (Google login) and removed user features entirely.
+### Authentication: delegated to Cloud IAP
 
-In hindsight: after switching to a *time-based* DEK, app-layer auth would have been workable. The complexity came from tying encryption keys to users, not from auth itself.
+I put Cloud IAP in front of the Cloud Run service and authenticate with Google login. The app itself has no users, sessions, or user table.
 
-### Why a single Cloud Run service
+I originally planned to handle authentication at the app layer, but combined with envelope encryption, it became a complexity beyond what I could handle with my knowledge at the time. So, since it's a single-user app, I delegated authentication to IAP and removed this area from the design.
 
-The most reworked decision in the project:
+### Runtime: one Cloud Run service
 
-1. **LB + two services (verified, never operated).** When I started, attaching IAP to Cloud Run required a load balancer in front. Before implementing the app, I built the infrastructure — an LB with separate frontend/backend Cloud Run services — and verified connectivity and DB access.
-2. **IAP direct attach appears.** Around April 2025, attaching IAP directly to Cloud Run became available (Preview). Dropping the LB would remove its fixed cost (~$18/month even when idle), so I revisited the design.
-3. **Design-stage research killed the two-service layout.** With two IAP-protected services, the backend lives on a different origin, and browser → backend requests fail on three fronts: IAP session cookies are per-domain and cannot be shared; CORS preflight (`OPTIONS`) carries no credentials, so IAP rejects it; and an unauthenticated AJAX call gets a 302/401 that `fetch` cannot complete. I avoided this by design rather than discovering it in production.
-4. **Same origin fixes all three.** The layout became one Cloud Run service: nginx as the ingress container, routing `/` to the Next.js sidecar and `/query` to the Go sidecar. One origin, one IAP session, no CORS. The LB is fully removed.
-5. **nginx turned out to be redundant.** Its whole job was path-based routing, which Next.js does natively with a rewrite (`/query` → `127.0.0.1:8081`). Dropping it removed one image to build, push and deploy, and one container's CPU and memory from every instance. The trade-off is that API traffic now passes through the Node process instead of nginx, and the two are no longer independently reachable — acceptable for a single-user app where the frontend being down means the app is down anyway.
+Next.js is the ingress container, and it passes `/query` to the Go sidecar (`127.0.0.1:8081`) via a rewrite. There is one service, one origin, and no load balancer.
 
-### Secrets: the `secret://` resolver
+At first, I verified an LB-plus-two-services setup. When I was considering using IAP, putting IAP in front of Cloud Run required a load balancer. So before starting on the budget app's implementation itself, I built that infrastructure, with the frontend and backend as separate services, and confirmed that the setup worked.
 
-Two problems with naive secret handling: putting secrets directly in environment variables leaks them into images and configs, and my first fix — bundling all config (DB password, encryption AAD, allowed origins, …) into one file in Secret Manager — made values impossible to manage individually and stored non-secrets in Secret Manager for no reason.
+Later, the ability to attach IAP directly to Cloud Run became available in Preview. Removing the LB would cut fixed costs, so I revisited the setup.
 
-I adopted the strategy used in [google/exposure-notifications-server](https://github.com/google/exposure-notifications-server): environment variables whose value starts with `secret://` are resolved from Secret Manager at startup; everything else is read as-is. Secrets stay out of images, non-secrets stay in plain env vars, and each value is managed on its own.
+While researching how to use IAP, I found that splitting an IAP-protected service into two would put the frontend and backend on different origins, which would break communication from the browser to the backend. That's because IAP session cookies are per domain and can't be shared.
 
-### Envelope encryption with a time-based DEK
+Given this behavior, I consolidated into a single Cloud Run service, using nginx as the ingress container to route `/` to the Next.js sidecar and `/query` to the Go sidecar. This setup carried over from when I was self-hosting on a Raspberry Pi with Tailscale.
 
-Honestly: a single-user app behind IAP does not need this. I built it to learn how envelope encryption works in practice.
+I ran that setup for a while, but then learned about Next.js's rewrite option. It would simplify the setup, and given that the app assumes both a frontend and a backend anyway, I migrated to a setup with Next.js as the ingress container.
 
-Ledger data is encrypted with a data encryption key (DEK), and the DEK itself is wrapped by Cloud KMS. For DEK granularity I considered per-record, per-user, and time-based keys, and chose time-based: it keeps rotation simple and works identically in local development, on the self-host setup, and on GCP. The implementation follows exposure-notifications-server's design.
+### Configuration and secrets: the `secret://` resolver
 
-## History
+Only environment variables whose value starts with `secret://` are resolved from Secret Manager at startup. Everything else is loaded as-is.
 
-| Phase | Summary |
-|---|---|
-| Feb–Mar 2026 | Initial development (schema design, backend, frontend) |
-| — | LB + two-service infrastructure built and verified ahead of implementation (never operated) |
-| — | Self-hosted on a Raspberry Pi 5 with Tailscale (retired; the setup files were removed — see git history) |
-| Now | Running on GCP as a single Cloud Run service (Next.js as ingress + Go sidecar) |
+Writing secrets directly into environment variables leaves them in images and config files, which I considered a bad idea. So at first, I took the approach of storing a single configuration file in Secret Manager and loading it at startup.
 
+But that approach meant managing every setting, including non-secret ones, in a single file, which left room for improvement. While researching this, I found [google/exposure-notifications-server](https://github.com/google/exposure-notifications-server) and adopted the approach it uses: secrets never end up in the image, non-secrets stay as ordinary environment variables, and every value can be managed individually.
+
+### Encryption: envelope encryption with a time-based DEK
+
+Ledger data is encrypted with a data encryption key (DEK), and that DEK is wrapped by Cloud KMS. One DEK covers one period.
+
+This mechanism isn't necessary for a single-user app behind IAP. I implemented it to learn envelope encryption hands-on. I compared per-record, per-user, and per-period granularity for the DEK and chose per-period, because it keeps rotation simple and behaves the same in local development, self-hosting, and on GCP. The implementation follows the design used by exposure-notifications-server.
 
 ## Local development
 
@@ -133,7 +131,7 @@ Ledger data is encrypted with a data encryption key (DEK), and the DEK itself is
 
 ```sh
 direnv allow
-mise trust # With mise
+mise trust && mise install # With mise
 task init
 task start:all
 ```
@@ -173,6 +171,5 @@ bun dev
 
 ## References
 
-- [google/exposure-notifications-server](https://github.com/google/exposure-notifications-server) — the `secret://` env resolver, the time-based DEK envelope-encryption design, and the server-environment setup patterns
-- [saki-engineering/graphql-sample](https://github.com/saki-engineering/graphql-sample)
-
+- [google/exposure-notifications-server](https://github.com/google/exposure-notifications-server): the `secret://` env resolver, the time-based DEK envelope-encryption design, and the server-environment setup patterns
+- [saki-engineering/graphql-sample](https://github.com/saki-engineering/graphql-sample): how to use `gqlgen`

@@ -72,7 +72,6 @@ the same sections:
 - **Architecture**: the runtime topology and how the pieces connect
 - **Design**: what each part of the design is, and the reasoning that led to it,
   including the options that were turned down
-- **History**: how the project got here
 - **Local development**: how to run it
 - **References**
 
