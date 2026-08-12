@@ -42,6 +42,49 @@ const KEYS: KeyDef[] = [
   { kind: "action", label: "=", action: "equals" },
 ]
 
+// Press feedback is driven from pointer events instead of CSS `:active`, because
+// the container preventDefaults pointerdown to keep the input focused and WebKit
+// hangs the activation state (and its own tap highlight) off that same default
+// action. On iOS, the only place this keypad appears, `:active` would never land.
+//
+// Keys are mashed in sequence, so the transition is short enough that a quick tap
+// still reaches full depth before the release.
+const KeypadKey = ({
+  label,
+  ariaLabel,
+  className,
+  onPress,
+}: {
+  label: React.ReactNode
+  ariaLabel?: string
+  className?: string
+  onPress: () => void
+}) => {
+  const [pressed, setPressed] = React.useState(false)
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      aria-label={ariaLabel}
+      data-pressed={pressed || undefined}
+      className={cn(
+        "h-12 text-base transition-[transform,background-color] duration-75 data-pressed:scale-95 data-pressed:bg-primary/20",
+        className,
+      )}
+      onPointerDown={() => setPressed(true)}
+      // pointerup alone leaves the key stuck when the pointer is released off it,
+      // which a mouse can do (touch is implicitly captured by the target).
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onClick={onPress}
+    >
+      {label}
+    </Button>
+  )
+}
+
 export const AmountKeypad = ({
   open,
   expression,
@@ -141,18 +184,15 @@ export const AmountKeypad = ({
 
           <div className="grid grid-cols-4 gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
             {KEYS.map((key) => (
-              <Button
+              <KeypadKey
                 key={key.kind === "insert" ? key.text : key.action}
-                type="button"
-                variant="outline"
-                className={cn("h-12 text-base", key.kind === "insert" && key.className)}
-                aria-label={
+                label={key.label}
+                className={key.kind === "insert" ? key.className : undefined}
+                ariaLabel={
                   key.kind === "action" && key.action === "backspace" ? "1 文字削除" : undefined
                 }
-                onClick={() => run(key)}
-              >
-                {key.label}
-              </Button>
+                onPress={() => run(key)}
+              />
             ))}
           </div>
         </motion.fieldset>
