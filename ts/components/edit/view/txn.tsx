@@ -71,14 +71,7 @@ export const TransactionForm = ({ data }: { data?: GetTransactionForModalQuery }
     >
       <div className="grid grid-cols-2 gap-4">
         <DateField name="date" form={form} />
-        <TextField
-          name="desc"
-          form={form}
-          label="メモ"
-          required
-          maxLength={300}
-          placeholder="メモを入力"
-        />
+        <TextField name="desc" form={form} label="メモ" maxLength={300} placeholder="メモを入力" />
       </div>
 
       <Separator />

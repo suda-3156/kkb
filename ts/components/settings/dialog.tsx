@@ -1,6 +1,7 @@
 "use client"
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useId } from "react"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import * as ResponsiveDialog from "@/components/ui/responsive-dialog"
 import {
@@ -39,10 +40,11 @@ export const SettingsDialog = () => {
 const AccountOrderSetting = () => {
   const settings = useAtomValue(settingsAtom)
   const update = useSetAtom(updateSettingsAtom)
+  const id = useId()
 
   return (
     <Field>
-      <FieldLabel>勘定科目の並び順</FieldLabel>
+      <FieldLabel htmlFor={id}>勘定科目の並び順</FieldLabel>
       <Select
         items={accountOrderItems}
         value={settings.accountOrder}
@@ -50,7 +52,7 @@ const AccountOrderSetting = () => {
           update({ accountOrder: (value ?? "created") as AccountOrder })
         }
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger id={id} className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

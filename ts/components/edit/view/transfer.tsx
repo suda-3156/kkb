@@ -41,14 +41,7 @@ export const TransferForm = () => {
         <AmountField name="amount" form={form} />
       </div>
 
-      <TextField
-        name="desc"
-        form={form}
-        label="メモ"
-        required
-        maxLength={300}
-        placeholder="メモを入力"
-      />
+      <TextField name="desc" form={form} label="メモ" maxLength={300} placeholder="メモを入力" />
 
       <SelectLedgerAccountField form={form} label="振替元口座" name="fromId" kind={"ASSET"} />
 

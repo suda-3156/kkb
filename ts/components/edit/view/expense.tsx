@@ -38,14 +38,7 @@ export const ExpenseForm = () => {
         <AmountField name="amount" form={form} />
       </div>
 
-      <TextField
-        name="desc"
-        form={form}
-        label="メモ"
-        required
-        maxLength={300}
-        placeholder="メモを入力"
-      />
+      <TextField name="desc" form={form} label="メモ" maxLength={300} placeholder="メモを入力" />
 
       <SelectLedgerAccountField form={form} label="費用科目" name="categoryId" kind={"EXPENSE"} />
 

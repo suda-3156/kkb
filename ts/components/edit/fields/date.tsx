@@ -1,4 +1,5 @@
 import { CalendarIcon } from "lucide-react"
+import { useId } from "react"
 import { Controller, type useForm } from "react-hook-form"
 import { Calendar } from "@/components/ui/calendar"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
@@ -18,6 +19,8 @@ export const DateField = ({
   form: AnyForm
   disabled?: boolean
 }) => {
+  const id = useId()
+
   return (
     <Controller
       name={name}
@@ -27,9 +30,9 @@ export const DateField = ({
         const selected = field.value ? stringToDate(field.value) : undefined
         return (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>日付</FieldLabel>
+            <FieldLabel htmlFor={id}>日付</FieldLabel>
             <div className="relative">
-              <Input placeholder="YYYY-MM-DD" {...field} disabled={disabled} />
+              <Input id={id} placeholder="YYYY-MM-DD" {...field} disabled={disabled} />
               <Popover>
                 <PopoverTrigger
                   className="absolute top-0 right-2 bottom-0 my-auto"
