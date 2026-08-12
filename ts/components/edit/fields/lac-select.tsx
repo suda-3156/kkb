@@ -59,6 +59,8 @@ type Props = {
 }
 
 export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => {
+  const id = React.useId()
+
   const { data, loading, error, fetchMore } = useQuery(GetLedgerAccountsForComboboxDoc, {
     variables: { first: 100, kind },
   })
@@ -108,7 +110,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
       control={form.control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          {label && <FieldLabel>{label}</FieldLabel>}
+          {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
           <Combobox
             items={groups}
             autoHighlight
@@ -129,6 +131,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
             isItemEqualToValue={(item, value) => item?.id === value?.id}
           >
             <ComboboxInput
+              id={id}
               className="w-[90%]"
               aria-invalid={fieldState.invalid}
               placeholder="科目を選択"

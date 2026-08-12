@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useId, useRef, useState } from "react"
 import { Controller, type useForm } from "react-hook-form"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -34,6 +34,7 @@ export const AmountField = ({
   const [draft, setDraft] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const isMobile = useIsMobile()
+  const id = useId()
 
   return (
     <Controller
@@ -86,8 +87,9 @@ export const AmountField = ({
 
         return (
           <Field data-invalid={fieldState.invalid}>
-            {!hideLabel && <FieldLabel>金額</FieldLabel>}
+            {!hideLabel && <FieldLabel htmlFor={id}>金額</FieldLabel>}
             <Input
+              id={id}
               type="text"
               // On mobile, suppress the OS keyboard and take input from our own
               // keypad instead: the numeric keyboard offers no arithmetic operators.

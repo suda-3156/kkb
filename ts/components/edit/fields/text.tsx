@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { Controller, type useForm } from "react-hook-form"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -22,14 +23,22 @@ type Props = {
 }
 
 export const TextField = ({ name, label, placeholder, maxLength, form, disabled }: Props) => {
+  const id = useId()
+
   return (
     <Controller
       name={name}
       control={form.control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Input placeholder={placeholder} maxLength={maxLength} {...field} disabled={disabled} />
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <Input
+            id={id}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            {...field}
+            disabled={disabled}
+          />
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </Field>
       )}

@@ -23,7 +23,7 @@ const mocks = [accountsMock("EXPENSE", EXPENSE_ACCOUNTS), accountsMock("ASSET", 
 
 const setup = () => renderForm(<ExpenseForm />, { mocks, width: MOBILE_WIDTH })
 
-const amountInput = () => screen.getByPlaceholderText("0")
+const amountInput = () => screen.getByLabelText("金額")
 const keypad = () => screen.queryByRole("group", { name: "電卓キーパッド" })
 
 const expectClosed = () =>
@@ -47,7 +47,7 @@ test("a tap outside the input and the keypad closes it", async () => {
   await user.click(amountInput())
   expect(keypad()).toBeInTheDocument()
 
-  await user.click(screen.getByPlaceholderText("メモを入力"))
+  await user.click(screen.getByLabelText("メモ"))
 
   await expectClosed()
 })

@@ -9,9 +9,8 @@ const mocks = [accountsMock("EXPENSE", EXPENSE_ACCOUNTS), accountsMock("ASSET", 
 
 const setup = () => renderForm(<ExpenseForm />, { mocks })
 
-// FieldLabel renders no `for` and no `aria-labelledby`, so getByLabelText finds
-// nothing. Both account fields share a placeholder; the category one is first.
-const comboboxes = () => screen.getAllByPlaceholderText("科目を選択")
+const categoryInput = () => screen.getByLabelText("費用科目")
+const paymentInput = () => screen.getByLabelText("支払い方法")
 
 /**
  * Open a combobox and wait for its accounts to arrive.
@@ -44,7 +43,7 @@ const highlighted = (name: string) =>
 
 test("typing narrows the candidates to the matching account", async () => {
   const { user } = setup()
-  const [category] = comboboxes()
+  const category = categoryInput()
 
   await open(user, category, "食費")
   await user.type(category, "食")
@@ -59,7 +58,8 @@ test("typing narrows the candidates to the matching account", async () => {
 // highlight, the way Enter already does.
 test("Tab commits the highlighted candidate and lands on the next field", async () => {
   const { user } = setup()
-  const [category, payment] = comboboxes()
+  const category = categoryInput()
+  const payment = paymentInput()
 
   await open(user, category, "食費")
   await user.type(category, "食")
@@ -76,7 +76,7 @@ test("Tab commits the highlighted candidate and lands on the next field", async 
 // Either direction means the user is done with the field.
 test("Shift+Tab commits the highlighted candidate too", async () => {
   const { user } = setup()
-  const [category] = comboboxes()
+  const category = categoryInput()
 
   await open(user, category, "家賃")
   await user.type(category, "家")
@@ -165,12 +165,11 @@ test("a filled form sends one balanced transaction", async () => {
     mocks: [...mocks, createMock],
   })
 
-  await user.type(screen.getByPlaceholderText("メモを入力"), "ランチ")
-  await user.type(screen.getByPlaceholderText("0"), "1200")
+  await user.type(screen.getByLabelText("メモ"), "ランチ")
+  await user.type(screen.getByLabelText("金額"), "1200")
 
-  const [category, payment] = comboboxes()
-  await pick(user, category, "食", "食費")
-  await pick(user, payment, "現", "現金")
+  await pick(user, categoryInput(), "食", "食費")
+  await pick(user, paymentInput(), "現", "現金")
 
   await user.click(screen.getByRole("button", { name: "確定" }))
 
