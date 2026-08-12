@@ -22,6 +22,17 @@ import (
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
 
+const (
+	// The app resolves ENCRYPTION_KMS_KEY_ID as "<group>/<name>", so these two
+	// together have to spell the configured key id.
+	wrapperKeyGroup = "system"
+	wrapperKeyName  = "ledger-encryption-key"
+
+	// Relative to the go module root, which is where this tool is run from.
+	ledgerAccountsSeedPath = "tools/seed/data/ledgeraccounts.json"
+	transactionsSeedPath   = "tools/seed/data/transactions.json"
+)
+
 var (
 	_ setup.DatabaseConfigProvider      = (*Config)(nil)
 	_ setup.KeyManagerConfigProvider    = (*Config)(nil)
@@ -153,7 +164,7 @@ func createEncryptionKey(ctx context.Context, cfg *keys.Config) error {
 		return fmt.Errorf("not EncryptionKeyManager, %T", kms)
 	}
 
-	keyID, err := kmst.CreateEncryptionKey(ctx, "system", "ledger-encryption-key")
+	keyID, err := kmst.CreateEncryptionKey(ctx, wrapperKeyGroup, wrapperKeyName)
 	if err != nil {
 		return err
 	}

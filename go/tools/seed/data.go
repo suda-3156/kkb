@@ -50,7 +50,7 @@ func insertData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, tm
 func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountManager) (map[string]prid.ID, error) {
 	var seeds []LedgerAccount
 
-	ledgeraccountsJSON, err := os.ReadFile("tools/seed/data/ledgeraccounts.json")
+	ledgeraccountsJSON, err := os.ReadFile(ledgerAccountsSeedPath)
 	if err != nil {
 		return nil, fmt.Errorf("read JSON: %w", err)
 	}
@@ -59,22 +59,13 @@ func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountM
 		return nil, fmt.Errorf("insertLedgerAccounts: parse JSON: %w", err)
 	}
 
-	// typeStr → LedgerAccountKind
-	kindMap := map[string]graph.LedgerAccountKind{
-		"ASSET":     graph.LedgerAccountKindAsset,
-		"LIABILITY": graph.LedgerAccountKindLiability,
-		"EXPENSE":   graph.LedgerAccountKindExpense,
-		"REVENUE":   graph.LedgerAccountKindRevenue,
-		"EQUITY":    graph.LedgerAccountKindEquity,
-	}
-
 	accountMap := make(map[string]prid.ID, len(seeds))
 
 	logging.Info(ctx, "inserting ledger accounts", "count", len(seeds))
 
 	for i, s := range seeds {
-		kind, ok := kindMap[s.Type]
-		if !ok {
+		kind := graph.LedgerAccountKind(s.Type)
+		if !kind.IsValid() {
 			return nil, fmt.Errorf("insertLedgerAccounts[%d] %q: unknown type %q", i, s.Name, s.Type)
 		}
 
@@ -104,7 +95,7 @@ func insertTransactions(
 ) error {
 	var seeds []Transaction
 
-	transactionsJSON, err := os.ReadFile("tools/seed/data/transactions.json")
+	transactionsJSON, err := os.ReadFile(transactionsSeedPath)
 	if err != nil {
 		return fmt.Errorf("read JSON: %w", err)
 	}
