@@ -31,6 +31,8 @@ func (r *queryResolver) Node(ctx context.Context, id prid.ID) (model.Node, error
 		return r.tnx.GetByPublicID(ctx, id)
 	case "lac":
 		return r.lac.GetByPublicID(ctx, id)
+	case "sub":
+		return r.sub.GetByPublicID(ctx, id)
 	default:
 		return nil, graph.ErrInvalidRequest
 	}

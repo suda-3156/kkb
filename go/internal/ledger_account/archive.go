@@ -8,6 +8,9 @@ import (
 
 	"github.com/suda-3156/kkb/go/ent"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
+	"github.com/suda-3156/kkb/go/ent/schema"
+	"github.com/suda-3156/kkb/go/ent/subscription"
+	"github.com/suda-3156/kkb/go/ent/subscriptionentry"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/prid"
@@ -67,6 +70,27 @@ func (m *LedgerAccountManager) archiveTx(
 	}
 
 	allIDs := append([]int{account.ID}, descendantIDs...)
+
+	// A running subscription materializes transactions from its template
+	// entries, and transaction creation refuses archived accounts: archiving a
+	// referenced account would make the daily job fail. CANCELED subscriptions
+	// don't block (the account would otherwise be unarchivable forever); if
+	// one is uncanceled later, the materialization failure is isolated per
+	// subscription and surfaces through the job alert.
+	inUse, err := client.SubscriptionEntry.Query().
+		Where(
+			subscriptionentry.HasLedgerAccountWith(ledgeraccount.IDIn(allIDs...)),
+			subscriptionentry.HasSubscriptionWith(
+				subscription.StatusIn(schema.Active, schema.Paused),
+			),
+		).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("archive: query subscription entries: %w", err)
+	}
+	if inUse {
+		return nil, ErrAccountUsedBySubscription
+	}
 
 	_, err = client.LedgerAccount.Update().
 		Where(ledgeraccount.IDIn(allIDs...)).

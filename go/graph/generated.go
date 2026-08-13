@@ -37,6 +37,8 @@ type ResolverRoot interface {
 	LedgerAccount() LedgerAccountResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Subscription() SubscriptionResolver
+	SubscriptionEntry() SubscriptionEntryResolver
 }
 
 type DirectiveRoot struct {
@@ -105,11 +107,17 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		ArchiveLedgerAccount   func(childComplexity int, id prid.ID) int
+		CancelSubscription     func(childComplexity int, id prid.ID) int
 		CreateLedgerAccount    func(childComplexity int, input model.CreateLedgerAccountInput) int
+		CreateSubscription     func(childComplexity int, input model.CreateSubscriptionInput) int
 		CreateTransaction      func(childComplexity int, input model.CreateTransactionInput) int
 		DeleteTransaction      func(childComplexity int, id prid.ID) int
+		PauseSubscription      func(childComplexity int, id prid.ID) int
+		ResumeSubscription     func(childComplexity int, id prid.ID) int
 		UnarchiveLedgerAccount func(childComplexity int, id prid.ID) int
+		UncancelSubscription   func(childComplexity int, id prid.ID) int
 		UpdateLedgerAccount    func(childComplexity int, input model.UpdateLedgerAccountInput) int
+		UpdateSubscription     func(childComplexity int, input model.UpdateSubscriptionInput) int
 		UpdateTransaction      func(childComplexity int, input model.UpdateTransactionInput) int
 	}
 
@@ -141,6 +149,9 @@ type ComplexityRoot struct {
 		Node                    func(childComplexity int, id prid.ID) int
 		PeriodAggregation       func(childComplexity int, startDate date.Date, endDate date.Date) int
 		PeriodAggregationSeries func(childComplexity int, startDate date.Date, endDate date.Date, granularity model.Granularity) int
+		Subscription            func(childComplexity int, id prid.ID) int
+		SubscriptionCalendar    func(childComplexity int, year int32, month int32) int
+		Subscriptions           func(childComplexity int, includeCanceled *bool) int
 		Transaction             func(childComplexity int, id prid.ID) int
 		Transactions            func(childComplexity int, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) int
 		TrialBalance            func(childComplexity int, asOf date.Date) int
@@ -149,6 +160,41 @@ type ComplexityRoot struct {
 	RevenueSummary struct {
 		ByAccount   func(childComplexity int) int
 		TotalAmount func(childComplexity int) int
+	}
+
+	Subscription struct {
+		AnchorOn         func(childComplexity int) int
+		CoveredThroughOn func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		ID               func(childComplexity int) int
+		IntervalMonths   func(childComplexity int) int
+		Name             func(childComplexity int) int
+		NextOccurrenceOn func(childComplexity int) int
+		Occurrences      func(childComplexity int, startDate *date.Date, endDate *date.Date) int
+		RegisteredOn     func(childComplexity int) int
+		Status           func(childComplexity int) int
+		TemplateEntries  func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+	}
+
+	SubscriptionCalendarEntry struct {
+		OccurrenceOn func(childComplexity int) int
+		Outcome      func(childComplexity int) int
+		Subscription func(childComplexity int) int
+		Transaction  func(childComplexity int) int
+	}
+
+	SubscriptionEntry struct {
+		Amount        func(childComplexity int) int
+		Kind          func(childComplexity int) int
+		LedgerAccount func(childComplexity int) int
+	}
+
+	SubscriptionOccurrence struct {
+		CreatedAt    func(childComplexity int) int
+		OccurrenceOn func(childComplexity int) int
+		Outcome      func(childComplexity int) int
+		Transaction  func(childComplexity int) int
 	}
 
 	Transaction struct {
@@ -203,6 +249,12 @@ type MutationResolver interface {
 	UpdateLedgerAccount(ctx context.Context, input model.UpdateLedgerAccountInput) (*model.LedgerAccount, error)
 	ArchiveLedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
 	UnarchiveLedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
+	CreateSubscription(ctx context.Context, input model.CreateSubscriptionInput) (*model.Subscription, error)
+	UpdateSubscription(ctx context.Context, input model.UpdateSubscriptionInput) (*model.Subscription, error)
+	PauseSubscription(ctx context.Context, id prid.ID) (*model.Subscription, error)
+	ResumeSubscription(ctx context.Context, id prid.ID) (*model.Subscription, error)
+	CancelSubscription(ctx context.Context, id prid.ID) (*model.Subscription, error)
+	UncancelSubscription(ctx context.Context, id prid.ID) (*model.Subscription, error)
 	CreateTransaction(ctx context.Context, input model.CreateTransactionInput) (*model.Transaction, error)
 	UpdateTransaction(ctx context.Context, input model.UpdateTransactionInput) (*model.Transaction, error)
 	DeleteTransaction(ctx context.Context, id prid.ID) (*model.DeleteTransactionPayload, error)
@@ -216,8 +268,17 @@ type QueryResolver interface {
 	ChildAccountBreakdown(ctx context.Context, parentID prid.ID, startDate date.Date, endDate date.Date) (*model.ChildAccountBreakdown, error)
 	LedgerAccount(ctx context.Context, id prid.ID) (*model.LedgerAccount, error)
 	LedgerAccounts(ctx context.Context, first *int32, last *int32, kind *model.LedgerAccountKind, includeArchived *bool, after *prid.ID, before *prid.ID) (*model.LedgerAccountConnection, error)
+	Subscription(ctx context.Context, id prid.ID) (*model.Subscription, error)
+	Subscriptions(ctx context.Context, includeCanceled *bool) ([]*model.Subscription, error)
+	SubscriptionCalendar(ctx context.Context, year int32, month int32) ([]*model.SubscriptionCalendarEntry, error)
 	Transaction(ctx context.Context, id prid.ID) (*model.Transaction, error)
 	Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) (*model.TransactionConnection, error)
+}
+type SubscriptionResolver interface {
+	Occurrences(ctx context.Context, obj *model.Subscription, startDate *date.Date, endDate *date.Date) ([]*model.SubscriptionOccurrence, error)
+}
+type SubscriptionEntryResolver interface {
+	LedgerAccount(ctx context.Context, obj *model.SubscriptionEntry) (*model.LedgerAccount, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -456,6 +517,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.ArchiveLedgerAccount(childComplexity, args["id"].(prid.ID)), true
+	case "Mutation.cancelSubscription":
+		if e.ComplexityRoot.Mutation.CancelSubscription == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_cancelSubscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CancelSubscription(childComplexity, args["id"].(prid.ID)), true
 	case "Mutation.createLedgerAccount":
 		if e.ComplexityRoot.Mutation.CreateLedgerAccount == nil {
 			break
@@ -467,6 +539,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateLedgerAccount(childComplexity, args["input"].(model.CreateLedgerAccountInput)), true
+	case "Mutation.createSubscription":
+		if e.ComplexityRoot.Mutation.CreateSubscription == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSubscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateSubscription(childComplexity, args["input"].(model.CreateSubscriptionInput)), true
 	case "Mutation.createTransaction":
 		if e.ComplexityRoot.Mutation.CreateTransaction == nil {
 			break
@@ -489,6 +572,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteTransaction(childComplexity, args["id"].(prid.ID)), true
+	case "Mutation.pauseSubscription":
+		if e.ComplexityRoot.Mutation.PauseSubscription == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_pauseSubscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.PauseSubscription(childComplexity, args["id"].(prid.ID)), true
+	case "Mutation.resumeSubscription":
+		if e.ComplexityRoot.Mutation.ResumeSubscription == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_resumeSubscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ResumeSubscription(childComplexity, args["id"].(prid.ID)), true
 	case "Mutation.unarchiveLedgerAccount":
 		if e.ComplexityRoot.Mutation.UnarchiveLedgerAccount == nil {
 			break
@@ -500,6 +605,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UnarchiveLedgerAccount(childComplexity, args["id"].(prid.ID)), true
+	case "Mutation.uncancelSubscription":
+		if e.ComplexityRoot.Mutation.UncancelSubscription == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_uncancelSubscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UncancelSubscription(childComplexity, args["id"].(prid.ID)), true
 	case "Mutation.updateLedgerAccount":
 		if e.ComplexityRoot.Mutation.UpdateLedgerAccount == nil {
 			break
@@ -511,6 +627,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateLedgerAccount(childComplexity, args["input"].(model.UpdateLedgerAccountInput)), true
+	case "Mutation.updateSubscription":
+		if e.ComplexityRoot.Mutation.UpdateSubscription == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSubscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateSubscription(childComplexity, args["input"].(model.UpdateSubscriptionInput)), true
 	case "Mutation.updateTransaction":
 		if e.ComplexityRoot.Mutation.UpdateTransaction == nil {
 			break
@@ -665,6 +792,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.PeriodAggregationSeries(childComplexity, args["startDate"].(date.Date), args["endDate"].(date.Date), args["granularity"].(model.Granularity)), true
+	case "Query.subscription":
+		if e.ComplexityRoot.Query.Subscription == nil {
+			break
+		}
+
+		args, err := ec.field_Query_subscription_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Subscription(childComplexity, args["id"].(prid.ID)), true
+	case "Query.subscriptionCalendar":
+		if e.ComplexityRoot.Query.SubscriptionCalendar == nil {
+			break
+		}
+
+		args, err := ec.field_Query_subscriptionCalendar_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.SubscriptionCalendar(childComplexity, args["year"].(int32), args["month"].(int32)), true
+	case "Query.subscriptions":
+		if e.ComplexityRoot.Query.Subscriptions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_subscriptions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Subscriptions(childComplexity, args["includeCanceled"].(*bool)), true
 	case "Query.transaction":
 		if e.ComplexityRoot.Query.Transaction == nil {
 			break
@@ -711,6 +871,153 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.RevenueSummary.TotalAmount(childComplexity), true
+
+	case "Subscription.anchorOn":
+		if e.ComplexityRoot.Subscription.AnchorOn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.AnchorOn(childComplexity), true
+	case "Subscription.coveredThroughOn":
+		if e.ComplexityRoot.Subscription.CoveredThroughOn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.CoveredThroughOn(childComplexity), true
+	case "Subscription.createdAt":
+		if e.ComplexityRoot.Subscription.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.CreatedAt(childComplexity), true
+	case "Subscription.id":
+		if e.ComplexityRoot.Subscription.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.ID(childComplexity), true
+	case "Subscription.intervalMonths":
+		if e.ComplexityRoot.Subscription.IntervalMonths == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.IntervalMonths(childComplexity), true
+	case "Subscription.name":
+		if e.ComplexityRoot.Subscription.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.Name(childComplexity), true
+	case "Subscription.nextOccurrenceOn":
+		if e.ComplexityRoot.Subscription.NextOccurrenceOn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.NextOccurrenceOn(childComplexity), true
+	case "Subscription.occurrences":
+		if e.ComplexityRoot.Subscription.Occurrences == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_occurrences_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Subscription.Occurrences(childComplexity, args["startDate"].(*date.Date), args["endDate"].(*date.Date)), true
+	case "Subscription.registeredOn":
+		if e.ComplexityRoot.Subscription.RegisteredOn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.RegisteredOn(childComplexity), true
+	case "Subscription.status":
+		if e.ComplexityRoot.Subscription.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.Status(childComplexity), true
+	case "Subscription.templateEntries":
+		if e.ComplexityRoot.Subscription.TemplateEntries == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.TemplateEntries(childComplexity), true
+	case "Subscription.updatedAt":
+		if e.ComplexityRoot.Subscription.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.UpdatedAt(childComplexity), true
+
+	case "SubscriptionCalendarEntry.occurrenceOn":
+		if e.ComplexityRoot.SubscriptionCalendarEntry.OccurrenceOn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionCalendarEntry.OccurrenceOn(childComplexity), true
+	case "SubscriptionCalendarEntry.outcome":
+		if e.ComplexityRoot.SubscriptionCalendarEntry.Outcome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionCalendarEntry.Outcome(childComplexity), true
+	case "SubscriptionCalendarEntry.subscription":
+		if e.ComplexityRoot.SubscriptionCalendarEntry.Subscription == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionCalendarEntry.Subscription(childComplexity), true
+	case "SubscriptionCalendarEntry.transaction":
+		if e.ComplexityRoot.SubscriptionCalendarEntry.Transaction == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionCalendarEntry.Transaction(childComplexity), true
+
+	case "SubscriptionEntry.amount":
+		if e.ComplexityRoot.SubscriptionEntry.Amount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionEntry.Amount(childComplexity), true
+	case "SubscriptionEntry.kind":
+		if e.ComplexityRoot.SubscriptionEntry.Kind == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionEntry.Kind(childComplexity), true
+	case "SubscriptionEntry.ledgerAccount":
+		if e.ComplexityRoot.SubscriptionEntry.LedgerAccount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionEntry.LedgerAccount(childComplexity), true
+
+	case "SubscriptionOccurrence.createdAt":
+		if e.ComplexityRoot.SubscriptionOccurrence.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionOccurrence.CreatedAt(childComplexity), true
+	case "SubscriptionOccurrence.occurrenceOn":
+		if e.ComplexityRoot.SubscriptionOccurrence.OccurrenceOn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionOccurrence.OccurrenceOn(childComplexity), true
+	case "SubscriptionOccurrence.outcome":
+		if e.ComplexityRoot.SubscriptionOccurrence.Outcome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionOccurrence.Outcome(childComplexity), true
+	case "SubscriptionOccurrence.transaction":
+		if e.ComplexityRoot.SubscriptionOccurrence.Transaction == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SubscriptionOccurrence.Transaction(childComplexity), true
 
 	case "Transaction.createdAt":
 		if e.ComplexityRoot.Transaction.CreatedAt == nil {
@@ -815,9 +1122,12 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCreateLedgerAccountInput,
+		ec.unmarshalInputCreateSubscriptionInput,
 		ec.unmarshalInputCreateTransactionInput,
 		ec.unmarshalInputJournalEntryInput,
+		ec.unmarshalInputSubscriptionEntryInput,
 		ec.unmarshalInputUpdateLedgerAccountInput,
+		ec.unmarshalInputUpdateSubscriptionInput,
 		ec.unmarshalInputUpdateTransactionInput,
 	)
 	first := true
@@ -978,7 +1288,15 @@ extend type Query {
   ): ChildAccountBreakdown!
 }
 `, BuiltIn: false},
-	{Name: "../../schema/common.graphql", Input: `scalar DateTime
+	{Name: "../../schema/common.graphql", Input: `# Explicit root-type declaration. Without it, a type named "Subscription"
+# (subscription.graphql's domain type) would be picked up as the GraphQL
+# subscription root by naming convention.
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+scalar DateTime
 scalar Date # 2006-01-02 format
 interface Node {
   id: ID! # Public ID (pulid ID format)
@@ -1075,6 +1393,131 @@ input UpdateLedgerAccountInput {
   name: String
   # The kind is immutable.
   isGroup: Boolean # Under some conditions, changes allowed.
+  updatedAt: DateTime! # For optimistic locking
+}
+`, BuiltIn: false},
+	{Name: "../../schema/subscription.graphql", Input: `# Subscription Schema Definitions
+#
+# "Subscription" here is a recurring fixed-amount payment definition, not the
+# GraphQL subscription root type. common.graphql declares an explicit
+# ` + "`" + `schema { query, mutation }` + "`" + ` block so this name stays an ordinary type.
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELED
+}
+
+enum OccurrenceOutcome {
+  MATERIALIZED
+  SKIPPED
+}
+
+# A template journal entry: the same shape as JournalEntry but without a date.
+type SubscriptionEntry {
+  ledgerAccount: LedgerAccount!
+  amount: Int!
+  kind: JournalEntryKind!
+}
+
+type Subscription implements Node {
+  id: ID!
+  name: String!
+  # The day the user signed up for the service (not this record's creation day).
+  registeredOn: Date!
+  # Base date deciding the day-of-month of occurrences (sticky month-end rounding).
+  anchorOn: Date!
+  # Next date to materialize. The daily job advances this monotonically.
+  nextOccurrenceOn: Date!
+  # Last day of the already-paid period (inclusive). Meaningful only after the
+  # first materialization; the UI hides it until then.
+  coveredThroughOn: Date!
+  intervalMonths: Int!
+  status: SubscriptionStatus!
+  templateEntries: [SubscriptionEntry!]!
+  # Payment history, materialization-log first: an occurrence whose transaction
+  # was deleted afterwards still appears, with transaction: null.
+  occurrences(startDate: Date, endDate: Date): [SubscriptionOccurrence!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SubscriptionOccurrence {
+  occurrenceOn: Date!
+  outcome: OccurrenceOutcome!
+  # The materialized transaction. Null when it was deleted afterwards, or when
+  # the occurrence was skipped.
+  transaction: Transaction
+  createdAt: DateTime!
+}
+
+# One cell of the subscription calendar (an idealized month, days 1 to 31).
+type SubscriptionCalendarEntry {
+  occurrenceOn: Date!
+  subscription: Subscription!
+  # Null for occurrences the job has not processed yet (future ones).
+  outcome: OccurrenceOutcome
+  transaction: Transaction
+}
+
+extend type Query {
+  subscription(id: ID!): Subscription
+
+  # A plain array: at most ~100 subscriptions, no pagination needed.
+  # By default a canceled subscription is hidden once today > coveredThroughOn
+  # (the last covered day is still usable).
+  subscriptions(includeCanceled: Boolean = false): [Subscription!]!
+
+  # Computed on the server so the sticky month-end rounding lives in one place.
+  subscriptionCalendar(year: Int!, month: Int!): [SubscriptionCalendarEntry!]!
+}
+
+extend type Mutation {
+  # When nextOccurrenceOn lands on today, the first occurrence is materialized
+  # immediately instead of waiting for tomorrow's job run.
+  createSubscription(input: CreateSubscriptionInput!): Subscription!
+
+  # This mutation will delete and recreate all template entries based on input
+  # when input.entries is given.
+  updateSubscription(input: UpdateSubscriptionInput!): Subscription!
+
+  # Pause is a plain toggle: occurrences are skipped until an explicit resume.
+  pauseSubscription(id: ID!): Subscription!
+  # Resume and uncancel share one rule:
+  # nextOccurrenceOn = max(today, coveredThroughOn + 1 day),
+  # and anchorOn moves to it only when it actually changed.
+  resumeSubscription(id: ID!): Subscription!
+  # Cancel freezes nextOccurrenceOn; the job no longer touches this subscription.
+  cancelSubscription(id: ID!): Subscription!
+  uncancelSubscription(id: ID!): Subscription!
+
+  # There is deliberately no delete mutation (same reasoning as LedgerAccount:
+  # referential integrity; canceled records keep the payment history readable).
+}
+
+input SubscriptionEntryInput {
+  ledgerAccountId: ID!
+  amount: Int!
+  kind: JournalEntryKind!
+}
+
+input CreateSubscriptionInput {
+  name: String!
+  registeredOn: Date!
+  intervalMonths: Int!
+  entries: [SubscriptionEntryInput!]!
+}
+
+input UpdateSubscriptionInput {
+  id: ID!
+  name: String
+  # Editable, but the schedule is recalculated only while no occurrence has
+  # been recorded yet; afterwards only the recorded fact changes.
+  registeredOn: Date
+  # A new interval takes effect from the next occurrence on; the current
+  # nextOccurrenceOn does not move.
+  intervalMonths: Int
+  entries: [SubscriptionEntryInput!]
   updatedAt: DateTime! # For optimistic locking
 }
 `, BuiltIn: false},
@@ -1345,6 +1788,76 @@ func (ec *executionContext) childFields_RevenueSummary(ctx context.Context, fiel
 	return nil, fmt.Errorf("no field named %q was found under type RevenueSummary", field.Name)
 }
 
+func (ec *executionContext) childFields_Subscription(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Subscription_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Subscription_name(ctx, field)
+	case "registeredOn":
+		return ec.fieldContext_Subscription_registeredOn(ctx, field)
+	case "anchorOn":
+		return ec.fieldContext_Subscription_anchorOn(ctx, field)
+	case "nextOccurrenceOn":
+		return ec.fieldContext_Subscription_nextOccurrenceOn(ctx, field)
+	case "coveredThroughOn":
+		return ec.fieldContext_Subscription_coveredThroughOn(ctx, field)
+	case "intervalMonths":
+		return ec.fieldContext_Subscription_intervalMonths(ctx, field)
+	case "status":
+		return ec.fieldContext_Subscription_status(ctx, field)
+	case "templateEntries":
+		return ec.fieldContext_Subscription_templateEntries(ctx, field)
+	case "occurrences":
+		return ec.fieldContext_Subscription_occurrences(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Subscription_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Subscription_updatedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Subscription", field.Name)
+}
+
+func (ec *executionContext) childFields_SubscriptionCalendarEntry(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "occurrenceOn":
+		return ec.fieldContext_SubscriptionCalendarEntry_occurrenceOn(ctx, field)
+	case "subscription":
+		return ec.fieldContext_SubscriptionCalendarEntry_subscription(ctx, field)
+	case "outcome":
+		return ec.fieldContext_SubscriptionCalendarEntry_outcome(ctx, field)
+	case "transaction":
+		return ec.fieldContext_SubscriptionCalendarEntry_transaction(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SubscriptionCalendarEntry", field.Name)
+}
+
+func (ec *executionContext) childFields_SubscriptionEntry(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "ledgerAccount":
+		return ec.fieldContext_SubscriptionEntry_ledgerAccount(ctx, field)
+	case "amount":
+		return ec.fieldContext_SubscriptionEntry_amount(ctx, field)
+	case "kind":
+		return ec.fieldContext_SubscriptionEntry_kind(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SubscriptionEntry", field.Name)
+}
+
+func (ec *executionContext) childFields_SubscriptionOccurrence(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "occurrenceOn":
+		return ec.fieldContext_SubscriptionOccurrence_occurrenceOn(ctx, field)
+	case "outcome":
+		return ec.fieldContext_SubscriptionOccurrence_outcome(ctx, field)
+	case "transaction":
+		return ec.fieldContext_SubscriptionOccurrence_transaction(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_SubscriptionOccurrence_createdAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SubscriptionOccurrence", field.Name)
+}
+
 func (ec *executionContext) childFields_Transaction(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
@@ -1529,12 +2042,40 @@ func (ec *executionContext) field_Mutation_archiveLedgerAccount_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_cancelSubscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (prid.ID, error) {
+			return ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createLedgerAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateLedgerAccountInput, error) {
 			return ec.unmarshalNCreateLedgerAccountInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCreateLedgerAccountInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createSubscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateSubscriptionInput, error) {
+			return ec.unmarshalNCreateSubscriptionInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCreateSubscriptionInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1571,7 +2112,49 @@ func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_pauseSubscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (prid.ID, error) {
+			return ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_resumeSubscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (prid.ID, error) {
+			return ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_unarchiveLedgerAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (prid.ID, error) {
+			return ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_uncancelSubscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
@@ -1591,6 +2174,20 @@ func (ec *executionContext) field_Mutation_updateLedgerAccount_args(ctx context.
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.UpdateLedgerAccountInput, error) {
 			return ec.unmarshalNUpdateLedgerAccountInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐUpdateLedgerAccountInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSubscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateSubscriptionInput, error) {
+			return ec.unmarshalNUpdateSubscriptionInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐUpdateSubscriptionInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1791,6 +2388,56 @@ func (ec *executionContext) field_Query_periodAggregation_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_subscriptionCalendar_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "year",
+		func(ctx context.Context, v any) (int32, error) {
+			return ec.unmarshalNInt2int32(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["year"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "month",
+		func(ctx context.Context, v any) (int32, error) {
+			return ec.unmarshalNInt2int32(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["month"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_subscription_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (prid.ID, error) {
+			return ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_subscriptions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeCanceled",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["includeCanceled"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_transaction_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1870,6 +2517,28 @@ func (ec *executionContext) field_Query_trialBalance_args(ctx context.Context, r
 		return nil, err
 	}
 	args["asOf"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_occurrences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "startDate",
+		func(ctx context.Context, v any) (*date.Date, error) {
+			return ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["startDate"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "endDate",
+		func(ctx context.Context, v any) (*date.Date, error) {
+			return ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["endDate"] = arg1
 	return args, nil
 }
 
@@ -2967,6 +3636,270 @@ func (ec *executionContext) fieldContext_Mutation_unarchiveLedgerAccount(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createSubscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createSubscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateSubscription(ctx, fc.Args["input"].(model.CreateSubscriptionInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createSubscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSubscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateSubscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateSubscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateSubscription(ctx, fc.Args["input"].(model.UpdateSubscriptionInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_updateSubscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateSubscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_pauseSubscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_pauseSubscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().PauseSubscription(ctx, fc.Args["id"].(prid.ID))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_pauseSubscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_pauseSubscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_resumeSubscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_resumeSubscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ResumeSubscription(ctx, fc.Args["id"].(prid.ID))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_resumeSubscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_resumeSubscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_cancelSubscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_cancelSubscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CancelSubscription(ctx, fc.Args["id"].(prid.ID))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_cancelSubscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_cancelSubscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_uncancelSubscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_uncancelSubscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UncancelSubscription(ctx, fc.Args["id"].(prid.ID))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_uncancelSubscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_uncancelSubscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -3710,6 +4643,138 @@ func (ec *executionContext) fieldContext_Query_ledgerAccounts(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_subscription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_subscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Subscription(ctx, fc.Args["id"].(prid.ID))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalOSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_subscription(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_subscription_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_subscriptions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_subscriptions(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Subscriptions(ctx, fc.Args["includeCanceled"].(*bool))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_subscriptions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_subscriptions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_subscriptionCalendar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_subscriptionCalendar(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().SubscriptionCalendar(ctx, fc.Args["year"].(int32), fc.Args["month"].(int32))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.SubscriptionCalendarEntry) graphql.Marshaler {
+			return ec.marshalNSubscriptionCalendarEntry2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionCalendarEntryᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_subscriptionCalendar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_SubscriptionCalendarEntry(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_subscriptionCalendar_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_transaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -3927,6 +4992,601 @@ func (ec *executionContext) fieldContext_RevenueSummary_byAccount(_ context.Cont
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_id(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v prid.ID) graphql.Marshaler {
+			return ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_name(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_registeredOn(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_registeredOn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RegisteredOn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v date.Date) graphql.Marshaler {
+			return ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_registeredOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type Date does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_anchorOn(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_anchorOn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AnchorOn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v date.Date) graphql.Marshaler {
+			return ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_anchorOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type Date does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_nextOccurrenceOn(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_nextOccurrenceOn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NextOccurrenceOn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v date.Date) graphql.Marshaler {
+			return ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_nextOccurrenceOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type Date does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_coveredThroughOn(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_coveredThroughOn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CoveredThroughOn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v date.Date) graphql.Marshaler {
+			return ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_coveredThroughOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type Date does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_intervalMonths(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_intervalMonths(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IntervalMonths, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
+			return ec.marshalNInt2int32(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_intervalMonths(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_status(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.SubscriptionStatus) graphql.Marshaler {
+			return ec.marshalNSubscriptionStatus2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionStatus(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type SubscriptionStatus does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_templateEntries(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_templateEntries(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TemplateEntries, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.SubscriptionEntry) graphql.Marshaler {
+			return ec.marshalNSubscriptionEntry2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_templateEntries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_SubscriptionEntry(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_occurrences(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_occurrences(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Subscription().Occurrences(ctx, obj, fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.SubscriptionOccurrence) graphql.Marshaler {
+			return ec.marshalNSubscriptionOccurrence2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionOccurrenceᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_occurrences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_SubscriptionOccurrence(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_occurrences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Subscription_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_updatedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionCalendarEntry_occurrenceOn(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionCalendarEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionCalendarEntry_occurrenceOn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OccurrenceOn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v date.Date) graphql.Marshaler {
+			return ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionCalendarEntry_occurrenceOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionCalendarEntry", field, false, false, errors.New("field of type Date does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionCalendarEntry_subscription(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionCalendarEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionCalendarEntry_subscription(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Subscription, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+			return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionCalendarEntry_subscription(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubscriptionCalendarEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subscription(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubscriptionCalendarEntry_outcome(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionCalendarEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionCalendarEntry_outcome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Outcome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.OccurrenceOutcome) graphql.Marshaler {
+			return ec.marshalOOccurrenceOutcome2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐOccurrenceOutcome(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionCalendarEntry_outcome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionCalendarEntry", field, false, false, errors.New("field of type OccurrenceOutcome does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionCalendarEntry_transaction(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionCalendarEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionCalendarEntry_transaction(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Transaction, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Transaction) graphql.Marshaler {
+			return ec.marshalOTransaction2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionCalendarEntry_transaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubscriptionCalendarEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Transaction(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubscriptionEntry_ledgerAccount(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionEntry_ledgerAccount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.SubscriptionEntry().LedgerAccount(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LedgerAccount) graphql.Marshaler {
+			return ec.marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionEntry_ledgerAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubscriptionEntry",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LedgerAccount(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubscriptionEntry_amount(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionEntry_amount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
+			return ec.marshalNInt2int32(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionEntry_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionEntry", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionEntry_kind(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionEntry_kind(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Kind, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.JournalEntryKind) graphql.Marshaler {
+			return ec.marshalNJournalEntryKind2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐJournalEntryKind(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionEntry_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionEntry", field, false, false, errors.New("field of type JournalEntryKind does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionOccurrence_occurrenceOn(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionOccurrence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionOccurrence_occurrenceOn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OccurrenceOn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v date.Date) graphql.Marshaler {
+			return ec.marshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionOccurrence_occurrenceOn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionOccurrence", field, false, false, errors.New("field of type Date does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionOccurrence_outcome(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionOccurrence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionOccurrence_outcome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Outcome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.OccurrenceOutcome) graphql.Marshaler {
+			return ec.marshalNOccurrenceOutcome2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐOccurrenceOutcome(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionOccurrence_outcome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionOccurrence", field, false, false, errors.New("field of type OccurrenceOutcome does not have child fields"))
+}
+
+func (ec *executionContext) _SubscriptionOccurrence_transaction(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionOccurrence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionOccurrence_transaction(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Transaction, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Transaction) graphql.Marshaler {
+			return ec.marshalOTransaction2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionOccurrence_transaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubscriptionOccurrence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Transaction(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubscriptionOccurrence_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.SubscriptionOccurrence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SubscriptionOccurrence_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SubscriptionOccurrence_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SubscriptionOccurrence", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Transaction_id(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
@@ -5442,6 +7102,57 @@ func (ec *executionContext) unmarshalInputCreateLedgerAccountInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateSubscriptionInput(ctx context.Context, obj any) (model.CreateSubscriptionInput, error) {
+	var it model.CreateSubscriptionInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "registeredOn", "intervalMonths", "entries"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "registeredOn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registeredOn"))
+			data, err := ec.unmarshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RegisteredOn = data
+		case "intervalMonths":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("intervalMonths"))
+			data, err := ec.unmarshalNInt2int32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IntervalMonths = data
+		case "entries":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entries"))
+			data, err := ec.unmarshalNSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Entries = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Context, obj any) (model.CreateTransactionInput, error) {
 	var it model.CreateTransactionInput
 	if obj == nil {
@@ -5488,6 +7199,50 @@ func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Con
 
 func (ec *executionContext) unmarshalInputJournalEntryInput(ctx context.Context, obj any) (model.JournalEntryInput, error) {
 	var it model.JournalEntryInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"ledgerAccountId", "amount", "kind"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "ledgerAccountId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerAccountId"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerAccountID = data
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNInt2int32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "kind":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kind"))
+			data, err := ec.unmarshalNJournalEntryKind2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐJournalEntryKind(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Kind = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSubscriptionEntryInput(ctx context.Context, obj any) (model.SubscriptionEntryInput, error) {
+	var it model.SubscriptionEntryInput
 	if obj == nil {
 		return it, nil
 	}
@@ -5599,6 +7354,71 @@ func (ec *executionContext) unmarshalInputUpdateLedgerAccountInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateSubscriptionInput(ctx context.Context, obj any) (model.UpdateSubscriptionInput, error) {
+	var it model.UpdateSubscriptionInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "registeredOn", "intervalMonths", "entries", "updatedAt"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "registeredOn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registeredOn"))
+			data, err := ec.unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RegisteredOn = data
+		case "intervalMonths":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("intervalMonths"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IntervalMonths = data
+		case "entries":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entries"))
+			data, err := ec.unmarshalOSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Entries = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalNDateTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Context, obj any) (model.UpdateTransactionInput, error) {
 	var it model.UpdateTransactionInput
 	if obj == nil {
@@ -5672,6 +7492,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Transaction(ctx, sel, obj)
+	case model.Subscription:
+		return ec._Subscription(ctx, sel, &obj)
+	case *model.Subscription:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Subscription(ctx, sel, obj)
 	case model.LedgerAccount:
 		return ec._LedgerAccount(ctx, sel, &obj)
 	case *model.LedgerAccount:
@@ -6400,6 +8227,48 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createSubscription":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSubscription(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateSubscription":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateSubscription(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pauseSubscription":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_pauseSubscription(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "resumeSubscription":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resumeSubscription(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cancelSubscription":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_cancelSubscription(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uncancelSubscription":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_uncancelSubscription(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createTransaction":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createTransaction(ctx, field)
@@ -6792,6 +8661,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "subscription":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_subscription(ctx, field)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "subscriptions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_subscriptions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "subscriptionCalendar":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_subscriptionCalendar(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "transaction":
 			field := field
 
@@ -6890,6 +8825,319 @@ func (ec *executionContext) _RevenueSummary(ctx context.Context, sel ast.Selecti
 			}
 		case "byAccount":
 			out.Values[i] = ec._RevenueSummary_byAccount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var subscriptionImplementors = []string{"Subscription", "Node"}
+
+func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet, obj *model.Subscription) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Subscription")
+		case "id":
+			out.Values[i] = ec._Subscription_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._Subscription_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "registeredOn":
+			out.Values[i] = ec._Subscription_registeredOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "anchorOn":
+			out.Values[i] = ec._Subscription_anchorOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "nextOccurrenceOn":
+			out.Values[i] = ec._Subscription_nextOccurrenceOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "coveredThroughOn":
+			out.Values[i] = ec._Subscription_coveredThroughOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "intervalMonths":
+			out.Values[i] = ec._Subscription_intervalMonths(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._Subscription_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "templateEntries":
+			out.Values[i] = ec._Subscription_templateEntries(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "occurrences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Subscription_occurrences(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.IsDeferred() {
+				deferredFieldSet.AddField(field)
+				fieldIndex := len(deferredFieldSet.Values) - 1
+				deferredFieldSet.Concurrently(fieldIndex, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, deferredFieldSet)
+				})
+
+				for _, deferrable := range field.Deferrables {
+					view, ok := deferLabelToView[deferrable.Label]
+					if !ok {
+						view = deferredFieldSet.NewView()
+						deferLabelToView[deferrable.Label] = view
+					}
+					view.AddIndices(fieldIndex)
+				}
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._Subscription_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Subscription_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var subscriptionCalendarEntryImplementors = []string{"SubscriptionCalendarEntry"}
+
+func (ec *executionContext) _SubscriptionCalendarEntry(ctx context.Context, sel ast.SelectionSet, obj *model.SubscriptionCalendarEntry) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionCalendarEntryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SubscriptionCalendarEntry")
+		case "occurrenceOn":
+			out.Values[i] = ec._SubscriptionCalendarEntry_occurrenceOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "subscription":
+			out.Values[i] = ec._SubscriptionCalendarEntry_subscription(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "outcome":
+			out.Values[i] = ec._SubscriptionCalendarEntry_outcome(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "transaction":
+			out.Values[i] = ec._SubscriptionCalendarEntry_transaction(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var subscriptionEntryImplementors = []string{"SubscriptionEntry"}
+
+func (ec *executionContext) _SubscriptionEntry(ctx context.Context, sel ast.SelectionSet, obj *model.SubscriptionEntry) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionEntryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SubscriptionEntry")
+		case "ledgerAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SubscriptionEntry_ledgerAccount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.IsDeferred() {
+				deferredFieldSet.AddField(field)
+				fieldIndex := len(deferredFieldSet.Values) - 1
+				deferredFieldSet.Concurrently(fieldIndex, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, deferredFieldSet)
+				})
+
+				for _, deferrable := range field.Deferrables {
+					view, ok := deferLabelToView[deferrable.Label]
+					if !ok {
+						view = deferredFieldSet.NewView()
+						deferLabelToView[deferrable.Label] = view
+					}
+					view.AddIndices(fieldIndex)
+				}
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "amount":
+			out.Values[i] = ec._SubscriptionEntry_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "kind":
+			out.Values[i] = ec._SubscriptionEntry_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var subscriptionOccurrenceImplementors = []string{"SubscriptionOccurrence"}
+
+func (ec *executionContext) _SubscriptionOccurrence(ctx context.Context, sel ast.SelectionSet, obj *model.SubscriptionOccurrence) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionOccurrenceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SubscriptionOccurrence")
+		case "occurrenceOn":
+			out.Values[i] = ec._SubscriptionOccurrence_occurrenceOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "outcome":
+			out.Values[i] = ec._SubscriptionOccurrence_outcome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transaction":
+			out.Values[i] = ec._SubscriptionOccurrence_transaction(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._SubscriptionOccurrence_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7600,6 +9848,11 @@ func (ec *executionContext) unmarshalNCreateLedgerAccountInput2githubᚗcomᚋsu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateSubscriptionInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCreateSubscriptionInput(ctx context.Context, v any) (model.CreateSubscriptionInput, error) {
+	res, err := ec.unmarshalInputCreateSubscriptionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateTransactionInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCreateTransactionInput(ctx context.Context, v any) (model.CreateTransactionInput, error) {
 	res, err := ec.unmarshalInputCreateTransactionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7800,6 +10053,16 @@ func (ec *executionContext) marshalNLedgerAccountKind2githubᚗcomᚋsudaᚑ3156
 	return v
 }
 
+func (ec *executionContext) unmarshalNOccurrenceOutcome2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐOccurrenceOutcome(ctx context.Context, v any) (model.OccurrenceOutcome, error) {
+	var res model.OccurrenceOutcome
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOccurrenceOutcome2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐOccurrenceOutcome(ctx context.Context, sel ast.SelectionSet, v model.OccurrenceOutcome) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -7880,6 +10143,143 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) marshalNSubscription2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx context.Context, sel ast.SelectionSet, v model.Subscription) graphql.Marshaler {
+	return ec._Subscription(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSubscription2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subscription) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx context.Context, sel ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Subscription(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSubscriptionCalendarEntry2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionCalendarEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SubscriptionCalendarEntry) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSubscriptionCalendarEntry2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionCalendarEntry(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSubscriptionCalendarEntry2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionCalendarEntry(ctx context.Context, sel ast.SelectionSet, v *model.SubscriptionCalendarEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SubscriptionCalendarEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSubscriptionEntry2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SubscriptionEntry) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSubscriptionEntry2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntry(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSubscriptionEntry2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntry(ctx context.Context, sel ast.SelectionSet, v *model.SubscriptionEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SubscriptionEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx context.Context, v any) ([]*model.SubscriptionEntryInput, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]*model.SubscriptionEntryInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSubscriptionEntryInput2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNSubscriptionEntryInput2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInput(ctx context.Context, v any) (*model.SubscriptionEntryInput, error) {
+	res, err := ec.unmarshalInputSubscriptionEntryInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSubscriptionOccurrence2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionOccurrenceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SubscriptionOccurrence) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSubscriptionOccurrence2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionOccurrence(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSubscriptionOccurrence2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionOccurrence(ctx context.Context, sel ast.SelectionSet, v *model.SubscriptionOccurrence) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SubscriptionOccurrence(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSubscriptionStatus2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionStatus(ctx context.Context, v any) (model.SubscriptionStatus, error) {
+	var res model.SubscriptionStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSubscriptionStatus2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionStatus(ctx context.Context, sel ast.SelectionSet, v model.SubscriptionStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNTransaction2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v model.Transaction) graphql.Marshaler {
 	return ec._Transaction(ctx, sel, &v)
 }
@@ -7924,6 +10324,11 @@ func (ec *executionContext) marshalNTrialBalance2ᚖgithubᚗcomᚋsudaᚑ3156�
 
 func (ec *executionContext) unmarshalNUpdateLedgerAccountInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐUpdateLedgerAccountInput(ctx context.Context, v any) (model.UpdateLedgerAccountInput, error) {
 	res, err := ec.unmarshalInputUpdateLedgerAccountInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateSubscriptionInput2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐUpdateSubscriptionInput(ctx context.Context, v any) (model.UpdateSubscriptionInput, error) {
+	res, err := ec.unmarshalInputUpdateSubscriptionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -8250,6 +10655,22 @@ func (ec *executionContext) marshalONode2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgo�
 	return ec._Node(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOOccurrenceOutcome2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐOccurrenceOutcome(ctx context.Context, v any) (*model.OccurrenceOutcome, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OccurrenceOutcome)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOccurrenceOutcome2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐOccurrenceOutcome(ctx context.Context, sel ast.SelectionSet, v *model.OccurrenceOutcome) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -8266,6 +10687,30 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOSubscription2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx context.Context, sel ast.SelectionSet, v *model.Subscription) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Subscription(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx context.Context, v any) ([]*model.SubscriptionEntryInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]*model.SubscriptionEntryInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSubscriptionEntryInput2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOTransaction2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v []*model.Transaction) graphql.Marshaler {
