@@ -71,6 +71,16 @@ tasks:
         fi
         docker compose exec api bash -c "go run ./tools/seed/"
 
+  run:job:
+    desc: "Run the daily job once in the api container (needs `task start:api`) \t usage: `task run:job` or `task run:job -- -tasks subscriptions`"
+    cmds:
+      # The Cloud Run Job runs /bin/job from the backend image; here the same
+      # cmd/job runs from source in the api container, so it reads .env.local
+      # and the local filesystem key/secret managers just like the API does.
+      - |
+        docker compose exec api go run ./cmd/job/ {{ .CLI_ARGS }}
+    silent: true
+
   start:all:
     desc: Start all containers
     cmds:
