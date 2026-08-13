@@ -70,6 +70,21 @@ export type RevenueFormValues = z.infer<typeof revenueSchema>
 export type TransferFormValues = z.infer<typeof transferSchema>
 export type TransactionFormValues = z.infer<typeof transactionSchema>
 
+export const subscriptionColorSchema = z.enum([
+  "RED",
+  "ORANGE",
+  "AMBER",
+  "LIME",
+  "EMERALD",
+  "TEAL",
+  "SKY",
+  "BLUE",
+  "VIOLET",
+  "FUCHSIA",
+  "PINK",
+  "ROSE",
+])
+
 export const subscriptionSchema = z.object({
   name: z.string().min(1, "名前は必須です").max(200, "名前は200文字以下です"),
   registeredOn: dateSchema,
@@ -78,6 +93,8 @@ export const subscriptionSchema = z.object({
     .int("整数を入力してください")
     .min(1, "周期は 1 か月以上です")
     .max(12, "周期は 12 か月以下です"),
+  // null = automatic (derived from the ID on display)
+  color: subscriptionColorSchema.nullable(),
   amount: amountSchema,
   categoryId: z.string().min(1, "費用科目を選択してください"),
   paymentId: z.string().min(1, "支払い方法を選択してください"),

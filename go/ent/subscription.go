@@ -37,6 +37,8 @@ type Subscription struct {
 	IntervalMonths int `json:"interval_months,omitempty"`
 	// Status holds the value of the "status" field.
 	Status schema.SubscriptionStatus `json:"status,omitempty"`
+	// Color holds the value of the "color" field.
+	Color *string `json:"color,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -112,7 +114,7 @@ func (*Subscription) scanValues(columns []string) ([]any, error) {
 			values[i] = new(prid.ID)
 		case subscription.FieldID, subscription.FieldIntervalMonths:
 			values[i] = new(sql.NullInt64)
-		case subscription.FieldRegisteredOn, subscription.FieldAnchorOn, subscription.FieldNextOccurrenceOn, subscription.FieldCoveredThroughOn, subscription.FieldStatus:
+		case subscription.FieldRegisteredOn, subscription.FieldAnchorOn, subscription.FieldNextOccurrenceOn, subscription.FieldCoveredThroughOn, subscription.FieldStatus, subscription.FieldColor:
 			values[i] = new(sql.NullString)
 		case subscription.FieldCreatedAt, subscription.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -186,6 +188,13 @@ func (_m *Subscription) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = schema.SubscriptionStatus(value.String)
+			}
+		case subscription.FieldColor:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field color", values[i])
+			} else if value.Valid {
+				_m.Color = new(string)
+				*_m.Color = value.String
 			}
 		case subscription.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -285,6 +294,11 @@ func (_m *Subscription) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	if v := _m.Color; v != nil {
+		builder.WriteString("color=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

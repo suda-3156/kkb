@@ -31,4 +31,5 @@ var (
 	ErrIntervalMustBePositive = errors.New("intervalMonths must be at least 1")
 	ErrInvalidMonth           = errors.New("month must be between 1 and 12")
 	ErrInvalidYear            = errors.New("year must be between 1970 and 9999")
+	ErrConflictingColorOps    = errors.New("cannot set and unset the color at the same time")
 )

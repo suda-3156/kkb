@@ -21,6 +21,7 @@ type Subscription struct {
 	Name            string  `json:"name"`
 	RegisteredOn    string  `json:"registered_on"`
 	IntervalMonths  int     `json:"interval_months"`
+	Color           string  `json:"color,omitempty"`             // SubscriptionColor token; empty means automatic
 	Status          string  `json:"status,omitempty"`            // "ACTIVE" (default), "PAUSED", or "CANCELED"
 	StatusChangedOn string  `json:"status_changed_on,omitempty"` // Day the pause/cancel happened; required for non-ACTIVE
 	Entries         []Entry `json:"entries"`
@@ -114,7 +115,7 @@ func insertSubscription(
 		return err
 	}
 
-	created, err := client.Subscription.Create().
+	create := client.Subscription.Create().
 		SetPublicID(prid.NewUnsafe("sub_")).
 		SetName(encName.Ciphertext).
 		SetEncryptionKeyID(encName.KeyID).
@@ -122,8 +123,14 @@ func insertSubscription(
 		SetAnchorOn(*registered).
 		SetNextOccurrenceOn(*registered).
 		SetCoveredThroughOn(covered).
-		SetIntervalMonths(s.IntervalMonths).
-		Save(ctx)
+		SetIntervalMonths(s.IntervalMonths)
+	if s.Color != "" {
+		if !graph.SubscriptionColor(s.Color).IsValid() {
+			return fmt.Errorf("unknown color %q", s.Color)
+		}
+		create = create.SetColor(s.Color)
+	}
+	created, err := create.Save(ctx)
 	if err != nil {
 		return fmt.Errorf("save subscription: %w", err)
 	}

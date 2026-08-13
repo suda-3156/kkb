@@ -95,6 +95,7 @@ var (
 		{Name: "covered_through_on", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
 		{Name: "interval_months", Type: field.TypeInt},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"ACTIVE", "PAUSED", "CANCELED"}, Default: "ACTIVE"},
+		{Name: "color", Type: field.TypeString, Nullable: true, Size: 20},
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "ledger_encryption_key_subscriptions", Type: field.TypeInt, Nullable: true},
@@ -107,7 +108,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "subscriptions_ledger_encryption_keys_subscriptions",
-				Columns:    []*schema.Column{SubscriptionsColumns[11]},
+				Columns:    []*schema.Column{SubscriptionsColumns[12]},
 				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

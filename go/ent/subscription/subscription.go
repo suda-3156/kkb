@@ -32,6 +32,8 @@ const (
 	FieldIntervalMonths = "interval_months"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldColor holds the string denoting the color field in the database.
+	FieldColor = "color"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -87,6 +89,7 @@ var Columns = []string{
 	FieldCoveredThroughOn,
 	FieldIntervalMonths,
 	FieldStatus,
+	FieldColor,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -127,6 +130,8 @@ var (
 	CoveredThroughOnValidator func(string) error
 	// IntervalMonthsValidator is a validator for the "interval_months" field. It is called by the builders before save.
 	IntervalMonthsValidator func(int) error
+	// ColorValidator is a validator for the "color" field. It is called by the builders before save.
+	ColorValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -188,6 +193,11 @@ func ByIntervalMonths(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByColor orders the results by the color field.
+func ByColor(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldColor, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

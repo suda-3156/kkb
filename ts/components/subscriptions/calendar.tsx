@@ -3,11 +3,13 @@
 import { useAtom, useSetAtom } from "jotai"
 import type { SubscriptionsQuery } from "@/graph/graphql"
 import {
+  COLOR_CLASSES,
   debitTotal,
   groupByBillingDay,
   IDEAL_CALENDAR_DAYS,
   intervalLabel,
   monthDayLabel,
+  resolveColor,
 } from "@/lib/subscriptions"
 import { cn } from "@/lib/utils"
 import { detailSubscriptionIdAtom, selectedDayAtom } from "./state"
@@ -62,14 +64,17 @@ export const SubscriptionCalendar = ({ subs }: { subs: SubscriptionItem[] }) => 
           >
             <span className="text-muted-foreground text-xs tabular-nums">{day}</span>
 
-            {/* Mobile: dots only */}
+            {/* Mobile: dots only. A paused subscription goes gray regardless
+                of its color, since "will be skipped" outranks identity. */}
             <div className="flex flex-wrap gap-0.5 sm:hidden">
               {daySubs.map((sub) => (
                 <span
                   key={sub.id}
                   className={cn(
                     "size-1.5 rounded-full",
-                    sub.status === "PAUSED" ? "bg-muted-foreground/40" : "bg-primary",
+                    sub.status === "PAUSED"
+                      ? "bg-muted-foreground/40"
+                      : COLOR_CLASSES[resolveColor(sub.color, sub.id)].dot,
                   )}
                 />
               ))}
@@ -87,8 +92,10 @@ export const SubscriptionCalendar = ({ subs }: { subs: SubscriptionItem[] }) => 
                   }}
                   title={`${sub.name} ¥${debitTotal(sub.templateEntries).toLocaleString()} ${intervalLabel(sub.intervalMonths)} 次回 ${monthDayLabel(sub.nextOccurrenceOn)}`}
                   className={cn(
-                    "cursor-pointer truncate rounded bg-primary/10 px-1 py-0.5 text-left text-xs transition-colors hover:bg-primary/20",
-                    sub.status === "PAUSED" && "bg-muted text-muted-foreground hover:bg-muted/80",
+                    "cursor-pointer truncate rounded px-1 py-0.5 text-left text-xs transition-colors",
+                    sub.status === "PAUSED"
+                      ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                      : COLOR_CLASSES[resolveColor(sub.color, sub.id)].chip,
                   )}
                 >
                   <span className="truncate">{sub.name}</span>{" "}

@@ -2449,6 +2449,7 @@ type SubscriptionMutation struct {
 	interval_months         *int
 	addinterval_months      *int
 	status                  *schema.SubscriptionStatus
+	color                   *string
 	created_at              *time.Time
 	updated_at              *time.Time
 	clearedFields           map[string]struct{}
@@ -2874,6 +2875,55 @@ func (m *SubscriptionMutation) ResetStatus() {
 	m.status = nil
 }
 
+// SetColor sets the "color" field.
+func (m *SubscriptionMutation) SetColor(s string) {
+	m.color = &s
+}
+
+// Color returns the value of the "color" field in the mutation.
+func (m *SubscriptionMutation) Color() (r string, exists bool) {
+	v := m.color
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldColor returns the old "color" field's value of the Subscription entity.
+// If the Subscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionMutation) OldColor(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldColor is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldColor requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldColor: %w", err)
+	}
+	return oldValue.Color, nil
+}
+
+// ClearColor clears the value of the "color" field.
+func (m *SubscriptionMutation) ClearColor() {
+	m.color = nil
+	m.clearedFields[subscription.FieldColor] = struct{}{}
+}
+
+// ColorCleared returns if the "color" field was cleared in this mutation.
+func (m *SubscriptionMutation) ColorCleared() bool {
+	_, ok := m.clearedFields[subscription.FieldColor]
+	return ok
+}
+
+// ResetColor resets all changes to the "color" field.
+func (m *SubscriptionMutation) ResetColor() {
+	m.color = nil
+	delete(m.clearedFields, subscription.FieldColor)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *SubscriptionMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -3181,7 +3231,7 @@ func (m *SubscriptionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.public_id != nil {
 		fields = append(fields, subscription.FieldPublicID)
 	}
@@ -3205,6 +3255,9 @@ func (m *SubscriptionMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, subscription.FieldStatus)
+	}
+	if m.color != nil {
+		fields = append(fields, subscription.FieldColor)
 	}
 	if m.created_at != nil {
 		fields = append(fields, subscription.FieldCreatedAt)
@@ -3236,6 +3289,8 @@ func (m *SubscriptionMutation) Field(name string) (ent.Value, bool) {
 		return m.IntervalMonths()
 	case subscription.FieldStatus:
 		return m.Status()
+	case subscription.FieldColor:
+		return m.Color()
 	case subscription.FieldCreatedAt:
 		return m.CreatedAt()
 	case subscription.FieldUpdatedAt:
@@ -3265,6 +3320,8 @@ func (m *SubscriptionMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldIntervalMonths(ctx)
 	case subscription.FieldStatus:
 		return m.OldStatus(ctx)
+	case subscription.FieldColor:
+		return m.OldColor(ctx)
 	case subscription.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case subscription.FieldUpdatedAt:
@@ -3334,6 +3391,13 @@ func (m *SubscriptionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetStatus(v)
 		return nil
+	case subscription.FieldColor:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetColor(v)
+		return nil
 	case subscription.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -3392,7 +3456,11 @@ func (m *SubscriptionMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *SubscriptionMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(subscription.FieldColor) {
+		fields = append(fields, subscription.FieldColor)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -3405,6 +3473,11 @@ func (m *SubscriptionMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *SubscriptionMutation) ClearField(name string) error {
+	switch name {
+	case subscription.FieldColor:
+		m.ClearColor()
+		return nil
+	}
 	return fmt.Errorf("unknown Subscription nullable field %s", name)
 }
 
@@ -3435,6 +3508,9 @@ func (m *SubscriptionMutation) ResetField(name string) error {
 		return nil
 	case subscription.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case subscription.FieldColor:
+		m.ResetColor()
 		return nil
 	case subscription.FieldCreatedAt:
 		m.ResetCreatedAt()

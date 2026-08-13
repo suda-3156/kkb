@@ -1,7 +1,14 @@
 "use client"
 
 import { useAtomValue, useSetAtom } from "jotai"
-import { debitTotal, intervalLabel, monthDayLabel, STATUS_LABELS } from "@/lib/subscriptions"
+import {
+  COLOR_CLASSES,
+  debitTotal,
+  intervalLabel,
+  monthDayLabel,
+  resolveColor,
+  STATUS_LABELS,
+} from "@/lib/subscriptions"
 import { cn } from "@/lib/utils"
 import type { SubscriptionItem } from "./calendar"
 import { detailSubscriptionIdAtom, selectedDayAtom } from "./state"
@@ -30,12 +37,22 @@ const SubscriptionRow = ({ sub }: { sub: SubscriptionItem }) => {
         sub.status === "CANCELED" && "opacity-60",
       )}
     >
-      <div className="min-w-0">
-        <p className="truncate font-medium text-sm">{sub.name}</p>
-        <p className="text-muted-foreground text-xs">
-          {intervalLabel(sub.intervalMonths)}
-          {sub.status !== "CANCELED" && <> ・ 次回 {monthDayLabel(sub.nextOccurrenceOn)}</>}
-        </p>
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className={cn(
+            "size-2 shrink-0 rounded-full",
+            sub.status === "PAUSED"
+              ? "bg-muted-foreground/40"
+              : COLOR_CLASSES[resolveColor(sub.color, sub.id)].dot,
+          )}
+        />
+        <div className="min-w-0">
+          <p className="truncate font-medium text-sm">{sub.name}</p>
+          <p className="text-muted-foreground text-xs">
+            {intervalLabel(sub.intervalMonths)}
+            {sub.status !== "CANCELED" && <> ・ 次回 {monthDayLabel(sub.nextOccurrenceOn)}</>}
+          </p>
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <span className="font-semibold text-sm tabular-nums">

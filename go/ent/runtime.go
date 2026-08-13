@@ -217,12 +217,16 @@ func init() {
 	subscriptionDescIntervalMonths := subscriptionFields[6].Descriptor()
 	// subscription.IntervalMonthsValidator is a validator for the "interval_months" field. It is called by the builders before save.
 	subscription.IntervalMonthsValidator = subscriptionDescIntervalMonths.Validators[0].(func(int) error)
+	// subscriptionDescColor is the schema descriptor for color field.
+	subscriptionDescColor := subscriptionFields[8].Descriptor()
+	// subscription.ColorValidator is a validator for the "color" field. It is called by the builders before save.
+	subscription.ColorValidator = subscriptionDescColor.Validators[0].(func(string) error)
 	// subscriptionDescCreatedAt is the schema descriptor for created_at field.
-	subscriptionDescCreatedAt := subscriptionFields[8].Descriptor()
+	subscriptionDescCreatedAt := subscriptionFields[9].Descriptor()
 	// subscription.DefaultCreatedAt holds the default value on creation for the created_at field.
 	subscription.DefaultCreatedAt = subscriptionDescCreatedAt.Default.(func() time.Time)
 	// subscriptionDescUpdatedAt is the schema descriptor for updated_at field.
-	subscriptionDescUpdatedAt := subscriptionFields[9].Descriptor()
+	subscriptionDescUpdatedAt := subscriptionFields[10].Descriptor()
 	// subscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	subscription.DefaultUpdatedAt = subscriptionDescUpdatedAt.Default.(func() time.Time)
 	// subscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

@@ -32,6 +32,9 @@ func (m *SubscriptionManager) Update(
 	if input.IntervalMonths != nil && *input.IntervalMonths < 1 {
 		return nil, ErrIntervalMustBePositive
 	}
+	if input.UnsetColor && input.Color != nil {
+		return nil, ErrConflictingColorOps
+	}
 	if len(input.Entries) > 0 {
 		if err := validateEntries(input.Entries); err != nil {
 			return nil, err
@@ -98,6 +101,12 @@ func (m *SubscriptionManager) updateTx(
 	// nextOccurrenceOn deliberately stays put.
 	if input.IntervalMonths != nil {
 		updateQuery = updateQuery.SetIntervalMonths(int(*input.IntervalMonths))
+	}
+
+	if input.UnsetColor {
+		updateQuery = updateQuery.ClearColor()
+	} else if input.Color != nil {
+		updateQuery = updateQuery.SetColor(string(*input.Color))
 	}
 
 	if input.RegisteredOn != nil && *input.RegisteredOn != existing.RegisteredOn {

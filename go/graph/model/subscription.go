@@ -16,6 +16,7 @@ type Subscription struct {
 	CoveredThroughOn date.Date            `json:"coveredThroughOn"`
 	IntervalMonths   int32                `json:"intervalMonths"`
 	Status           SubscriptionStatus   `json:"status"`
+	Color            *SubscriptionColor   `json:"color,omitempty"`
 	TemplateEntries  []*SubscriptionEntry `json:"templateEntries"`
 	CreatedAt        time.Time            `json:"createdAt"`
 	UpdatedAt        time.Time            `json:"updatedAt"`

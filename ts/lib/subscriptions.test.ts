@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
 import {
+  autoColor,
   billingDay,
   debitTotal,
   groupByBillingDay,
   intervalLabel,
   monthDayLabel,
   occurrenceDisplay,
+  resolveColor,
+  SUBSCRIPTION_COLORS,
 } from "./subscriptions"
 
 describe("billingDay", () => {
@@ -67,6 +70,24 @@ describe("groupByBillingDay", () => {
   it("leaves canceled subscriptions off the calendar", () => {
     const grouped = groupByBillingDay([sub("2026-03-15", "CANCELED")])
     expect(grouped.size).toBe(0)
+  })
+})
+
+describe("autoColor / resolveColor", () => {
+  it("is deterministic for the same id", () => {
+    expect(autoColor("sub_abcdefghijklmnop")).toBe(autoColor("sub_abcdefghijklmnop"))
+  })
+
+  it("always lands in the palette", () => {
+    for (const id of ["sub_a", "sub_b", "sub_c", "sub_1234567890abcdef"]) {
+      expect(SUBSCRIPTION_COLORS).toContain(autoColor(id))
+    }
+  })
+
+  it("prefers the chosen color and falls back to the derived one", () => {
+    expect(resolveColor("TEAL", "sub_a")).toBe("TEAL")
+    expect(resolveColor(null, "sub_a")).toBe(autoColor("sub_a"))
+    expect(resolveColor(undefined, "sub_a")).toBe(autoColor("sub_a"))
   })
 })
 

@@ -131,6 +131,26 @@ func (_u *SubscriptionUpdate) SetNillableStatus(v *schema.SubscriptionStatus) *S
 	return _u
 }
 
+// SetColor sets the "color" field.
+func (_u *SubscriptionUpdate) SetColor(v string) *SubscriptionUpdate {
+	_u.mutation.SetColor(v)
+	return _u
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (_u *SubscriptionUpdate) SetNillableColor(v *string) *SubscriptionUpdate {
+	if v != nil {
+		_u.SetColor(*v)
+	}
+	return _u
+}
+
+// ClearColor clears the value of the "color" field.
+func (_u *SubscriptionUpdate) ClearColor() *SubscriptionUpdate {
+	_u.mutation.ClearColor()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *SubscriptionUpdate) SetUpdatedAt(v time.Time) *SubscriptionUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -348,6 +368,11 @@ func (_u *SubscriptionUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Subscription.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Color(); ok {
+		if err := subscription.ColorValidator(v); err != nil {
+			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "Subscription.color": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -386,6 +411,12 @@ func (_u *SubscriptionUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(subscription.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Color(); ok {
+		_spec.SetField(subscription.FieldColor, field.TypeString, value)
+	}
+	if _u.mutation.ColorCleared() {
+		_spec.ClearField(subscription.FieldColor, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(subscription.FieldUpdatedAt, field.TypeTime, value)
@@ -671,6 +702,26 @@ func (_u *SubscriptionUpdateOne) SetNillableStatus(v *schema.SubscriptionStatus)
 	return _u
 }
 
+// SetColor sets the "color" field.
+func (_u *SubscriptionUpdateOne) SetColor(v string) *SubscriptionUpdateOne {
+	_u.mutation.SetColor(v)
+	return _u
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (_u *SubscriptionUpdateOne) SetNillableColor(v *string) *SubscriptionUpdateOne {
+	if v != nil {
+		_u.SetColor(*v)
+	}
+	return _u
+}
+
+// ClearColor clears the value of the "color" field.
+func (_u *SubscriptionUpdateOne) ClearColor() *SubscriptionUpdateOne {
+	_u.mutation.ClearColor()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *SubscriptionUpdateOne) SetUpdatedAt(v time.Time) *SubscriptionUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
@@ -901,6 +952,11 @@ func (_u *SubscriptionUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Subscription.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Color(); ok {
+		if err := subscription.ColorValidator(v); err != nil {
+			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "Subscription.color": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -956,6 +1012,12 @@ func (_u *SubscriptionUpdateOne) sqlSave(ctx context.Context) (_node *Subscripti
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(subscription.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Color(); ok {
+		_spec.SetField(subscription.FieldColor, field.TypeString, value)
+	}
+	if _u.mutation.ColorCleared() {
+		_spec.ClearField(subscription.FieldColor, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(subscription.FieldUpdatedAt, field.TypeTime, value)

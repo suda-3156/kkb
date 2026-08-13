@@ -83,6 +83,20 @@ func (_c *SubscriptionCreate) SetNillableStatus(v *schema.SubscriptionStatus) *S
 	return _c
 }
 
+// SetColor sets the "color" field.
+func (_c *SubscriptionCreate) SetColor(v string) *SubscriptionCreate {
+	_c.mutation.SetColor(v)
+	return _c
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (_c *SubscriptionCreate) SetNillableColor(v *string) *SubscriptionCreate {
+	if v != nil {
+		_c.SetColor(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *SubscriptionCreate) SetCreatedAt(v time.Time) *SubscriptionCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -290,6 +304,11 @@ func (_c *SubscriptionCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Subscription.status": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.Color(); ok {
+		if err := subscription.ColorValidator(v); err != nil {
+			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "Subscription.color": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Subscription.created_at"`)}
 	}
@@ -353,6 +372,10 @@ func (_c *SubscriptionCreate) createSpec() (*Subscription, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(subscription.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.Color(); ok {
+		_spec.SetField(subscription.FieldColor, field.TypeString, value)
+		_node.Color = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(subscription.FieldCreatedAt, field.TypeTime, value)

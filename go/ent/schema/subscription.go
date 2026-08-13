@@ -107,6 +107,15 @@ func (Subscription) Fields() []ent.Field {
 		field.Enum("status").
 			GoType(SubscriptionStatus("")).
 			Default(string(Active)),
+		// Display color: one of the frontend palette's named tokens (the
+		// GraphQL SubscriptionColor enum, e.g. "RED"). Deliberately a varchar,
+		// not a DB enum, so growing the palette needs no migration. Plaintext
+		// on purpose: one value out of a dozen reveals nothing about the
+		// ledger. Null means automatic (derived client-side from the ID).
+		field.String("color").
+			MaxLen(20).
+			Optional().
+			Nillable(),
 		field.Time("created_at").
 			SchemaType(map[string]string{
 				"mysql": "datetime(6)",

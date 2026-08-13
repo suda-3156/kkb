@@ -84,6 +84,12 @@ func (m *SubscriptionManager) convertToGraph(ctx context.Context, sub *ent.Subsc
 		})
 	}
 
+	var color *graph.SubscriptionColor
+	if sub.Color != nil {
+		c := graph.SubscriptionColor(*sub.Color)
+		color = &c
+	}
+
 	return &graph.Subscription{
 		ID:               sub.PublicID,
 		Name:             name,
@@ -93,6 +99,7 @@ func (m *SubscriptionManager) convertToGraph(ctx context.Context, sub *ent.Subsc
 		CoveredThroughOn: sub.CoveredThroughOn,
 		IntervalMonths:   int32(sub.IntervalMonths), //nolint:gosec // Validated to be small on write.
 		Status:           m.convertStatusToGraph(sub.Status),
+		Color:            color,
 		TemplateEntries:  entries,
 		CreatedAt:        sub.CreatedAt,
 		UpdatedAt:        sub.UpdatedAt,

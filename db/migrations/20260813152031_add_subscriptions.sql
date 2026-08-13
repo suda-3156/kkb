@@ -9,6 +9,7 @@ CREATE TABLE `subscriptions` (
   `covered_through_on` char(10) NOT NULL,
   `interval_months` bigint NOT NULL,
   `status` enum('ACTIVE','PAUSED','CANCELED') NOT NULL DEFAULT "ACTIVE",
+  `color` varchar(20) NULL,
   `created_at` datetime(6) NOT NULL,
   `updated_at` datetime(6) NOT NULL,
   `ledger_encryption_key_subscriptions` bigint NULL,

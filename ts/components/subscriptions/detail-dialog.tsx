@@ -73,6 +73,7 @@ const DetailBody = ({ sub }: { sub: SubscriptionDetail }) => {
     name: sub.name,
     registeredOn: sub.registeredOn,
     intervalMonths: sub.intervalMonths,
+    color: sub.color ?? null,
     amount: debitTotal(sub.templateEntries),
     categoryId: debitEntry?.ledgerAccount.id ?? "",
     paymentId: creditEntry?.ledgerAccount.id ?? "",
@@ -85,6 +86,9 @@ const DetailBody = ({ sub }: { sub: SubscriptionDetail }) => {
         name: values.name,
         registeredOn: values.registeredOn,
         intervalMonths: values.intervalMonths,
+        // null means back to automatic, which the input models as unsetColor
+        color: values.color ?? undefined,
+        unsetColor: values.color === null,
         entries: buildTemplateEntries(values),
         updatedAt: sub.updatedAt,
       },

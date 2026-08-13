@@ -15,6 +15,7 @@ export const SubscriptionsDoc = graphql(/* GraphQL */ `
       coveredThroughOn
       intervalMonths
       status
+      color
       createdAt
       updatedAt
       templateEntries {
@@ -41,6 +42,7 @@ export const SubscriptionDetailDoc = graphql(/* GraphQL */ `
       coveredThroughOn
       intervalMonths
       status
+      color
       createdAt
       updatedAt
       templateEntries {
@@ -81,6 +83,7 @@ export const CreateSubscriptionDoc = graphql(/* GraphQL */ `
       coveredThroughOn
       intervalMonths
       status
+      color
       createdAt
       updatedAt
       templateEntries {
@@ -107,6 +110,7 @@ export const UpdateSubscriptionDoc = graphql(/* GraphQL */ `
       coveredThroughOn
       intervalMonths
       status
+      color
       createdAt
       updatedAt
       templateEntries {

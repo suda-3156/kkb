@@ -164,6 +164,7 @@ type ComplexityRoot struct {
 
 	Subscription struct {
 		AnchorOn         func(childComplexity int) int
+		Color            func(childComplexity int) int
 		CoveredThroughOn func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
@@ -878,6 +879,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Subscription.AnchorOn(childComplexity), true
+	case "Subscription.color":
+		if e.ComplexityRoot.Subscription.Color == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.Color(childComplexity), true
 	case "Subscription.coveredThroughOn":
 		if e.ComplexityRoot.Subscription.CoveredThroughOn == nil {
 			break
@@ -1413,6 +1420,23 @@ enum OccurrenceOutcome {
   SKIPPED
 }
 
+# The display palette. Named tokens rather than hex codes so the frontend can
+# resolve each one per theme (light/dark); the names follow Tailwind's palette.
+enum SubscriptionColor {
+  RED
+  ORANGE
+  AMBER
+  LIME
+  EMERALD
+  TEAL
+  SKY
+  BLUE
+  VIOLET
+  FUCHSIA
+  PINK
+  ROSE
+}
+
 # A template journal entry: the same shape as JournalEntry but without a date.
 type SubscriptionEntry {
   ledgerAccount: LedgerAccount!
@@ -1434,6 +1458,8 @@ type Subscription implements Node {
   coveredThroughOn: Date!
   intervalMonths: Int!
   status: SubscriptionStatus!
+  # Null means automatic: the client derives a stable palette color from the ID.
+  color: SubscriptionColor
   templateEntries: [SubscriptionEntry!]!
   # Payment history, materialization-log first: an occurrence whose transaction
   # was deleted afterwards still appears, with transaction: null.
@@ -1505,6 +1531,7 @@ input CreateSubscriptionInput {
   name: String!
   registeredOn: Date!
   intervalMonths: Int!
+  color: SubscriptionColor
   entries: [SubscriptionEntryInput!]!
 }
 
@@ -1517,6 +1544,9 @@ input UpdateSubscriptionInput {
   # A new interval takes effect from the next occurrence on; the current
   # nextOccurrenceOn does not move.
   intervalMonths: Int
+  color: SubscriptionColor
+  # Back to automatic coloring. Cannot be combined with color.
+  unsetColor: Boolean! = false
   entries: [SubscriptionEntryInput!]
   updatedAt: DateTime! # For optimistic locking
 }
@@ -1806,6 +1836,8 @@ func (ec *executionContext) childFields_Subscription(ctx context.Context, field 
 		return ec.fieldContext_Subscription_intervalMonths(ctx, field)
 	case "status":
 		return ec.fieldContext_Subscription_status(ctx, field)
+	case "color":
+		return ec.fieldContext_Subscription_color(ctx, field)
 	case "templateEntries":
 		return ec.fieldContext_Subscription_templateEntries(ctx, field)
 	case "occurrences":
@@ -5178,6 +5210,29 @@ func (ec *executionContext) fieldContext_Subscription_status(_ context.Context, 
 	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type SubscriptionStatus does not have child fields"))
 }
 
+func (ec *executionContext) _Subscription_color(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_color(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Color, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.SubscriptionColor) graphql.Marshaler {
+			return ec.marshalOSubscriptionColor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionColor(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_color(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subscription", field, false, false, errors.New("field of type SubscriptionColor does not have child fields"))
+}
+
 func (ec *executionContext) _Subscription_templateEntries(ctx context.Context, field graphql.CollectedField, obj *model.Subscription) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7113,7 +7168,7 @@ func (ec *executionContext) unmarshalInputCreateSubscriptionInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "registeredOn", "intervalMonths", "entries"}
+	fieldsInOrder := [...]string{"name", "registeredOn", "intervalMonths", "color", "entries"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7141,6 +7196,13 @@ func (ec *executionContext) unmarshalInputCreateSubscriptionInput(ctx context.Co
 				return it, err
 			}
 			it.IntervalMonths = data
+		case "color":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
+			data, err := ec.unmarshalOSubscriptionColor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionColor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Color = data
 		case "entries":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entries"))
 			data, err := ec.unmarshalNSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx, v)
@@ -7365,7 +7427,11 @@ func (ec *executionContext) unmarshalInputUpdateSubscriptionInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "registeredOn", "intervalMonths", "entries", "updatedAt"}
+	if _, present := asMap["unsetColor"]; !present {
+		asMap["unsetColor"] = false
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "registeredOn", "intervalMonths", "color", "unsetColor", "entries", "updatedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7400,6 +7466,20 @@ func (ec *executionContext) unmarshalInputUpdateSubscriptionInput(ctx context.Co
 				return it, err
 			}
 			it.IntervalMonths = data
+		case "color":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
+			data, err := ec.unmarshalOSubscriptionColor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionColor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Color = data
+		case "unsetColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("unsetColor"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UnsetColor = data
 		case "entries":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entries"))
 			data, err := ec.unmarshalOSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx, v)
@@ -8899,6 +8979,11 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		case "status":
 			out.Values[i] = ec._Subscription_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "color":
+			out.Values[i] = ec._Subscription_color(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "templateEntries":
@@ -10694,6 +10779,22 @@ func (ec *executionContext) marshalOSubscription2ᚖgithubᚗcomᚋsudaᚑ3156�
 		return graphql.Null
 	}
 	return ec._Subscription(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSubscriptionColor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionColor(ctx context.Context, v any) (*model.SubscriptionColor, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.SubscriptionColor)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSubscriptionColor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionColor(ctx context.Context, sel ast.SelectionSet, v *model.SubscriptionColor) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOSubscriptionEntryInput2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionEntryInputᚄ(ctx context.Context, v any) ([]*model.SubscriptionEntryInput, error) {

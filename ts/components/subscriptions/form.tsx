@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import {
   AmountField,
   DateField,
@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { type SubscriptionFormValues, subscriptionSchema } from "@/lib/schema"
+import { COLOR_CLASSES, SUBSCRIPTION_COLORS } from "@/lib/subscriptions"
+import { cn } from "@/lib/utils"
 
 // The interval is entered as one of three shapes; custom opens a 1..12 dial.
 // The form value stays a plain number, so 12 entered through "custom" reopens
@@ -125,6 +127,47 @@ export const SubscriptionForm = ({ defaultValues, submitLabel, loading, onSubmit
           </Field>
         )}
       </div>
+
+      {/* Swatch row: 自動 (null, a stable color derived from the ID) plus the
+          fixed palette. No free color picker on purpose: named tokens resolve
+          per theme, and swatches stay tappable on mobile. */}
+      <Controller
+        name="color"
+        control={form.control}
+        render={({ field }) => (
+          <Field>
+            <FieldLabel>色</FieldLabel>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => field.onChange(null)}
+                aria-pressed={field.value === null}
+                className={cn(
+                  "cursor-pointer rounded-full border px-2 py-0.5 text-muted-foreground text-xs transition-colors hover:bg-muted",
+                  field.value === null && "border-ring ring-2 ring-ring/50",
+                )}
+              >
+                自動
+              </button>
+              {SUBSCRIPTION_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  aria-label={`色: ${color}`}
+                  aria-pressed={field.value === color}
+                  onClick={() => field.onChange(color)}
+                  className={cn(
+                    "size-5 cursor-pointer rounded-full transition-transform hover:scale-110",
+                    COLOR_CLASSES[color].swatch,
+                    field.value === color &&
+                      "ring-2 ring-ring ring-offset-2 ring-offset-background",
+                  )}
+                />
+              ))}
+            </div>
+          </Field>
+        )}
+      />
 
       <SelectLedgerAccountField form={form} label="費用科目" name="categoryId" kind="EXPENSE" />
 

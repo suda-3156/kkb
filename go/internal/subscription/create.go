@@ -73,7 +73,7 @@ func (m *SubscriptionManager) createTx(
 	keyID int,
 	next, covered, today date.Date,
 ) (*graph.Subscription, error) {
-	created, err := client.Subscription.Create().
+	create := client.Subscription.Create().
 		SetPublicID(prid.NewUnsafe("sub_")).
 		SetName(encName).
 		SetEncryptionKeyID(keyID).
@@ -81,8 +81,11 @@ func (m *SubscriptionManager) createTx(
 		SetAnchorOn(input.RegisteredOn).
 		SetNextOccurrenceOn(next).
 		SetCoveredThroughOn(covered).
-		SetIntervalMonths(int(input.IntervalMonths)).
-		Save(ctx)
+		SetIntervalMonths(int(input.IntervalMonths))
+	if input.Color != nil {
+		create = create.SetColor(string(*input.Color))
+	}
+	created, err := create.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("save subscription: %w", err)
 	}

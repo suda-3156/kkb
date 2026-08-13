@@ -15,6 +15,23 @@ enum OccurrenceOutcome {
   SKIPPED
 }
 
+# The display palette. Named tokens rather than hex codes so the frontend can
+# resolve each one per theme (light/dark); the names follow Tailwind's palette.
+enum SubscriptionColor {
+  RED
+  ORANGE
+  AMBER
+  LIME
+  EMERALD
+  TEAL
+  SKY
+  BLUE
+  VIOLET
+  FUCHSIA
+  PINK
+  ROSE
+}
+
 # A template journal entry: the same shape as JournalEntry but without a date.
 type SubscriptionEntry {
   ledgerAccount: LedgerAccount!
@@ -36,6 +53,8 @@ type Subscription implements Node {
   coveredThroughOn: Date!
   intervalMonths: Int!
   status: SubscriptionStatus!
+  # Null means automatic: the client derives a stable palette color from the ID.
+  color: SubscriptionColor
   templateEntries: [SubscriptionEntry!]!
   # Payment history, materialization-log first: an occurrence whose transaction
   # was deleted afterwards still appears, with transaction: null.
@@ -107,6 +126,7 @@ input CreateSubscriptionInput {
   name: String!
   registeredOn: Date!
   intervalMonths: Int!
+  color: SubscriptionColor
   entries: [SubscriptionEntryInput!]!
 }
 
@@ -119,6 +139,9 @@ input UpdateSubscriptionInput {
   # A new interval takes effect from the next occurrence on; the current
   # nextOccurrenceOn does not move.
   intervalMonths: Int
+  color: SubscriptionColor
+  # Back to automatic coloring. Cannot be combined with color.
+  unsetColor: Boolean! = false
   entries: [SubscriptionEntryInput!]
   updatedAt: DateTime! # For optimistic locking
 }
