@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
@@ -34,6 +35,7 @@ type Transaction struct {
 	// The values are being populated by the TransactionQuery when eager-loading is set.
 	Edges                              TransactionEdges `json:"edges"`
 	ledger_encryption_key_transactions *int
+	subscription_transactions          *int
 	selectValues                       sql.SelectValues
 }
 
@@ -43,9 +45,11 @@ type TransactionEdges struct {
 	Entries []*JournalEntry `json:"entries,omitempty"`
 	// EncryptionKey holds the value of the encryption_key edge.
 	EncryptionKey *LedgerEncryptionKey `json:"encryption_key,omitempty"`
+	// Subscription holds the value of the subscription edge.
+	Subscription *Subscription `json:"subscription,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // EntriesOrErr returns the Entries value or an error if the edge
@@ -68,6 +72,17 @@ func (e TransactionEdges) EncryptionKeyOrErr() (*LedgerEncryptionKey, error) {
 	return nil, &NotLoadedError{edge: "encryption_key"}
 }
 
+// SubscriptionOrErr returns the Subscription value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TransactionEdges) SubscriptionOrErr() (*Subscription, error) {
+	if e.Subscription != nil {
+		return e.Subscription, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: subscription.Label}
+	}
+	return nil, &NotLoadedError{edge: "subscription"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Transaction) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -84,6 +99,8 @@ func (*Transaction) scanValues(columns []string) ([]any, error) {
 		case transaction.FieldCreatedAt, transaction.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case transaction.ForeignKeys[0]: // ledger_encryption_key_transactions
+			values[i] = new(sql.NullInt64)
+		case transaction.ForeignKeys[1]: // subscription_transactions
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -143,6 +160,13 @@ func (_m *Transaction) assignValues(columns []string, values []any) error {
 				_m.ledger_encryption_key_transactions = new(int)
 				*_m.ledger_encryption_key_transactions = int(value.Int64)
 			}
+		case transaction.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field subscription_transactions", value)
+			} else if value.Valid {
+				_m.subscription_transactions = new(int)
+				*_m.subscription_transactions = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -164,6 +188,11 @@ func (_m *Transaction) QueryEntries() *JournalEntryQuery {
 // QueryEncryptionKey queries the "encryption_key" edge of the Transaction entity.
 func (_m *Transaction) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
 	return NewTransactionClient(_m.config).QueryEncryptionKey(_m)
+}
+
+// QuerySubscription queries the "subscription" edge of the Transaction entity.
+func (_m *Transaction) QuerySubscription() *SubscriptionQuery {
+	return NewTransactionClient(_m.config).QuerySubscription(_m)
 }
 
 // Update returns a builder for updating this Transaction.

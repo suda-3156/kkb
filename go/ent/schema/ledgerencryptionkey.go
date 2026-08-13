@@ -45,5 +45,7 @@ func (LedgerEncryptionKey) Edges() []ent.Edge {
 		edge.To("ledger_accounts", LedgerAccount.Type),
 		// Transactions using this key for encrypting their data
 		edge.To("transactions", Transaction.Type),
+		// Subscriptions using this key for encrypting their data
+		edge.To("subscriptions", Subscription.Type),
 	}
 }

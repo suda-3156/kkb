@@ -17,21 +17,23 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/subscriptionentry"
 )
 
 // LedgerAccountQuery is the builder for querying LedgerAccount entities.
 type LedgerAccountQuery struct {
 	config
-	ctx                *QueryContext
-	order              []ledgeraccount.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.LedgerAccount
-	withParent         *LedgerAccountQuery
-	withChildren       *LedgerAccountQuery
-	withJournalEntries *JournalEntryQuery
-	withEncryptionKey  *LedgerEncryptionKeyQuery
-	withFKs            bool
-	modifiers          []func(*sql.Selector)
+	ctx                     *QueryContext
+	order                   []ledgeraccount.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.LedgerAccount
+	withParent              *LedgerAccountQuery
+	withChildren            *LedgerAccountQuery
+	withJournalEntries      *JournalEntryQuery
+	withSubscriptionEntries *SubscriptionEntryQuery
+	withEncryptionKey       *LedgerEncryptionKeyQuery
+	withFKs                 bool
+	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -127,6 +129,28 @@ func (_q *LedgerAccountQuery) QueryJournalEntries() *JournalEntryQuery {
 			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, selector),
 			sqlgraph.To(journalentry.Table, journalentry.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgeraccount.JournalEntriesTable, ledgeraccount.JournalEntriesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySubscriptionEntries chains the current query on the "subscription_entries" edge.
+func (_q *LedgerAccountQuery) QuerySubscriptionEntries() *SubscriptionEntryQuery {
+	query := (&SubscriptionEntryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgeraccount.Table, ledgeraccount.FieldID, selector),
+			sqlgraph.To(subscriptionentry.Table, subscriptionentry.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgeraccount.SubscriptionEntriesTable, ledgeraccount.SubscriptionEntriesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -343,15 +367,16 @@ func (_q *LedgerAccountQuery) Clone() *LedgerAccountQuery {
 		return nil
 	}
 	return &LedgerAccountQuery{
-		config:             _q.config,
-		ctx:                _q.ctx.Clone(),
-		order:              append([]ledgeraccount.OrderOption{}, _q.order...),
-		inters:             append([]Interceptor{}, _q.inters...),
-		predicates:         append([]predicate.LedgerAccount{}, _q.predicates...),
-		withParent:         _q.withParent.Clone(),
-		withChildren:       _q.withChildren.Clone(),
-		withJournalEntries: _q.withJournalEntries.Clone(),
-		withEncryptionKey:  _q.withEncryptionKey.Clone(),
+		config:                  _q.config,
+		ctx:                     _q.ctx.Clone(),
+		order:                   append([]ledgeraccount.OrderOption{}, _q.order...),
+		inters:                  append([]Interceptor{}, _q.inters...),
+		predicates:              append([]predicate.LedgerAccount{}, _q.predicates...),
+		withParent:              _q.withParent.Clone(),
+		withChildren:            _q.withChildren.Clone(),
+		withJournalEntries:      _q.withJournalEntries.Clone(),
+		withSubscriptionEntries: _q.withSubscriptionEntries.Clone(),
+		withEncryptionKey:       _q.withEncryptionKey.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -388,6 +413,17 @@ func (_q *LedgerAccountQuery) WithJournalEntries(opts ...func(*JournalEntryQuery
 		opt(query)
 	}
 	_q.withJournalEntries = query
+	return _q
+}
+
+// WithSubscriptionEntries tells the query-builder to eager-load the nodes that are connected to
+// the "subscription_entries" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerAccountQuery) WithSubscriptionEntries(opts ...func(*SubscriptionEntryQuery)) *LedgerAccountQuery {
+	query := (&SubscriptionEntryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSubscriptionEntries = query
 	return _q
 }
 
@@ -481,10 +517,11 @@ func (_q *LedgerAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes       = []*LedgerAccount{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withParent != nil,
 			_q.withChildren != nil,
 			_q.withJournalEntries != nil,
+			_q.withSubscriptionEntries != nil,
 			_q.withEncryptionKey != nil,
 		}
 	)
@@ -532,6 +569,15 @@ func (_q *LedgerAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		if err := _q.loadJournalEntries(ctx, query, nodes,
 			func(n *LedgerAccount) { n.Edges.JournalEntries = []*JournalEntry{} },
 			func(n *LedgerAccount, e *JournalEntry) { n.Edges.JournalEntries = append(n.Edges.JournalEntries, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSubscriptionEntries; query != nil {
+		if err := _q.loadSubscriptionEntries(ctx, query, nodes,
+			func(n *LedgerAccount) { n.Edges.SubscriptionEntries = []*SubscriptionEntry{} },
+			func(n *LedgerAccount, e *SubscriptionEntry) {
+				n.Edges.SubscriptionEntries = append(n.Edges.SubscriptionEntries, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -633,6 +679,37 @@ func (_q *LedgerAccountQuery) loadJournalEntries(ctx context.Context, query *Jou
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "ledger_account_journal_entries" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *LedgerAccountQuery) loadSubscriptionEntries(ctx context.Context, query *SubscriptionEntryQuery, nodes []*LedgerAccount, init func(*LedgerAccount), assign func(*LedgerAccount, *SubscriptionEntry)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*LedgerAccount)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.SubscriptionEntry(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ledgeraccount.SubscriptionEntriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ledger_account_subscription_entries
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "ledger_account_subscription_entries" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ledger_account_subscription_entries" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

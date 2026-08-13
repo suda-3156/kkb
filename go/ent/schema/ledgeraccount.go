@@ -97,6 +97,8 @@ func (LedgerAccount) Edges() []ent.Edge {
 			Unique(),
 		// Journal entries using this account
 		edge.To("journal_entries", JournalEntry.Type),
+		// Subscription template entries using this account
+		edge.To("subscription_entries", SubscriptionEntry.Type),
 		// Ledger encryption key used for encrypting this account's data
 		edge.From("encryption_key", LedgerEncryptionKey.Type).
 			Ref("ledger_accounts").

@@ -39,9 +39,11 @@ type LedgerEncryptionKeyEdges struct {
 	LedgerAccounts []*LedgerAccount `json:"ledger_accounts,omitempty"`
 	// Transactions holds the value of the transactions edge.
 	Transactions []*Transaction `json:"transactions,omitempty"`
+	// Subscriptions holds the value of the subscriptions edge.
+	Subscriptions []*Subscription `json:"subscriptions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // LedgerAccountsOrErr returns the LedgerAccounts value or an error if the edge
@@ -60,6 +62,15 @@ func (e LedgerEncryptionKeyEdges) TransactionsOrErr() ([]*Transaction, error) {
 		return e.Transactions, nil
 	}
 	return nil, &NotLoadedError{edge: "transactions"}
+}
+
+// SubscriptionsOrErr returns the Subscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerEncryptionKeyEdges) SubscriptionsOrErr() ([]*Subscription, error) {
+	if e.loadedTypes[2] {
+		return e.Subscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "subscriptions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -147,6 +158,11 @@ func (_m *LedgerEncryptionKey) QueryLedgerAccounts() *LedgerAccountQuery {
 // QueryTransactions queries the "transactions" edge of the LedgerEncryptionKey entity.
 func (_m *LedgerEncryptionKey) QueryTransactions() *TransactionQuery {
 	return NewLedgerEncryptionKeyClient(_m.config).QueryTransactions(_m)
+}
+
+// QuerySubscriptions queries the "subscriptions" edge of the LedgerEncryptionKey entity.
+func (_m *LedgerEncryptionKey) QuerySubscriptions() *SubscriptionQuery {
+	return NewLedgerEncryptionKeyClient(_m.config).QuerySubscriptions(_m)
 }
 
 // Update returns a builder for updating this LedgerEncryptionKey.

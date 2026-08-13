@@ -14,6 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
@@ -92,6 +93,21 @@ func (_u *LedgerEncryptionKeyUpdate) AddTransactions(v ...*Transaction) *LedgerE
 	return _u.AddTransactionIDs(ids...)
 }
 
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
+func (_u *LedgerEncryptionKeyUpdate) AddSubscriptionIDs(ids ...int) *LedgerEncryptionKeyUpdate {
+	_u.mutation.AddSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
+func (_u *LedgerEncryptionKeyUpdate) AddSubscriptions(v ...*Subscription) *LedgerEncryptionKeyUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionIDs(ids...)
+}
+
 // Mutation returns the LedgerEncryptionKeyMutation object of the builder.
 func (_u *LedgerEncryptionKeyUpdate) Mutation() *LedgerEncryptionKeyMutation {
 	return _u.mutation
@@ -137,6 +153,27 @@ func (_u *LedgerEncryptionKeyUpdate) RemoveTransactions(v ...*Transaction) *Ledg
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTransactionIDs(ids...)
+}
+
+// ClearSubscriptions clears all "subscriptions" edges to the Subscription entity.
+func (_u *LedgerEncryptionKeyUpdate) ClearSubscriptions() *LedgerEncryptionKeyUpdate {
+	_u.mutation.ClearSubscriptions()
+	return _u
+}
+
+// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscription entities by IDs.
+func (_u *LedgerEncryptionKeyUpdate) RemoveSubscriptionIDs(ids ...int) *LedgerEncryptionKeyUpdate {
+	_u.mutation.RemoveSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptions removes "subscriptions" edges to Subscription entities.
+func (_u *LedgerEncryptionKeyUpdate) RemoveSubscriptions(v ...*Subscription) *LedgerEncryptionKeyUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -304,6 +341,51 @@ func (_u *LedgerEncryptionKeyUpdate) sqlSave(ctx context.Context) (_node int, er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ledgerencryptionkey.Label}
@@ -386,6 +468,21 @@ func (_u *LedgerEncryptionKeyUpdateOne) AddTransactions(v ...*Transaction) *Ledg
 	return _u.AddTransactionIDs(ids...)
 }
 
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
+func (_u *LedgerEncryptionKeyUpdateOne) AddSubscriptionIDs(ids ...int) *LedgerEncryptionKeyUpdateOne {
+	_u.mutation.AddSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
+func (_u *LedgerEncryptionKeyUpdateOne) AddSubscriptions(v ...*Subscription) *LedgerEncryptionKeyUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionIDs(ids...)
+}
+
 // Mutation returns the LedgerEncryptionKeyMutation object of the builder.
 func (_u *LedgerEncryptionKeyUpdateOne) Mutation() *LedgerEncryptionKeyMutation {
 	return _u.mutation
@@ -431,6 +528,27 @@ func (_u *LedgerEncryptionKeyUpdateOne) RemoveTransactions(v ...*Transaction) *L
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTransactionIDs(ids...)
+}
+
+// ClearSubscriptions clears all "subscriptions" edges to the Subscription entity.
+func (_u *LedgerEncryptionKeyUpdateOne) ClearSubscriptions() *LedgerEncryptionKeyUpdateOne {
+	_u.mutation.ClearSubscriptions()
+	return _u
+}
+
+// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscription entities by IDs.
+func (_u *LedgerEncryptionKeyUpdateOne) RemoveSubscriptionIDs(ids ...int) *LedgerEncryptionKeyUpdateOne {
+	_u.mutation.RemoveSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptions removes "subscriptions" edges to Subscription entities.
+func (_u *LedgerEncryptionKeyUpdateOne) RemoveSubscriptions(v ...*Subscription) *LedgerEncryptionKeyUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionIDs(ids...)
 }
 
 // Where appends a list predicates to the LedgerEncryptionKeyUpdate builder.
@@ -621,6 +739,51 @@ func (_u *LedgerEncryptionKeyUpdateOne) sqlSave(ctx context.Context) (_node *Led
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(transaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

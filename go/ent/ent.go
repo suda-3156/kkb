@@ -15,6 +15,9 @@ import (
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/subscription"
+	"github.com/suda-3156/kkb/go/ent/subscriptionentry"
+	"github.com/suda-3156/kkb/go/ent/subscriptionoccurrence"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
@@ -76,10 +79,13 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			journalentry.Table:        journalentry.ValidColumn,
-			ledgeraccount.Table:       ledgeraccount.ValidColumn,
-			ledgerencryptionkey.Table: ledgerencryptionkey.ValidColumn,
-			transaction.Table:         transaction.ValidColumn,
+			journalentry.Table:           journalentry.ValidColumn,
+			ledgeraccount.Table:          ledgeraccount.ValidColumn,
+			ledgerencryptionkey.Table:    ledgerencryptionkey.ValidColumn,
+			subscription.Table:           subscription.ValidColumn,
+			subscriptionentry.Table:      subscriptionentry.ValidColumn,
+			subscriptionoccurrence.Table: subscriptionoccurrence.ValidColumn,
+			transaction.Table:            transaction.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

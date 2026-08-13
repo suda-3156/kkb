@@ -28,6 +28,8 @@ const (
 	EdgeEntries = "entries"
 	// EdgeEncryptionKey holds the string denoting the encryption_key edge name in mutations.
 	EdgeEncryptionKey = "encryption_key"
+	// EdgeSubscription holds the string denoting the subscription edge name in mutations.
+	EdgeSubscription = "subscription"
 	// Table holds the table name of the transaction in the database.
 	Table = "transactions"
 	// EntriesTable is the table that holds the entries relation/edge.
@@ -44,6 +46,13 @@ const (
 	EncryptionKeyInverseTable = "ledger_encryption_keys"
 	// EncryptionKeyColumn is the table column denoting the encryption_key relation/edge.
 	EncryptionKeyColumn = "ledger_encryption_key_transactions"
+	// SubscriptionTable is the table that holds the subscription relation/edge.
+	SubscriptionTable = "transactions"
+	// SubscriptionInverseTable is the table name for the Subscription entity.
+	// It exists in this package in order to avoid circular dependency with the "subscription" package.
+	SubscriptionInverseTable = "subscriptions"
+	// SubscriptionColumn is the table column denoting the subscription relation/edge.
+	SubscriptionColumn = "subscription_transactions"
 )
 
 // Columns holds all SQL columns for transaction fields.
@@ -60,6 +69,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"ledger_encryption_key_transactions",
+	"subscription_transactions",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -140,6 +150,13 @@ func ByEncryptionKeyField(field string, opts ...sql.OrderTermOption) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newEncryptionKeyStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// BySubscriptionField orders the results by subscription field.
+func BySubscriptionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newEntriesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -152,5 +169,12 @@ func newEncryptionKeyStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(EncryptionKeyInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, EncryptionKeyTable, EncryptionKeyColumn),
+	)
+}
+func newSubscriptionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SubscriptionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionTable, SubscriptionColumn),
 	)
 }

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
@@ -104,6 +105,21 @@ func (_c *LedgerEncryptionKeyCreate) AddTransactions(v ...*Transaction) *LedgerE
 		ids[i] = v[i].ID
 	}
 	return _c.AddTransactionIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
+func (_c *LedgerEncryptionKeyCreate) AddSubscriptionIDs(ids ...int) *LedgerEncryptionKeyCreate {
+	_c.mutation.AddSubscriptionIDs(ids...)
+	return _c
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
+func (_c *LedgerEncryptionKeyCreate) AddSubscriptions(v ...*Subscription) *LedgerEncryptionKeyCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSubscriptionIDs(ids...)
 }
 
 // Mutation returns the LedgerEncryptionKeyMutation object of the builder.
@@ -253,6 +269,22 @@ func (_c *LedgerEncryptionKeyCreate) createSpec() (*LedgerEncryptionKey, *sqlgra
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(transaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgerencryptionkey.SubscriptionsTable,
+			Columns: []string{ledgerencryptionkey.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

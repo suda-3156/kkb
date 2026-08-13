@@ -64,5 +64,11 @@ func (Transaction) Edges() []ent.Edge {
 		edge.From("encryption_key", LedgerEncryptionKey.Type).
 			Ref("transactions").
 			Unique(),
+		// Subscription that materialized this transaction (nullable: most
+		// transactions are entered by hand). Existing aggregation and list
+		// queries never select this column.
+		edge.From("subscription", Subscription.Type).
+			Ref("transactions").
+			Unique(),
 	}
 }

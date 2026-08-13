@@ -50,11 +50,13 @@ type LedgerAccountEdges struct {
 	Children []*LedgerAccount `json:"children,omitempty"`
 	// JournalEntries holds the value of the journal_entries edge.
 	JournalEntries []*JournalEntry `json:"journal_entries,omitempty"`
+	// SubscriptionEntries holds the value of the subscription_entries edge.
+	SubscriptionEntries []*SubscriptionEntry `json:"subscription_entries,omitempty"`
 	// EncryptionKey holds the value of the encryption_key edge.
 	EncryptionKey *LedgerEncryptionKey `json:"encryption_key,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // ParentOrErr returns the Parent value or an error if the edge
@@ -86,12 +88,21 @@ func (e LedgerAccountEdges) JournalEntriesOrErr() ([]*JournalEntry, error) {
 	return nil, &NotLoadedError{edge: "journal_entries"}
 }
 
+// SubscriptionEntriesOrErr returns the SubscriptionEntries value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerAccountEdges) SubscriptionEntriesOrErr() ([]*SubscriptionEntry, error) {
+	if e.loadedTypes[3] {
+		return e.SubscriptionEntries, nil
+	}
+	return nil, &NotLoadedError{edge: "subscription_entries"}
+}
+
 // EncryptionKeyOrErr returns the EncryptionKey value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e LedgerAccountEdges) EncryptionKeyOrErr() (*LedgerEncryptionKey, error) {
 	if e.EncryptionKey != nil {
 		return e.EncryptionKey, nil
-	} else if e.loadedTypes[3] {
+	} else if e.loadedTypes[4] {
 		return nil, &NotFoundError{label: ledgerencryptionkey.Label}
 	}
 	return nil, &NotLoadedError{edge: "encryption_key"}
@@ -222,6 +233,11 @@ func (_m *LedgerAccount) QueryChildren() *LedgerAccountQuery {
 // QueryJournalEntries queries the "journal_entries" edge of the LedgerAccount entity.
 func (_m *LedgerAccount) QueryJournalEntries() *JournalEntryQuery {
 	return NewLedgerAccountClient(_m.config).QueryJournalEntries(_m)
+}
+
+// QuerySubscriptionEntries queries the "subscription_entries" edge of the LedgerAccount entity.
+func (_m *LedgerAccount) QuerySubscriptionEntries() *SubscriptionEntryQuery {
+	return NewLedgerAccountClient(_m.config).QuerySubscriptionEntries(_m)
 }
 
 // QueryEncryptionKey queries the "encryption_key" edge of the LedgerAccount entity.

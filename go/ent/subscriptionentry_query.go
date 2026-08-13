@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,23 +12,21 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/suda-3156/kkb/go/ent/journalentry"
-	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/subscription"
-	"github.com/suda-3156/kkb/go/ent/transaction"
+	"github.com/suda-3156/kkb/go/ent/subscriptionentry"
 )
 
-// TransactionQuery is the builder for querying Transaction entities.
-type TransactionQuery struct {
+// SubscriptionEntryQuery is the builder for querying SubscriptionEntry entities.
+type SubscriptionEntryQuery struct {
 	config
 	ctx               *QueryContext
-	order             []transaction.OrderOption
+	order             []subscriptionentry.OrderOption
 	inters            []Interceptor
-	predicates        []predicate.Transaction
-	withEntries       *JournalEntryQuery
-	withEncryptionKey *LedgerEncryptionKeyQuery
+	predicates        []predicate.SubscriptionEntry
 	withSubscription  *SubscriptionQuery
+	withLedgerAccount *LedgerAccountQuery
 	withFKs           bool
 	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -37,83 +34,39 @@ type TransactionQuery struct {
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the TransactionQuery builder.
-func (_q *TransactionQuery) Where(ps ...predicate.Transaction) *TransactionQuery {
+// Where adds a new predicate for the SubscriptionEntryQuery builder.
+func (_q *SubscriptionEntryQuery) Where(ps ...predicate.SubscriptionEntry) *SubscriptionEntryQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *TransactionQuery) Limit(limit int) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) Limit(limit int) *SubscriptionEntryQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *TransactionQuery) Offset(offset int) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) Offset(offset int) *SubscriptionEntryQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *TransactionQuery) Unique(unique bool) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) Unique(unique bool) *SubscriptionEntryQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *TransactionQuery) Order(o ...transaction.OrderOption) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) Order(o ...subscriptionentry.OrderOption) *SubscriptionEntryQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryEntries chains the current query on the "entries" edge.
-func (_q *TransactionQuery) QueryEntries() *JournalEntryQuery {
-	query := (&JournalEntryClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
-			sqlgraph.To(journalentry.Table, journalentry.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, transaction.EntriesTable, transaction.EntriesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryEncryptionKey chains the current query on the "encryption_key" edge.
-func (_q *TransactionQuery) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
-	query := (&LedgerEncryptionKeyClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
-			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, transaction.EncryptionKeyTable, transaction.EncryptionKeyColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QuerySubscription chains the current query on the "subscription" edge.
-func (_q *TransactionQuery) QuerySubscription() *SubscriptionQuery {
+func (_q *SubscriptionEntryQuery) QuerySubscription() *SubscriptionQuery {
 	query := (&SubscriptionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -124,9 +77,9 @@ func (_q *TransactionQuery) QuerySubscription() *SubscriptionQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
+			sqlgraph.From(subscriptionentry.Table, subscriptionentry.FieldID, selector),
 			sqlgraph.To(subscription.Table, subscription.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, transaction.SubscriptionTable, transaction.SubscriptionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, subscriptionentry.SubscriptionTable, subscriptionentry.SubscriptionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -134,21 +87,43 @@ func (_q *TransactionQuery) QuerySubscription() *SubscriptionQuery {
 	return query
 }
 
-// First returns the first Transaction entity from the query.
-// Returns a *NotFoundError when no Transaction was found.
-func (_q *TransactionQuery) First(ctx context.Context) (*Transaction, error) {
+// QueryLedgerAccount chains the current query on the "ledger_account" edge.
+func (_q *SubscriptionEntryQuery) QueryLedgerAccount() *LedgerAccountQuery {
+	query := (&LedgerAccountClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(subscriptionentry.Table, subscriptionentry.FieldID, selector),
+			sqlgraph.To(ledgeraccount.Table, ledgeraccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, subscriptionentry.LedgerAccountTable, subscriptionentry.LedgerAccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// First returns the first SubscriptionEntry entity from the query.
+// Returns a *NotFoundError when no SubscriptionEntry was found.
+func (_q *SubscriptionEntryQuery) First(ctx context.Context) (*SubscriptionEntry, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{transaction.Label}
+		return nil, &NotFoundError{subscriptionentry.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *TransactionQuery) FirstX(ctx context.Context) *Transaction {
+func (_q *SubscriptionEntryQuery) FirstX(ctx context.Context) *SubscriptionEntry {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -156,22 +131,22 @@ func (_q *TransactionQuery) FirstX(ctx context.Context) *Transaction {
 	return node
 }
 
-// FirstID returns the first Transaction ID from the query.
-// Returns a *NotFoundError when no Transaction ID was found.
-func (_q *TransactionQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first SubscriptionEntry ID from the query.
+// Returns a *NotFoundError when no SubscriptionEntry ID was found.
+func (_q *SubscriptionEntryQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{transaction.Label}
+		err = &NotFoundError{subscriptionentry.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *TransactionQuery) FirstIDX(ctx context.Context) int {
+func (_q *SubscriptionEntryQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -179,10 +154,10 @@ func (_q *TransactionQuery) FirstIDX(ctx context.Context) int {
 	return id
 }
 
-// Only returns a single Transaction entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Transaction entity is found.
-// Returns a *NotFoundError when no Transaction entities are found.
-func (_q *TransactionQuery) Only(ctx context.Context) (*Transaction, error) {
+// Only returns a single SubscriptionEntry entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one SubscriptionEntry entity is found.
+// Returns a *NotFoundError when no SubscriptionEntry entities are found.
+func (_q *SubscriptionEntryQuery) Only(ctx context.Context) (*SubscriptionEntry, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -191,14 +166,14 @@ func (_q *TransactionQuery) Only(ctx context.Context) (*Transaction, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{transaction.Label}
+		return nil, &NotFoundError{subscriptionentry.Label}
 	default:
-		return nil, &NotSingularError{transaction.Label}
+		return nil, &NotSingularError{subscriptionentry.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *TransactionQuery) OnlyX(ctx context.Context) *Transaction {
+func (_q *SubscriptionEntryQuery) OnlyX(ctx context.Context) *SubscriptionEntry {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -206,10 +181,10 @@ func (_q *TransactionQuery) OnlyX(ctx context.Context) *Transaction {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Transaction ID in the query.
-// Returns a *NotSingularError when more than one Transaction ID is found.
+// OnlyID is like Only, but returns the only SubscriptionEntry ID in the query.
+// Returns a *NotSingularError when more than one SubscriptionEntry ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *TransactionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SubscriptionEntryQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -218,15 +193,15 @@ func (_q *TransactionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{transaction.Label}
+		err = &NotFoundError{subscriptionentry.Label}
 	default:
-		err = &NotSingularError{transaction.Label}
+		err = &NotSingularError{subscriptionentry.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *TransactionQuery) OnlyIDX(ctx context.Context) int {
+func (_q *SubscriptionEntryQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -234,18 +209,18 @@ func (_q *TransactionQuery) OnlyIDX(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of Transactions.
-func (_q *TransactionQuery) All(ctx context.Context) ([]*Transaction, error) {
+// All executes the query and returns a list of SubscriptionEntries.
+func (_q *SubscriptionEntryQuery) All(ctx context.Context) ([]*SubscriptionEntry, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Transaction, *TransactionQuery]()
-	return withInterceptors[[]*Transaction](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*SubscriptionEntry, *SubscriptionEntryQuery]()
+	return withInterceptors[[]*SubscriptionEntry](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *TransactionQuery) AllX(ctx context.Context) []*Transaction {
+func (_q *SubscriptionEntryQuery) AllX(ctx context.Context) []*SubscriptionEntry {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -253,20 +228,20 @@ func (_q *TransactionQuery) AllX(ctx context.Context) []*Transaction {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Transaction IDs.
-func (_q *TransactionQuery) IDs(ctx context.Context) (ids []int, err error) {
+// IDs executes the query and returns a list of SubscriptionEntry IDs.
+func (_q *SubscriptionEntryQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(transaction.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(subscriptionentry.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *TransactionQuery) IDsX(ctx context.Context) []int {
+func (_q *SubscriptionEntryQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -275,16 +250,16 @@ func (_q *TransactionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (_q *TransactionQuery) Count(ctx context.Context) (int, error) {
+func (_q *SubscriptionEntryQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*TransactionQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SubscriptionEntryQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *TransactionQuery) CountX(ctx context.Context) int {
+func (_q *SubscriptionEntryQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -293,7 +268,7 @@ func (_q *TransactionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *TransactionQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *SubscriptionEntryQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -306,7 +281,7 @@ func (_q *TransactionQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *TransactionQuery) ExistX(ctx context.Context) bool {
+func (_q *SubscriptionEntryQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -314,57 +289,45 @@ func (_q *TransactionQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the TransactionQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the SubscriptionEntryQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *TransactionQuery) Clone() *TransactionQuery {
+func (_q *SubscriptionEntryQuery) Clone() *SubscriptionEntryQuery {
 	if _q == nil {
 		return nil
 	}
-	return &TransactionQuery{
+	return &SubscriptionEntryQuery{
 		config:            _q.config,
 		ctx:               _q.ctx.Clone(),
-		order:             append([]transaction.OrderOption{}, _q.order...),
+		order:             append([]subscriptionentry.OrderOption{}, _q.order...),
 		inters:            append([]Interceptor{}, _q.inters...),
-		predicates:        append([]predicate.Transaction{}, _q.predicates...),
-		withEntries:       _q.withEntries.Clone(),
-		withEncryptionKey: _q.withEncryptionKey.Clone(),
+		predicates:        append([]predicate.SubscriptionEntry{}, _q.predicates...),
 		withSubscription:  _q.withSubscription.Clone(),
+		withLedgerAccount: _q.withLedgerAccount.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithEntries tells the query-builder to eager-load the nodes that are connected to
-// the "entries" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TransactionQuery) WithEntries(opts ...func(*JournalEntryQuery)) *TransactionQuery {
-	query := (&JournalEntryClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withEntries = query
-	return _q
-}
-
-// WithEncryptionKey tells the query-builder to eager-load the nodes that are connected to
-// the "encryption_key" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TransactionQuery) WithEncryptionKey(opts ...func(*LedgerEncryptionKeyQuery)) *TransactionQuery {
-	query := (&LedgerEncryptionKeyClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withEncryptionKey = query
-	return _q
-}
-
 // WithSubscription tells the query-builder to eager-load the nodes that are connected to
 // the "subscription" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TransactionQuery) WithSubscription(opts ...func(*SubscriptionQuery)) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) WithSubscription(opts ...func(*SubscriptionQuery)) *SubscriptionEntryQuery {
 	query := (&SubscriptionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
 	_q.withSubscription = query
+	return _q
+}
+
+// WithLedgerAccount tells the query-builder to eager-load the nodes that are connected to
+// the "ledger_account" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *SubscriptionEntryQuery) WithLedgerAccount(opts ...func(*LedgerAccountQuery)) *SubscriptionEntryQuery {
+	query := (&LedgerAccountClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withLedgerAccount = query
 	return _q
 }
 
@@ -374,19 +337,19 @@ func (_q *TransactionQuery) WithSubscription(opts ...func(*SubscriptionQuery)) *
 // Example:
 //
 //	var v []struct {
-//		PublicID prid.ID `json:"public_id,omitempty"`
+//		Amount int32 `json:"amount,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Transaction.Query().
-//		GroupBy(transaction.FieldPublicID).
+//	client.SubscriptionEntry.Query().
+//		GroupBy(subscriptionentry.FieldAmount).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *TransactionQuery) GroupBy(field string, fields ...string) *TransactionGroupBy {
+func (_q *SubscriptionEntryQuery) GroupBy(field string, fields ...string) *SubscriptionEntryGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TransactionGroupBy{build: _q}
+	grbuild := &SubscriptionEntryGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = transaction.Label
+	grbuild.label = subscriptionentry.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -397,26 +360,26 @@ func (_q *TransactionQuery) GroupBy(field string, fields ...string) *Transaction
 // Example:
 //
 //	var v []struct {
-//		PublicID prid.ID `json:"public_id,omitempty"`
+//		Amount int32 `json:"amount,omitempty"`
 //	}
 //
-//	client.Transaction.Query().
-//		Select(transaction.FieldPublicID).
+//	client.SubscriptionEntry.Query().
+//		Select(subscriptionentry.FieldAmount).
 //		Scan(ctx, &v)
-func (_q *TransactionQuery) Select(fields ...string) *TransactionSelect {
+func (_q *SubscriptionEntryQuery) Select(fields ...string) *SubscriptionEntrySelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &TransactionSelect{TransactionQuery: _q}
-	sbuild.label = transaction.Label
+	sbuild := &SubscriptionEntrySelect{SubscriptionEntryQuery: _q}
+	sbuild.label = subscriptionentry.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a TransactionSelect configured with the given aggregations.
-func (_q *TransactionQuery) Aggregate(fns ...AggregateFunc) *TransactionSelect {
+// Aggregate returns a SubscriptionEntrySelect configured with the given aggregations.
+func (_q *SubscriptionEntryQuery) Aggregate(fns ...AggregateFunc) *SubscriptionEntrySelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *TransactionQuery) prepareQuery(ctx context.Context) error {
+func (_q *SubscriptionEntryQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -428,7 +391,7 @@ func (_q *TransactionQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !transaction.ValidColumn(f) {
+		if !subscriptionentry.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -442,28 +405,27 @@ func (_q *TransactionQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *TransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Transaction, error) {
+func (_q *SubscriptionEntryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SubscriptionEntry, error) {
 	var (
-		nodes       = []*Transaction{}
+		nodes       = []*SubscriptionEntry{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
-			_q.withEntries != nil,
-			_q.withEncryptionKey != nil,
+		loadedTypes = [2]bool{
 			_q.withSubscription != nil,
+			_q.withLedgerAccount != nil,
 		}
 	)
-	if _q.withEncryptionKey != nil || _q.withSubscription != nil {
+	if _q.withSubscription != nil || _q.withLedgerAccount != nil {
 		withFKs = true
 	}
 	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, transaction.ForeignKeys...)
+		_spec.Node.Columns = append(_spec.Node.Columns, subscriptionentry.ForeignKeys...)
 	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Transaction).scanValues(nil, columns)
+		return (*SubscriptionEntry).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Transaction{config: _q.config}
+		node := &SubscriptionEntry{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -480,99 +442,29 @@ func (_q *TransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withEntries; query != nil {
-		if err := _q.loadEntries(ctx, query, nodes,
-			func(n *Transaction) { n.Edges.Entries = []*JournalEntry{} },
-			func(n *Transaction, e *JournalEntry) { n.Edges.Entries = append(n.Edges.Entries, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withEncryptionKey; query != nil {
-		if err := _q.loadEncryptionKey(ctx, query, nodes, nil,
-			func(n *Transaction, e *LedgerEncryptionKey) { n.Edges.EncryptionKey = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := _q.withSubscription; query != nil {
 		if err := _q.loadSubscription(ctx, query, nodes, nil,
-			func(n *Transaction, e *Subscription) { n.Edges.Subscription = e }); err != nil {
+			func(n *SubscriptionEntry, e *Subscription) { n.Edges.Subscription = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withLedgerAccount; query != nil {
+		if err := _q.loadLedgerAccount(ctx, query, nodes, nil,
+			func(n *SubscriptionEntry, e *LedgerAccount) { n.Edges.LedgerAccount = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *TransactionQuery) loadEntries(ctx context.Context, query *JournalEntryQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *JournalEntry)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Transaction)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.JournalEntry(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(transaction.EntriesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.transaction_entries
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "transaction_entries" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "transaction_entries" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *TransactionQuery) loadEncryptionKey(ctx context.Context, query *LedgerEncryptionKeyQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *LedgerEncryptionKey)) error {
+func (_q *SubscriptionEntryQuery) loadSubscription(ctx context.Context, query *SubscriptionQuery, nodes []*SubscriptionEntry, init func(*SubscriptionEntry), assign func(*SubscriptionEntry, *Subscription)) error {
 	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Transaction)
+	nodeids := make(map[int][]*SubscriptionEntry)
 	for i := range nodes {
-		if nodes[i].ledger_encryption_key_transactions == nil {
+		if nodes[i].subscription_template_entries == nil {
 			continue
 		}
-		fk := *nodes[i].ledger_encryption_key_transactions
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(ledgerencryptionkey.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "ledger_encryption_key_transactions" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *TransactionQuery) loadSubscription(ctx context.Context, query *SubscriptionQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *Subscription)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Transaction)
-	for i := range nodes {
-		if nodes[i].subscription_transactions == nil {
-			continue
-		}
-		fk := *nodes[i].subscription_transactions
+		fk := *nodes[i].subscription_template_entries
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -589,7 +481,39 @@ func (_q *TransactionQuery) loadSubscription(ctx context.Context, query *Subscri
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "subscription_transactions" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "subscription_template_entries" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *SubscriptionEntryQuery) loadLedgerAccount(ctx context.Context, query *LedgerAccountQuery, nodes []*SubscriptionEntry, init func(*SubscriptionEntry), assign func(*SubscriptionEntry, *LedgerAccount)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*SubscriptionEntry)
+	for i := range nodes {
+		if nodes[i].ledger_account_subscription_entries == nil {
+			continue
+		}
+		fk := *nodes[i].ledger_account_subscription_entries
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(ledgeraccount.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "ledger_account_subscription_entries" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -598,7 +522,7 @@ func (_q *TransactionQuery) loadSubscription(ctx context.Context, query *Subscri
 	return nil
 }
 
-func (_q *TransactionQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *SubscriptionEntryQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	if len(_q.modifiers) > 0 {
 		_spec.Modifiers = _q.modifiers
@@ -610,8 +534,8 @@ func (_q *TransactionQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *TransactionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(transaction.Table, transaction.Columns, sqlgraph.NewFieldSpec(transaction.FieldID, field.TypeInt))
+func (_q *SubscriptionEntryQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(subscriptionentry.Table, subscriptionentry.Columns, sqlgraph.NewFieldSpec(subscriptionentry.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -620,9 +544,9 @@ func (_q *TransactionQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, transaction.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, subscriptionentry.FieldID)
 		for i := range fields {
-			if fields[i] != transaction.FieldID {
+			if fields[i] != subscriptionentry.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -650,12 +574,12 @@ func (_q *TransactionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *TransactionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *SubscriptionEntryQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(transaction.Table)
+	t1 := builder.Table(subscriptionentry.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = transaction.Columns
+		columns = subscriptionentry.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -688,7 +612,7 @@ func (_q *TransactionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 // ForUpdate locks the selected rows against concurrent updates, and prevent them from being
 // updated, deleted or "selected ... for update" by other sessions, until the transaction is
 // either committed or rolled-back.
-func (_q *TransactionQuery) ForUpdate(opts ...sql.LockOption) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) ForUpdate(opts ...sql.LockOption) *SubscriptionEntryQuery {
 	if _q.driver.Dialect() == dialect.Postgres {
 		_q.Unique(false)
 	}
@@ -701,7 +625,7 @@ func (_q *TransactionQuery) ForUpdate(opts ...sql.LockOption) *TransactionQuery 
 // ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
 // on any rows that are read. Other sessions can read the rows, but cannot modify them
 // until your transaction commits.
-func (_q *TransactionQuery) ForShare(opts ...sql.LockOption) *TransactionQuery {
+func (_q *SubscriptionEntryQuery) ForShare(opts ...sql.LockOption) *SubscriptionEntryQuery {
 	if _q.driver.Dialect() == dialect.Postgres {
 		_q.Unique(false)
 	}
@@ -711,28 +635,28 @@ func (_q *TransactionQuery) ForShare(opts ...sql.LockOption) *TransactionQuery {
 	return _q
 }
 
-// TransactionGroupBy is the group-by builder for Transaction entities.
-type TransactionGroupBy struct {
+// SubscriptionEntryGroupBy is the group-by builder for SubscriptionEntry entities.
+type SubscriptionEntryGroupBy struct {
 	selector
-	build *TransactionQuery
+	build *SubscriptionEntryQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *TransactionGroupBy) Aggregate(fns ...AggregateFunc) *TransactionGroupBy {
+func (_g *SubscriptionEntryGroupBy) Aggregate(fns ...AggregateFunc) *SubscriptionEntryGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *TransactionGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *SubscriptionEntryGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TransactionQuery, *TransactionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*SubscriptionEntryQuery, *SubscriptionEntryGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *TransactionGroupBy) sqlScan(ctx context.Context, root *TransactionQuery, v any) error {
+func (_g *SubscriptionEntryGroupBy) sqlScan(ctx context.Context, root *SubscriptionEntryQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -759,28 +683,28 @@ func (_g *TransactionGroupBy) sqlScan(ctx context.Context, root *TransactionQuer
 	return sql.ScanSlice(rows, v)
 }
 
-// TransactionSelect is the builder for selecting fields of Transaction entities.
-type TransactionSelect struct {
-	*TransactionQuery
+// SubscriptionEntrySelect is the builder for selecting fields of SubscriptionEntry entities.
+type SubscriptionEntrySelect struct {
+	*SubscriptionEntryQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *TransactionSelect) Aggregate(fns ...AggregateFunc) *TransactionSelect {
+func (_s *SubscriptionEntrySelect) Aggregate(fns ...AggregateFunc) *SubscriptionEntrySelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *TransactionSelect) Scan(ctx context.Context, v any) error {
+func (_s *SubscriptionEntrySelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TransactionQuery, *TransactionSelect](ctx, _s.TransactionQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*SubscriptionEntryQuery, *SubscriptionEntrySelect](ctx, _s.SubscriptionEntryQuery, _s, _s.inters, v)
 }
 
-func (_s *TransactionSelect) sqlScan(ctx context.Context, root *TransactionQuery, v any) error {
+func (_s *SubscriptionEntrySelect) sqlScan(ctx context.Context, root *SubscriptionEntryQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {
