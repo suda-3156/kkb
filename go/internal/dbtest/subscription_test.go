@@ -17,6 +17,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
 	"github.com/suda-3156/kkb/go/internal/subscription"
+	subscriptionstask "github.com/suda-3156/kkb/go/internal/tasks/subscriptions"
 )
 
 // These tests cover the request-spanning behavior a pure test cannot reach:
@@ -487,14 +488,14 @@ func TestReactivation(t *testing.T) {
 	})
 }
 
-// TestMaterializeDue_IsolatesFailures runs the job entrypoint over one broken
+// TestMaterializeDue_IsolatesFailures runs the task's sweep over one broken
 // and one healthy subscription: the healthy one must advance, the broken one
-// must roll back, and the task as a whole must fail.
+// must roll back, and the sweep as a whole must fail.
 func TestMaterializeDue_IsolatesFailures(t *testing.T) {
 	ctx := t.Context()
 
-	// This test drives MaterializeDue, which scans every due subscription in
-	// the shared database. Freeze the leftovers from the other tests so the
+	// This test drives the sweep, which scans every due subscription in the
+	// shared database. Freeze the leftovers from the other tests so the
 	// outcome only depends on the two fixtures below.
 	if _, err := testDB.Client.Subscription.Update().
 		SetStatus(schema.Canceled).
@@ -518,7 +519,7 @@ func TestMaterializeDue_IsolatesFailures(t *testing.T) {
 		t.Fatalf("archive account: %v", err)
 	}
 
-	err := testSM.MaterializeDue(ctx, mustDate(t, "2033-01-10"))
+	err := subscriptionstask.MaterializeDue(ctx, testSM, mustDate(t, "2033-01-10"))
 	if err == nil {
 		t.Fatal("MaterializeDue() = nil, want an error while any subscription fails")
 	}

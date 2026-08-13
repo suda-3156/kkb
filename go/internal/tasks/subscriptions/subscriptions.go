@@ -9,12 +9,16 @@ package subscriptions
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 
+	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
+	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/setup"
 	"github.com/suda-3156/kkb/go/internal/subscription"
 	"github.com/suda-3156/kkb/go/internal/transaction"
@@ -48,9 +52,8 @@ func (c *Config) SecretManagerConfig() *secrets.Config {
 	return &c.SecretManager
 }
 
-// Run materializes every due subscription (subscription.MaterializeDue). It
-// owns its dependencies' whole lifecycle: environment processing, connection,
-// and teardown all happen here, per invocation.
+// Run owns its dependencies' whole lifecycle: environment processing,
+// connection, and teardown all happen here, per invocation.
 func Run(ctx context.Context) error {
 	var cfg Config
 	env, err := setup.Setup(ctx, &cfg)
@@ -77,5 +80,54 @@ func Run(ctx context.Context) error {
 	tm := transaction.New(env.Database(), em)
 	sm := subscription.New(env.Database(), em, tm)
 
-	return sm.MaterializeDue(ctx, subscription.TodayJST())
+	return MaterializeDue(ctx, sm, subscription.TodayJST())
+}
+
+// MaterializeDue is one sweep over every due subscription. The domain half
+// (finding due subscriptions, advancing one safely) lives on the manager;
+// this holds the run policy: one subscription's failure (an archived account
+// in its template, say) is logged and does not stop the others, but if any
+// failed the sweep fails as a whole, so the job execution is reported failed
+// and monitoring can see it.
+//
+// Exported apart from Run so the integration tests can drive it with an
+// injected manager.
+func MaterializeDue(ctx context.Context, sm *subscription.SubscriptionManager, today date.Date) error {
+	ids, err := sm.DueSubscriptionIDs(ctx, today)
+	if err != nil {
+		return fmt.Errorf("materialize due: %w", err)
+	}
+
+	logging.Info(
+		ctx,
+		"subscriptions task - starting",
+		slog.String("today", today.String()),
+		slog.Int("due_count", len(ids)),
+	)
+
+	var failures []error
+	for _, id := range ids {
+		if err := sm.MaterializeOne(ctx, id, today); err != nil {
+			logging.Error(
+				ctx,
+				"subscriptions task - subscription failed",
+				slog.Int("subscription_id", id),
+				slog.Any("error", err),
+			)
+			failures = append(failures, fmt.Errorf("subscription id=%d: %w", id, err))
+		}
+	}
+
+	logging.Info(
+		ctx,
+		"subscriptions task - finished",
+		slog.Int("due_count", len(ids)),
+		slog.Int("failed_count", len(failures)),
+	)
+
+	if len(failures) > 0 {
+		return fmt.Errorf("materialize due: %d of %d subscriptions failed: %w",
+			len(failures), len(ids), errors.Join(failures...))
+	}
+	return nil
 }
