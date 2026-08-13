@@ -147,7 +147,8 @@ func (m *SubscriptionManager) materializeOne(
 	if err != nil {
 		return fmt.Errorf("materialize: %w", err)
 	}
-	memo := fmt.Sprintf("%s %d年%d月分", name, occTime.Year(), int(occTime.Month()))
+
+	memo := fmt.Sprintf("【%d年%d月】%s", occTime.Year(), int(occTime.Month()), name)
 	encMemo, err := m.em.Encrypt(ctx, memo)
 	if err != nil {
 		return fmt.Errorf("materialize: encrypt memo: %w", err)
