@@ -47,29 +47,19 @@ const SubscriptionRow = ({ sub }: { sub: SubscriptionItem }) => {
   )
 }
 
-/** The subscriptions billing on the day selected in the ideal calendar. */
+/**
+ * The subscriptions billing on the day selected in the ideal calendar.
+ * Nothing renders until a day is selected; a selected day with no rows shows
+ * just the heading (the absence of rows is the answer).
+ */
 export const SelectedDayList = ({ subs }: { subs: SubscriptionItem[] }) => {
   const selectedDay = useAtomValue(selectedDayAtom)
 
-  if (selectedDay === null) {
-    return (
-      <p className="py-4 text-center text-muted-foreground text-sm">
-        日付を選ぶと、その日に支払いのあるサブスクが表示されます
-      </p>
-    )
-  }
-
-  if (subs.length === 0) {
-    return (
-      <p className="py-4 text-center text-muted-foreground text-sm">
-        {selectedDay}日に支払いのあるサブスクはありません
-      </p>
-    )
-  }
+  if (selectedDay === null) return null
 
   return (
     <div>
-      <h3 className="px-3 pt-2 font-medium text-muted-foreground text-xs">
+      <h3 className="px-3 pt-4 font-medium text-muted-foreground text-xs">
         {selectedDay}日の支払い
       </h3>
       <div className="divide-y">
@@ -84,15 +74,18 @@ export const SelectedDayList = ({ subs }: { subs: SubscriptionItem[] }) => {
 /** Canceled subscriptions, revealed by the toggle. The row opens the detail
  * dialog, where 解約の取り消し lives. */
 export const CanceledList = ({ subs }: { subs: SubscriptionItem[] }) => {
-  if (subs.length === 0) {
-    return <p className="py-4 text-center text-muted-foreground text-sm">解約済みはありません</p>
-  }
-
   return (
-    <div className="divide-y">
-      {subs.map((sub) => (
-        <SubscriptionRow key={sub.id} sub={sub} />
-      ))}
+    <div>
+      <h3 className="px-3 font-medium text-muted-foreground text-xs">解約済み</h3>
+      {subs.length === 0 ? (
+        <p className="py-4 text-center text-muted-foreground text-sm">解約済みはありません</p>
+      ) : (
+        <div className="divide-y">
+          {subs.map((sub) => (
+            <SubscriptionRow key={sub.id} sub={sub} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
