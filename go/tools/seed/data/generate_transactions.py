@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate seed transactions for kkb.
-Period : 2025-01-01 – today
+Period : one year before today – today
 Target : ~1000 transactions
 
 Leaf accounts (non-group) from ledgeraccounts.json

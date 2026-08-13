@@ -10,14 +10,12 @@ import (
 
 	"github.com/suda-3156/kkb/go/ent"
 	entmigrate "github.com/suda-3156/kkb/go/ent/migrate"
-	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
-	"github.com/suda-3156/kkb/go/internal/prid"
 	"github.com/suda-3156/kkb/go/internal/setup"
 	"github.com/suda-3156/kkb/go/internal/subscription"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
@@ -30,7 +28,7 @@ const (
 	wrapperKeyName  = "ledger-encryption-key"
 
 	// Relative to the go module root, which is where this tool is run from.
-	ledgerAccountsSeedPath = "tools/seed/data/ledgeraccounts.json"
+	ledgerAccountsSeedPath = "tools/seed/data/ledger_accounts.json"
 	transactionsSeedPath   = "tools/seed/data/transactions.json"
 	subscriptionsSeedPath  = "tools/seed/data/subscriptions.json"
 )
@@ -127,22 +125,6 @@ func run(ctx context.Context) error {
 	return nil
 }
 
-func create(
-	ctx context.Context, lac *ledgeraccount.LedgerAccountManager, name string, kind graph.LedgerAccountKind, isGroup bool, parentID *prid.ID,
-) (*graph.LedgerAccount, error) {
-	a, err := lac.Create(ctx, graph.CreateLedgerAccountInput{
-		Name:     name,
-		Kind:     kind,
-		IsGroup:  isGroup,
-		ParentID: parentID,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("create %q: %w", name, err)
-	}
-	logging.Info(ctx, "created ledger account", "name", name, "id", a.ID)
-	return a, nil
-}
-
 func migrate(ctx context.Context, client *ent.Client) {
 	logging.Warning(ctx, "Auto-migrating database schema in local environment...")
 	err := client.Debug().Schema.Create(
@@ -174,6 +156,30 @@ func createEncryptionKey(ctx context.Context, cfg *keys.Config) error {
 
 	if _, err := kmst.CreateKeyVersion(ctx, keyID); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func insertData(
+	ctx context.Context,
+	client *ent.Client,
+	em *encryption.EncryptionManager,
+	lac *ledgeraccount.LedgerAccountManager,
+	tm *transaction.TransactionManager,
+	sm *subscription.SubscriptionManager,
+) error {
+	accountMap, err := insertLedgerAccounts(ctx, lac)
+	if err != nil {
+		return fmt.Errorf("insertData: insert ledger accounts: %w", err)
+	}
+
+	if err := insertTransactions(ctx, tm, accountMap); err != nil {
+		return fmt.Errorf("insertData: insert transactions: %w", err)
+	}
+
+	if err := insertSubscriptions(ctx, client, em, sm, accountMap); err != nil {
+		return fmt.Errorf("insertData: insert subscriptions: %w", err)
 	}
 
 	return nil
