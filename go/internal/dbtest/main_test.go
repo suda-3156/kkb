@@ -26,6 +26,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
+	"github.com/suda-3156/kkb/go/internal/subscription"
 	"github.com/suda-3156/kkb/go/internal/transaction"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/mysql"
@@ -64,6 +65,7 @@ var (
 	testLAC *ledgeraccount.LedgerAccountManager
 	testTM  *transaction.TransactionManager
 	testAM  *aggregation.AggregationManager
+	testSM  *subscription.SubscriptionManager
 )
 
 func TestMain(m *testing.M) {
@@ -160,6 +162,7 @@ func run(m *testing.M) (int, error) {
 	testLAC = ledgeraccount.New(testDB, testEM)
 	testTM = transaction.New(testDB, testEM)
 	testAM = aggregation.New(testDB, testEM)
+	testSM = subscription.New(testDB, testEM, testTM)
 
 	return m.Run(), nil
 }
