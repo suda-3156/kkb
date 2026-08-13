@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/suda-3156/kkb/go/ent"
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
+	"github.com/suda-3156/kkb/go/internal/encryption"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/prid"
+	"github.com/suda-3156/kkb/go/internal/subscription"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
 
@@ -34,7 +37,14 @@ type Entry struct {
 	Kind    string `json:"kind"` // "DEBIT" or "CREDIT"
 }
 
-func insertData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, tm *transaction.TransactionManager) error {
+func insertData(
+	ctx context.Context,
+	client *ent.Client,
+	em *encryption.EncryptionManager,
+	lac *ledgeraccount.LedgerAccountManager,
+	tm *transaction.TransactionManager,
+	sm *subscription.SubscriptionManager,
+) error {
 	accountMap, err := insertLedgerAccounts(ctx, lac)
 	if err != nil {
 		return fmt.Errorf("insertData: insert ledger accounts: %w", err)
@@ -42,6 +52,10 @@ func insertData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, tm
 
 	if err := insertTransactions(ctx, tm, accountMap); err != nil {
 		return fmt.Errorf("insertData: insert transactions: %w", err)
+	}
+
+	if err := insertSubscriptions(ctx, client, em, sm, accountMap); err != nil {
+		return fmt.Errorf("insertData: insert subscriptions: %w", err)
 	}
 
 	return nil

@@ -1,0 +1,60 @@
+[
+  {
+    "name": "動画配信サービス",
+    "registered_on": "2025-09-10",
+    "interval_months": 1,
+    "entries": [
+      { "account": "娯楽費", "amount": 1890, "kind": "DEBIT" },
+      { "account": "楽天カード", "amount": 1890, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "name": "音楽ストリーミング",
+    "registered_on": "2025-11-25",
+    "interval_months": 1,
+    "entries": [
+      { "account": "娯楽費", "amount": 1080, "kind": "DEBIT" },
+      { "account": "三井住友カード", "amount": 1080, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "name": "クラウドストレージ",
+    "registered_on": "2025-10-31",
+    "interval_months": 1,
+    "entries": [
+      { "account": "通信費", "amount": 250, "kind": "DEBIT" },
+      { "account": "三井住友カード", "amount": 250, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "name": "ドメイン更新",
+    "registered_on": "2026-02-01",
+    "interval_months": 12,
+    "entries": [
+      { "account": "通信費", "amount": 1540, "kind": "DEBIT" },
+      { "account": "楽天カード", "amount": 1540, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "name": "電子書籍読み放題",
+    "registered_on": "2025-12-05",
+    "interval_months": 1,
+    "status": "PAUSED",
+    "status_changed_on": "2026-06-20",
+    "entries": [
+      { "account": "娯楽費", "amount": 980, "kind": "DEBIT" },
+      { "account": "楽天カード", "amount": 980, "kind": "CREDIT" }
+    ]
+  },
+  {
+    "name": "オンライン学習サービス",
+    "registered_on": "2025-10-15",
+    "interval_months": 1,
+    "status": "CANCELED",
+    "status_changed_on": "2026-05-01",
+    "entries": [
+      { "account": "その他費用", "amount": 2980, "kind": "DEBIT" },
+      { "account": "普通預金", "amount": 2980, "kind": "CREDIT" }
+    ]
+  }
+]

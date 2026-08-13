@@ -19,6 +19,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/prid"
 	"github.com/suda-3156/kkb/go/internal/setup"
+	"github.com/suda-3156/kkb/go/internal/subscription"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
 
@@ -31,6 +32,7 @@ const (
 	// Relative to the go module root, which is where this tool is run from.
 	ledgerAccountsSeedPath = "tools/seed/data/ledgeraccounts.json"
 	transactionsSeedPath   = "tools/seed/data/transactions.json"
+	subscriptionsSeedPath  = "tools/seed/data/subscriptions.json"
 )
 
 var (
@@ -116,7 +118,8 @@ func run(ctx context.Context) error {
 	// Insert sample data.
 	lac := ledgeraccount.New(env.Database(), em)
 	tm := transaction.New(env.Database(), em)
-	err = insertData(ctx, lac, tm)
+	sm := subscription.New(env.Database(), em, tm)
+	err = insertData(ctx, env.Database().Client, em, lac, tm, sm)
 	if err != nil {
 		return err
 	}
