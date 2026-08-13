@@ -1,7 +1,8 @@
 "use client"
 
 import { useSetAtom } from "jotai"
-import { Moon, PiggyBank, Settings, Sun } from "lucide-react"
+import { LayoutDashboard, Moon, PiggyBank, Repeat, Settings, Sun } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { openModalAtom } from "./edit/state"
 import { settingsOpenAtom } from "./settings/state"
@@ -12,6 +13,10 @@ export function Header() {
 
   const open = useSetAtom(openModalAtom)
   const openSettings = useSetAtom(settingsOpenAtom)
+  const router = useRouter()
+  // One toggle slot: the subscriptions page links back to the dashboard,
+  // everywhere else links to the subscriptions page.
+  const onSubscriptions = usePathname().startsWith("/subscriptions")
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
@@ -23,6 +28,15 @@ export function Header() {
           className="mr-2 overflow-clip bg-background shadow-sm"
         >
           <PiggyBank />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2 overflow-clip bg-background shadow-sm"
+          aria-label={onSubscriptions ? "ダッシュボードへ" : "サブスク管理へ"}
+          onClick={() => router.push(onSubscriptions ? "/dashboard" : "/subscriptions")}
+        >
+          {onSubscriptions ? <LayoutDashboard /> : <Repeat />}
         </Button>
         <Button
           variant="ghost"

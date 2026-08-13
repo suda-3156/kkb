@@ -53,7 +53,11 @@ export const GetLedgerAccountsForComboboxDoc = graphql(/* GraphQL */ `
 type Props = {
   name: string
   label?: string
-  kind?: LedgerAccountKind
+  /**
+   * A single kind is filtered by the server; a list has to be fetched
+   * unfiltered and narrowed client-side, because the query only takes one kind.
+   */
+  kind?: LedgerAccountKind | readonly LedgerAccountKind[]
 
   form: AnyForm
 }
@@ -61,8 +65,10 @@ type Props = {
 export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => {
   const id = React.useId()
 
+  const serverKind = Array.isArray(kind) ? undefined : (kind as LedgerAccountKind | undefined)
+
   const { data, loading, error, fetchMore } = useQuery(GetLedgerAccountsForComboboxDoc, {
-    variables: { first: 100, kind },
+    variables: { first: 100, kind: serverKind },
   })
 
   React.useEffect(() => {
@@ -71,7 +77,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
         variables: {
           first: 100,
           after: data.ledgerAccounts.pageInfo.endCursor,
-          kind,
+          kind: serverKind,
         },
       })
     }
@@ -79,7 +85,7 @@ export const SelectLedgerAccountField = ({ name, label, kind, form }: Props) => 
     if (!loading && error) {
       toast.error("科目の情報の取得に失敗しました")
     }
-  }, [loading, data, fetchMore, kind, error])
+  }, [loading, data, fetchMore, serverKind, error])
 
   const { accountOrder } = useAtomValue(settingsAtom)
 
