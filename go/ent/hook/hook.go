@@ -45,6 +45,42 @@ func (f LedgerEncryptionKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LedgerEncryptionKeyMutation", m)
 }
 
+// The SubscriptionFunc type is an adapter to allow the use of ordinary
+// function as Subscription mutator.
+type SubscriptionFunc func(context.Context, *ent.SubscriptionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubscriptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SubscriptionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubscriptionMutation", m)
+}
+
+// The SubscriptionEntryFunc type is an adapter to allow the use of ordinary
+// function as SubscriptionEntry mutator.
+type SubscriptionEntryFunc func(context.Context, *ent.SubscriptionEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubscriptionEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SubscriptionEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubscriptionEntryMutation", m)
+}
+
+// The SubscriptionOccurrenceFunc type is an adapter to allow the use of ordinary
+// function as SubscriptionOccurrence mutator.
+type SubscriptionOccurrenceFunc func(context.Context, *ent.SubscriptionOccurrenceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubscriptionOccurrenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SubscriptionOccurrenceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubscriptionOccurrenceMutation", m)
+}
+
 // The TransactionFunc type is an adapter to allow the use of ordinary
 // function as Transaction mutator.
 type TransactionFunc func(context.Context, *ent.TransactionMutation) (ent.Value, error)

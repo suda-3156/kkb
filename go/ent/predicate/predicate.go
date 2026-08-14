@@ -15,5 +15,14 @@ type LedgerAccount func(*sql.Selector)
 // LedgerEncryptionKey is the predicate function for ledgerencryptionkey builders.
 type LedgerEncryptionKey func(*sql.Selector)
 
+// Subscription is the predicate function for subscription builders.
+type Subscription func(*sql.Selector)
+
+// SubscriptionEntry is the predicate function for subscriptionentry builders.
+type SubscriptionEntry func(*sql.Selector)
+
+// SubscriptionOccurrence is the predicate function for subscriptionoccurrence builders.
+type SubscriptionOccurrence func(*sql.Selector)
+
 // Transaction is the predicate function for transaction builders.
 type Transaction func(*sql.Selector)

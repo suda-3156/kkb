@@ -16,6 +16,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
@@ -28,6 +29,7 @@ type TransactionQuery struct {
 	predicates        []predicate.Transaction
 	withEntries       *JournalEntryQuery
 	withEncryptionKey *LedgerEncryptionKeyQuery
+	withSubscription  *SubscriptionQuery
 	withFKs           bool
 	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -103,6 +105,28 @@ func (_q *TransactionQuery) QueryEncryptionKey() *LedgerEncryptionKeyQuery {
 			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
 			sqlgraph.To(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, transaction.EncryptionKeyTable, transaction.EncryptionKeyColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySubscription chains the current query on the "subscription" edge.
+func (_q *TransactionQuery) QuerySubscription() *SubscriptionQuery {
+	query := (&SubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
+			sqlgraph.To(subscription.Table, subscription.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.SubscriptionTable, transaction.SubscriptionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -304,6 +328,7 @@ func (_q *TransactionQuery) Clone() *TransactionQuery {
 		predicates:        append([]predicate.Transaction{}, _q.predicates...),
 		withEntries:       _q.withEntries.Clone(),
 		withEncryptionKey: _q.withEncryptionKey.Clone(),
+		withSubscription:  _q.withSubscription.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -329,6 +354,17 @@ func (_q *TransactionQuery) WithEncryptionKey(opts ...func(*LedgerEncryptionKeyQ
 		opt(query)
 	}
 	_q.withEncryptionKey = query
+	return _q
+}
+
+// WithSubscription tells the query-builder to eager-load the nodes that are connected to
+// the "subscription" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TransactionQuery) WithSubscription(opts ...func(*SubscriptionQuery)) *TransactionQuery {
+	query := (&SubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSubscription = query
 	return _q
 }
 
@@ -411,12 +447,13 @@ func (_q *TransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 		nodes       = []*Transaction{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withEntries != nil,
 			_q.withEncryptionKey != nil,
+			_q.withSubscription != nil,
 		}
 	)
-	if _q.withEncryptionKey != nil {
+	if _q.withEncryptionKey != nil || _q.withSubscription != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -453,6 +490,12 @@ func (_q *TransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	if query := _q.withEncryptionKey; query != nil {
 		if err := _q.loadEncryptionKey(ctx, query, nodes, nil,
 			func(n *Transaction, e *LedgerEncryptionKey) { n.Edges.EncryptionKey = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSubscription; query != nil {
+		if err := _q.loadSubscription(ctx, query, nodes, nil,
+			func(n *Transaction, e *Subscription) { n.Edges.Subscription = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -515,6 +558,38 @@ func (_q *TransactionQuery) loadEncryptionKey(ctx context.Context, query *Ledger
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "ledger_encryption_key_transactions" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *TransactionQuery) loadSubscription(ctx context.Context, query *SubscriptionQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *Subscription)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Transaction)
+	for i := range nodes {
+		if nodes[i].subscription_transactions == nil {
+			continue
+		}
+		fk := *nodes[i].subscription_transactions
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(subscription.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "subscription_transactions" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

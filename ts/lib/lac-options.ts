@@ -135,20 +135,24 @@ export const bumpLastUsed = (
  *   of the groups themselves never depends on the ordering setting
  * - Drops kinds that end up with no candidates
  *
- * Passing `kind` narrows the result to that kind. The server filters too, but
- * filtering again here keeps the display intact if Apollo's cache mixes in
- * accounts of another kind.
+ * Passing `kind` narrows the result to that kind, or to those kinds when given
+ * a list (the server can only filter by a single kind, so a list is filtered
+ * here alone). The server filters too, but filtering again here keeps the
+ * display intact if Apollo's cache mixes in accounts of another kind.
  */
 export const buildAccountGroups = (
   nodes: readonly (AccountOption | null | undefined)[] | null | undefined,
-  kind?: LedgerAccountKind,
+  kind?: LedgerAccountKind | readonly LedgerAccountKind[],
   order: AccountOrder = "created",
 ): AccountGroup[] => {
   const options = (nodes ?? []).filter(
     (node): node is AccountOption => node != null && !node.isGroup,
   )
 
-  const kinds = kind ? [kind] : KIND_ORDER
+  const kinds =
+    kind === undefined
+      ? KIND_ORDER
+      : KIND_ORDER.filter((k) => (Array.isArray(kind) ? kind.includes(k) : kind === k))
   const compare = order === "lastUsed" ? byLastUsed : byCreatedAt
 
   return kinds

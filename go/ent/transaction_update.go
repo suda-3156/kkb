@@ -14,6 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/date"
 )
@@ -91,6 +92,25 @@ func (_u *TransactionUpdate) SetEncryptionKey(v *LedgerEncryptionKey) *Transacti
 	return _u.SetEncryptionKeyID(v.ID)
 }
 
+// SetSubscriptionID sets the "subscription" edge to the Subscription entity by ID.
+func (_u *TransactionUpdate) SetSubscriptionID(id int) *TransactionUpdate {
+	_u.mutation.SetSubscriptionID(id)
+	return _u
+}
+
+// SetNillableSubscriptionID sets the "subscription" edge to the Subscription entity by ID if the given value is not nil.
+func (_u *TransactionUpdate) SetNillableSubscriptionID(id *int) *TransactionUpdate {
+	if id != nil {
+		_u = _u.SetSubscriptionID(*id)
+	}
+	return _u
+}
+
+// SetSubscription sets the "subscription" edge to the Subscription entity.
+func (_u *TransactionUpdate) SetSubscription(v *Subscription) *TransactionUpdate {
+	return _u.SetSubscriptionID(v.ID)
+}
+
 // Mutation returns the TransactionMutation object of the builder.
 func (_u *TransactionUpdate) Mutation() *TransactionMutation {
 	return _u.mutation
@@ -120,6 +140,12 @@ func (_u *TransactionUpdate) RemoveEntries(v ...*JournalEntry) *TransactionUpdat
 // ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
 func (_u *TransactionUpdate) ClearEncryptionKey() *TransactionUpdate {
 	_u.mutation.ClearEncryptionKey()
+	return _u
+}
+
+// ClearSubscription clears the "subscription" edge to the Subscription entity.
+func (_u *TransactionUpdate) ClearSubscription() *TransactionUpdate {
+	_u.mutation.ClearSubscription()
 	return _u
 }
 
@@ -269,6 +295,35 @@ func (_u *TransactionUpdate) sqlSave(ctx context.Context) (_node int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.SubscriptionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.SubscriptionTable,
+			Columns: []string{transaction.SubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.SubscriptionTable,
+			Columns: []string{transaction.SubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{transaction.Label}
@@ -349,6 +404,25 @@ func (_u *TransactionUpdateOne) SetEncryptionKey(v *LedgerEncryptionKey) *Transa
 	return _u.SetEncryptionKeyID(v.ID)
 }
 
+// SetSubscriptionID sets the "subscription" edge to the Subscription entity by ID.
+func (_u *TransactionUpdateOne) SetSubscriptionID(id int) *TransactionUpdateOne {
+	_u.mutation.SetSubscriptionID(id)
+	return _u
+}
+
+// SetNillableSubscriptionID sets the "subscription" edge to the Subscription entity by ID if the given value is not nil.
+func (_u *TransactionUpdateOne) SetNillableSubscriptionID(id *int) *TransactionUpdateOne {
+	if id != nil {
+		_u = _u.SetSubscriptionID(*id)
+	}
+	return _u
+}
+
+// SetSubscription sets the "subscription" edge to the Subscription entity.
+func (_u *TransactionUpdateOne) SetSubscription(v *Subscription) *TransactionUpdateOne {
+	return _u.SetSubscriptionID(v.ID)
+}
+
 // Mutation returns the TransactionMutation object of the builder.
 func (_u *TransactionUpdateOne) Mutation() *TransactionMutation {
 	return _u.mutation
@@ -378,6 +452,12 @@ func (_u *TransactionUpdateOne) RemoveEntries(v ...*JournalEntry) *TransactionUp
 // ClearEncryptionKey clears the "encryption_key" edge to the LedgerEncryptionKey entity.
 func (_u *TransactionUpdateOne) ClearEncryptionKey() *TransactionUpdateOne {
 	_u.mutation.ClearEncryptionKey()
+	return _u
+}
+
+// ClearSubscription clears the "subscription" edge to the Subscription entity.
+func (_u *TransactionUpdateOne) ClearSubscription() *TransactionUpdateOne {
+	_u.mutation.ClearSubscription()
 	return _u
 }
 
@@ -550,6 +630,35 @@ func (_u *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transaction
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgerencryptionkey.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.SubscriptionTable,
+			Columns: []string{transaction.SubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.SubscriptionTable,
+			Columns: []string{transaction.SubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

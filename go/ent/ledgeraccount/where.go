@@ -436,6 +436,29 @@ func HasJournalEntriesWith(preds ...predicate.JournalEntry) predicate.LedgerAcco
 	})
 }
 
+// HasSubscriptionEntries applies the HasEdge predicate on the "subscription_entries" edge.
+func HasSubscriptionEntries() predicate.LedgerAccount {
+	return predicate.LedgerAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionEntriesTable, SubscriptionEntriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSubscriptionEntriesWith applies the HasEdge predicate on the "subscription_entries" edge with a given conditions (other predicates).
+func HasSubscriptionEntriesWith(preds ...predicate.SubscriptionEntry) predicate.LedgerAccount {
+	return predicate.LedgerAccount(func(s *sql.Selector) {
+		step := newSubscriptionEntriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasEncryptionKey applies the HasEdge predicate on the "encryption_key" edge.
 func HasEncryptionKey() predicate.LedgerAccount {
 	return predicate.LedgerAccount(func(s *sql.Selector) {

@@ -403,6 +403,29 @@ func HasEncryptionKeyWith(preds ...predicate.LedgerEncryptionKey) predicate.Tran
 	})
 }
 
+// HasSubscription applies the HasEdge predicate on the "subscription" edge.
+func HasSubscription() predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionTable, SubscriptionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSubscriptionWith applies the HasEdge predicate on the "subscription" edge with a given conditions (other predicates).
+func HasSubscriptionWith(preds ...predicate.Subscription) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		step := newSubscriptionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Transaction) predicate.Transaction {
 	return predicate.Transaction(sql.AndPredicates(predicates...))

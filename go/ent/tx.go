@@ -18,6 +18,12 @@ type Tx struct {
 	LedgerAccount *LedgerAccountClient
 	// LedgerEncryptionKey is the client for interacting with the LedgerEncryptionKey builders.
 	LedgerEncryptionKey *LedgerEncryptionKeyClient
+	// Subscription is the client for interacting with the Subscription builders.
+	Subscription *SubscriptionClient
+	// SubscriptionEntry is the client for interacting with the SubscriptionEntry builders.
+	SubscriptionEntry *SubscriptionEntryClient
+	// SubscriptionOccurrence is the client for interacting with the SubscriptionOccurrence builders.
+	SubscriptionOccurrence *SubscriptionOccurrenceClient
 	// Transaction is the client for interacting with the Transaction builders.
 	Transaction *TransactionClient
 
@@ -154,6 +160,9 @@ func (tx *Tx) init() {
 	tx.JournalEntry = NewJournalEntryClient(tx.config)
 	tx.LedgerAccount = NewLedgerAccountClient(tx.config)
 	tx.LedgerEncryptionKey = NewLedgerEncryptionKeyClient(tx.config)
+	tx.Subscription = NewSubscriptionClient(tx.config)
+	tx.SubscriptionEntry = NewSubscriptionEntryClient(tx.config)
+	tx.SubscriptionOccurrence = NewSubscriptionOccurrenceClient(tx.config)
 	tx.Transaction = NewTransactionClient(tx.config)
 }
 

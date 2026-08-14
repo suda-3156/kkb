@@ -36,6 +36,8 @@ const (
 	EdgeChildren = "children"
 	// EdgeJournalEntries holds the string denoting the journal_entries edge name in mutations.
 	EdgeJournalEntries = "journal_entries"
+	// EdgeSubscriptionEntries holds the string denoting the subscription_entries edge name in mutations.
+	EdgeSubscriptionEntries = "subscription_entries"
 	// EdgeEncryptionKey holds the string denoting the encryption_key edge name in mutations.
 	EdgeEncryptionKey = "encryption_key"
 	// Table holds the table name of the ledgeraccount in the database.
@@ -55,6 +57,13 @@ const (
 	JournalEntriesInverseTable = "journal_entries"
 	// JournalEntriesColumn is the table column denoting the journal_entries relation/edge.
 	JournalEntriesColumn = "ledger_account_journal_entries"
+	// SubscriptionEntriesTable is the table that holds the subscription_entries relation/edge.
+	SubscriptionEntriesTable = "subscription_entries"
+	// SubscriptionEntriesInverseTable is the table name for the SubscriptionEntry entity.
+	// It exists in this package in order to avoid circular dependency with the "subscriptionentry" package.
+	SubscriptionEntriesInverseTable = "subscription_entries"
+	// SubscriptionEntriesColumn is the table column denoting the subscription_entries relation/edge.
+	SubscriptionEntriesColumn = "ledger_account_subscription_entries"
 	// EncryptionKeyTable is the table that holds the encryption_key relation/edge.
 	EncryptionKeyTable = "ledger_accounts"
 	// EncryptionKeyInverseTable is the table name for the LedgerEncryptionKey entity.
@@ -194,6 +203,20 @@ func ByJournalEntries(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// BySubscriptionEntriesCount orders the results by subscription_entries count.
+func BySubscriptionEntriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSubscriptionEntriesStep(), opts...)
+	}
+}
+
+// BySubscriptionEntries orders the results by subscription_entries terms.
+func BySubscriptionEntries(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionEntriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByEncryptionKeyField orders the results by encryption_key field.
 func ByEncryptionKeyField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -219,6 +242,13 @@ func newJournalEntriesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(JournalEntriesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, JournalEntriesTable, JournalEntriesColumn),
+	)
+}
+func newSubscriptionEntriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SubscriptionEntriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionEntriesTable, SubscriptionEntriesColumn),
 	)
 }
 func newEncryptionKeyStep() *sqlgraph.Step {

@@ -84,6 +84,93 @@ var (
 		Columns:    LedgerEncryptionKeysColumns,
 		PrimaryKey: []*schema.Column{LedgerEncryptionKeysColumns[0]},
 	}
+	// SubscriptionsColumns holds the columns for the "subscriptions" table.
+	SubscriptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "public_id", Type: field.TypeString, Unique: true, Size: 20, SchemaType: map[string]string{"mysql": "char(20)"}},
+		{Name: "name", Type: field.TypeBytes, Size: 1024},
+		{Name: "registered_on", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
+		{Name: "anchor_on", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
+		{Name: "next_occurrence_on", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
+		{Name: "covered_through_on", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
+		{Name: "interval_months", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"ACTIVE", "PAUSED", "CANCELED"}, Default: "ACTIVE"},
+		{Name: "color", Type: field.TypeString, Nullable: true, Size: 20},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "ledger_encryption_key_subscriptions", Type: field.TypeInt, Nullable: true},
+	}
+	// SubscriptionsTable holds the schema information for the "subscriptions" table.
+	SubscriptionsTable = &schema.Table{
+		Name:       "subscriptions",
+		Columns:    SubscriptionsColumns,
+		PrimaryKey: []*schema.Column{SubscriptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subscriptions_ledger_encryption_keys_subscriptions",
+				Columns:    []*schema.Column{SubscriptionsColumns[12]},
+				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// SubscriptionEntriesColumns holds the columns for the "subscription_entries" table.
+	SubscriptionEntriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "amount", Type: field.TypeInt32},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"DEBIT", "CREDIT"}},
+		{Name: "ledger_account_subscription_entries", Type: field.TypeInt},
+		{Name: "subscription_template_entries", Type: field.TypeInt},
+	}
+	// SubscriptionEntriesTable holds the schema information for the "subscription_entries" table.
+	SubscriptionEntriesTable = &schema.Table{
+		Name:       "subscription_entries",
+		Columns:    SubscriptionEntriesColumns,
+		PrimaryKey: []*schema.Column{SubscriptionEntriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subscription_entries_ledger_accounts_subscription_entries",
+				Columns:    []*schema.Column{SubscriptionEntriesColumns[3]},
+				RefColumns: []*schema.Column{LedgerAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "subscription_entries_subscriptions_template_entries",
+				Columns:    []*schema.Column{SubscriptionEntriesColumns[4]},
+				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// SubscriptionOccurrencesColumns holds the columns for the "subscription_occurrences" table.
+	SubscriptionOccurrencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "occurrence_on", Type: field.TypeString, Size: 10, SchemaType: map[string]string{"mysql": "char(10)"}},
+		{Name: "outcome", Type: field.TypeEnum, Enums: []string{"MATERIALIZED", "SKIPPED"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "subscription_occurrences", Type: field.TypeInt},
+	}
+	// SubscriptionOccurrencesTable holds the schema information for the "subscription_occurrences" table.
+	SubscriptionOccurrencesTable = &schema.Table{
+		Name:       "subscription_occurrences",
+		Columns:    SubscriptionOccurrencesColumns,
+		PrimaryKey: []*schema.Column{SubscriptionOccurrencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subscription_occurrences_subscriptions_occurrences",
+				Columns:    []*schema.Column{SubscriptionOccurrencesColumns[4]},
+				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "subscriptionoccurrence_occurrence_on_subscription_occurrences",
+				Unique:  true,
+				Columns: []*schema.Column{SubscriptionOccurrencesColumns[1], SubscriptionOccurrencesColumns[4]},
+			},
+		},
+	}
 	// TransactionsColumns holds the columns for the "transactions" table.
 	TransactionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -93,6 +180,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "ledger_encryption_key_transactions", Type: field.TypeInt, Nullable: true},
+		{Name: "subscription_transactions", Type: field.TypeInt, Nullable: true},
 	}
 	// TransactionsTable holds the schema information for the "transactions" table.
 	TransactionsTable = &schema.Table{
@@ -106,6 +194,12 @@ var (
 				RefColumns: []*schema.Column{LedgerEncryptionKeysColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
+			{
+				Symbol:     "transactions_subscriptions_transactions",
+				Columns:    []*schema.Column{TransactionsColumns[7]},
+				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
 		},
 	}
 	// Tables holds all the tables in the schema.
@@ -113,6 +207,9 @@ var (
 		JournalEntriesTable,
 		LedgerAccountsTable,
 		LedgerEncryptionKeysTable,
+		SubscriptionsTable,
+		SubscriptionEntriesTable,
+		SubscriptionOccurrencesTable,
 		TransactionsTable,
 	}
 )
@@ -122,5 +219,10 @@ func init() {
 	JournalEntriesTable.ForeignKeys[1].RefTable = TransactionsTable
 	LedgerAccountsTable.ForeignKeys[0].RefTable = LedgerAccountsTable
 	LedgerAccountsTable.ForeignKeys[1].RefTable = LedgerEncryptionKeysTable
+	SubscriptionsTable.ForeignKeys[0].RefTable = LedgerEncryptionKeysTable
+	SubscriptionEntriesTable.ForeignKeys[0].RefTable = LedgerAccountsTable
+	SubscriptionEntriesTable.ForeignKeys[1].RefTable = SubscriptionsTable
+	SubscriptionOccurrencesTable.ForeignKeys[0].RefTable = SubscriptionsTable
 	TransactionsTable.ForeignKeys[0].RefTable = LedgerEncryptionKeysTable
+	TransactionsTable.ForeignKeys[1].RefTable = SubscriptionsTable
 }

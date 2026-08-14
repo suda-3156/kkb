@@ -45,6 +45,14 @@ type CreateLedgerAccountInput struct {
 	IsGroup  bool              `json:"isGroup"`
 }
 
+type CreateSubscriptionInput struct {
+	Name           string                    `json:"name"`
+	RegisteredOn   date.Date                 `json:"registeredOn"`
+	IntervalMonths int32                     `json:"intervalMonths"`
+	Color          *SubscriptionColor        `json:"color,omitempty"`
+	Entries        []*SubscriptionEntryInput `json:"entries"`
+}
+
 type CreateTransactionInput struct {
 	Entries     []*JournalEntryInput `json:"entries"`
 	Date        date.Date            `json:"date"`
@@ -109,6 +117,12 @@ type RevenueSummary struct {
 	ByAccount   []*AccountAmountSummary `json:"byAccount"`
 }
 
+type SubscriptionEntryInput struct {
+	LedgerAccountID prid.ID          `json:"ledgerAccountId"`
+	Amount          int32            `json:"amount"`
+	Kind            JournalEntryKind `json:"kind"`
+}
+
 type TransactionConnection struct {
 	Edges      []*TransactionEdge `json:"edges,omitempty"`
 	Nodes      []*Transaction     `json:"nodes,omitempty"`
@@ -134,6 +148,17 @@ type UpdateLedgerAccountInput struct {
 	Name        *string   `json:"name,omitempty"`
 	IsGroup     *bool     `json:"isGroup,omitempty"`
 	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type UpdateSubscriptionInput struct {
+	ID             prid.ID                   `json:"id"`
+	Name           *string                   `json:"name,omitempty"`
+	RegisteredOn   *date.Date                `json:"registeredOn,omitempty"`
+	IntervalMonths *int32                    `json:"intervalMonths,omitempty"`
+	Color          *SubscriptionColor        `json:"color,omitempty"`
+	UnsetColor     bool                      `json:"unsetColor"`
+	Entries        []*SubscriptionEntryInput `json:"entries,omitempty"`
+	UpdatedAt      time.Time                 `json:"updatedAt"`
 }
 
 type UpdateTransactionInput struct {
@@ -312,6 +337,193 @@ func (e *LedgerAccountKind) UnmarshalJSON(b []byte) error {
 }
 
 func (e LedgerAccountKind) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type OccurrenceOutcome string
+
+const (
+	OccurrenceOutcomeMaterialized OccurrenceOutcome = "MATERIALIZED"
+	OccurrenceOutcomeSkipped      OccurrenceOutcome = "SKIPPED"
+)
+
+var AllOccurrenceOutcome = []OccurrenceOutcome{
+	OccurrenceOutcomeMaterialized,
+	OccurrenceOutcomeSkipped,
+}
+
+func (e OccurrenceOutcome) IsValid() bool {
+	switch e {
+	case OccurrenceOutcomeMaterialized, OccurrenceOutcomeSkipped:
+		return true
+	}
+	return false
+}
+
+func (e OccurrenceOutcome) String() string {
+	return string(e)
+}
+
+func (e *OccurrenceOutcome) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OccurrenceOutcome(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OccurrenceOutcome", str)
+	}
+	return nil
+}
+
+func (e OccurrenceOutcome) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OccurrenceOutcome) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OccurrenceOutcome) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SubscriptionColor string
+
+const (
+	SubscriptionColorRed     SubscriptionColor = "RED"
+	SubscriptionColorOrange  SubscriptionColor = "ORANGE"
+	SubscriptionColorAmber   SubscriptionColor = "AMBER"
+	SubscriptionColorLime    SubscriptionColor = "LIME"
+	SubscriptionColorEmerald SubscriptionColor = "EMERALD"
+	SubscriptionColorTeal    SubscriptionColor = "TEAL"
+	SubscriptionColorSky     SubscriptionColor = "SKY"
+	SubscriptionColorBlue    SubscriptionColor = "BLUE"
+	SubscriptionColorViolet  SubscriptionColor = "VIOLET"
+	SubscriptionColorFuchsia SubscriptionColor = "FUCHSIA"
+	SubscriptionColorPink    SubscriptionColor = "PINK"
+	SubscriptionColorRose    SubscriptionColor = "ROSE"
+)
+
+var AllSubscriptionColor = []SubscriptionColor{
+	SubscriptionColorRed,
+	SubscriptionColorOrange,
+	SubscriptionColorAmber,
+	SubscriptionColorLime,
+	SubscriptionColorEmerald,
+	SubscriptionColorTeal,
+	SubscriptionColorSky,
+	SubscriptionColorBlue,
+	SubscriptionColorViolet,
+	SubscriptionColorFuchsia,
+	SubscriptionColorPink,
+	SubscriptionColorRose,
+}
+
+func (e SubscriptionColor) IsValid() bool {
+	switch e {
+	case SubscriptionColorRed, SubscriptionColorOrange, SubscriptionColorAmber, SubscriptionColorLime, SubscriptionColorEmerald, SubscriptionColorTeal, SubscriptionColorSky, SubscriptionColorBlue, SubscriptionColorViolet, SubscriptionColorFuchsia, SubscriptionColorPink, SubscriptionColorRose:
+		return true
+	}
+	return false
+}
+
+func (e SubscriptionColor) String() string {
+	return string(e)
+}
+
+func (e *SubscriptionColor) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SubscriptionColor(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SubscriptionColor", str)
+	}
+	return nil
+}
+
+func (e SubscriptionColor) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SubscriptionColor) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SubscriptionColor) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SubscriptionStatus string
+
+const (
+	SubscriptionStatusActive   SubscriptionStatus = "ACTIVE"
+	SubscriptionStatusPaused   SubscriptionStatus = "PAUSED"
+	SubscriptionStatusCanceled SubscriptionStatus = "CANCELED"
+)
+
+var AllSubscriptionStatus = []SubscriptionStatus{
+	SubscriptionStatusActive,
+	SubscriptionStatusPaused,
+	SubscriptionStatusCanceled,
+}
+
+func (e SubscriptionStatus) IsValid() bool {
+	switch e {
+	case SubscriptionStatusActive, SubscriptionStatusPaused, SubscriptionStatusCanceled:
+		return true
+	}
+	return false
+}
+
+func (e SubscriptionStatus) String() string {
+	return string(e)
+}
+
+func (e *SubscriptionStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SubscriptionStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SubscriptionStatus", str)
+	}
+	return nil
+}
+
+func (e SubscriptionStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SubscriptionStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SubscriptionStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

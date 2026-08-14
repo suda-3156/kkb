@@ -133,7 +133,7 @@ jobs:
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: ./go
-          file: ./containers/service.dockerfile
+          file: ./containers/backend.dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ env.REPO }}/backend:${{ steps.vars.outputs.sha_short }}
@@ -179,6 +179,18 @@ jobs:
             --region="${{ secrets.GCP_REGION }}" \
             --container=frontend --image="${REPO}/frontend:${TAG}" \
             --container=backend  --image="${REPO}/backend:${TAG}"
+
+      # The daily tasks job runs from the same backend image (command override
+      # to /bin/job), so point it at the digest that just went live. Update
+      # only; Cloud Scheduler executes it on its own schedule.
+      - name: Update the daily tasks job
+        env:
+          TAG: ${{ steps.vars.outputs.sha_short }}
+        run: |-
+          gcloud run jobs update kkb-tasks \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --region="${{ secrets.GCP_REGION }}" \
+            --container=tasks --image="${REPO}/backend:${TAG}"
 
       - name: Result
         run: |-

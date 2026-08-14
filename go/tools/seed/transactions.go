@@ -2,25 +2,16 @@ package main
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
 
 	graph "github.com/suda-3156/kkb/go/graph/model"
 	"github.com/suda-3156/kkb/go/internal/date"
-	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/prid"
 	transaction "github.com/suda-3156/kkb/go/internal/transaction"
 )
-
-type LedgerAccount struct {
-	Name    string `json:"name"`
-	Parent  string `json:"parent,omitempty"` // Parent account name, empty if top-level
-	Type    string `json:"type"`             // "ASSET", "LIABILITY", "EQUITY", "REVENUE", or "EXPENSE"
-	IsGroup bool   `json:"is_group"`         // true if this account is a group account
-}
 
 type Transaction struct {
 	Date        string  `json:"date"`
@@ -32,60 +23,6 @@ type Entry struct {
 	Account string `json:"account"` // Account name must exist in accountMap
 	Amount  int32  `json:"amount"`
 	Kind    string `json:"kind"` // "DEBIT" or "CREDIT"
-}
-
-func insertData(ctx context.Context, lac *ledgeraccount.LedgerAccountManager, tm *transaction.TransactionManager) error {
-	accountMap, err := insertLedgerAccounts(ctx, lac)
-	if err != nil {
-		return fmt.Errorf("insertData: insert ledger accounts: %w", err)
-	}
-
-	if err := insertTransactions(ctx, tm, accountMap); err != nil {
-		return fmt.Errorf("insertData: insert transactions: %w", err)
-	}
-
-	return nil
-}
-
-func insertLedgerAccounts(ctx context.Context, lac *ledgeraccount.LedgerAccountManager) (map[string]prid.ID, error) {
-	var seeds []LedgerAccount
-
-	ledgeraccountsJSON, err := os.ReadFile(ledgerAccountsSeedPath)
-	if err != nil {
-		return nil, fmt.Errorf("read JSON: %w", err)
-	}
-
-	if err := json.Unmarshal(ledgeraccountsJSON, &seeds); err != nil {
-		return nil, fmt.Errorf("insertLedgerAccounts: parse JSON: %w", err)
-	}
-
-	accountMap := make(map[string]prid.ID, len(seeds))
-
-	logging.Info(ctx, "inserting ledger accounts", "count", len(seeds))
-
-	for i, s := range seeds {
-		kind := graph.LedgerAccountKind(s.Type)
-		if !kind.IsValid() {
-			return nil, fmt.Errorf("insertLedgerAccounts[%d] %q: unknown type %q", i, s.Name, s.Type)
-		}
-
-		var parentID *prid.ID
-		if s.Parent != "" {
-			id, ok := accountMap[s.Parent]
-			if !ok {
-				return nil, fmt.Errorf("insertLedgerAccounts[%d] %q: parent %q not found (must appear before child in JSON)", i, s.Name, s.Parent)
-			}
-			parentID = &id
-		}
-
-		a, err := create(ctx, lac, s.Name, kind, s.IsGroup, parentID)
-		if err != nil {
-			return nil, err
-		}
-		accountMap[a.Name] = a.ID
-	}
-
-	return accountMap, nil
 }
 
 func insertTransactions(

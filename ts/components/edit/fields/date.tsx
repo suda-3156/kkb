@@ -14,10 +14,12 @@ export const DateField = ({
   name,
   form,
   disabled,
+  label = "日付",
 }: {
   name: string
   form: AnyForm
   disabled?: boolean
+  label?: string
 }) => {
   const id = useId()
 
@@ -30,7 +32,7 @@ export const DateField = ({
         const selected = field.value ? stringToDate(field.value) : undefined
         return (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={id}>日付</FieldLabel>
+            <FieldLabel htmlFor={id}>{label}</FieldLabel>
             <div className="relative">
               <Input id={id} placeholder="YYYY-MM-DD" {...field} disabled={disabled} />
               <Popover>

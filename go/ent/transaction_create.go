@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/suda-3156/kkb/go/ent/journalentry"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
@@ -102,6 +103,25 @@ func (_c *TransactionCreate) SetNillableEncryptionKeyID(id *int) *TransactionCre
 // SetEncryptionKey sets the "encryption_key" edge to the LedgerEncryptionKey entity.
 func (_c *TransactionCreate) SetEncryptionKey(v *LedgerEncryptionKey) *TransactionCreate {
 	return _c.SetEncryptionKeyID(v.ID)
+}
+
+// SetSubscriptionID sets the "subscription" edge to the Subscription entity by ID.
+func (_c *TransactionCreate) SetSubscriptionID(id int) *TransactionCreate {
+	_c.mutation.SetSubscriptionID(id)
+	return _c
+}
+
+// SetNillableSubscriptionID sets the "subscription" edge to the Subscription entity by ID if the given value is not nil.
+func (_c *TransactionCreate) SetNillableSubscriptionID(id *int) *TransactionCreate {
+	if id != nil {
+		_c = _c.SetSubscriptionID(*id)
+	}
+	return _c
+}
+
+// SetSubscription sets the "subscription" edge to the Subscription entity.
+func (_c *TransactionCreate) SetSubscription(v *Subscription) *TransactionCreate {
+	return _c.SetSubscriptionID(v.ID)
 }
 
 // Mutation returns the TransactionMutation object of the builder.
@@ -258,6 +278,23 @@ func (_c *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ledger_encryption_key_transactions = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SubscriptionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.SubscriptionTable,
+			Columns: []string{transaction.SubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.subscription_transactions = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -88,3 +88,29 @@ models:
     fields:
       ledgerAccount:
         resolver: true
+
+  Subscription:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.Subscription
+    fields:
+      templateEntries:
+        # Always loaded as children of a subscription.
+        resolver: false
+      occurrences:
+        # Takes arguments and joins transactions, so it goes through the manager.
+        resolver: true
+
+  SubscriptionEntry:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.SubscriptionEntry
+    fields:
+      ledgerAccount:
+        resolver: true
+
+  SubscriptionOccurrence:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.SubscriptionOccurrence
+
+  SubscriptionCalendarEntry:
+    model:
+      - github.com/suda-3156/kkb/go/graph/model.SubscriptionCalendarEntry

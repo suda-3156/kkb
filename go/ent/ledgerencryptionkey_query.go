@@ -16,6 +16,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/predicate"
+	"github.com/suda-3156/kkb/go/ent/subscription"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
@@ -28,6 +29,7 @@ type LedgerEncryptionKeyQuery struct {
 	predicates         []predicate.LedgerEncryptionKey
 	withLedgerAccounts *LedgerAccountQuery
 	withTransactions   *TransactionQuery
+	withSubscriptions  *SubscriptionQuery
 	modifiers          []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -102,6 +104,28 @@ func (_q *LedgerEncryptionKeyQuery) QueryTransactions() *TransactionQuery {
 			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, selector),
 			sqlgraph.To(transaction.Table, transaction.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.TransactionsTable, ledgerencryptionkey.TransactionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySubscriptions chains the current query on the "subscriptions" edge.
+func (_q *LedgerEncryptionKeyQuery) QuerySubscriptions() *SubscriptionQuery {
+	query := (&SubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgerencryptionkey.Table, ledgerencryptionkey.FieldID, selector),
+			sqlgraph.To(subscription.Table, subscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgerencryptionkey.SubscriptionsTable, ledgerencryptionkey.SubscriptionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -303,6 +327,7 @@ func (_q *LedgerEncryptionKeyQuery) Clone() *LedgerEncryptionKeyQuery {
 		predicates:         append([]predicate.LedgerEncryptionKey{}, _q.predicates...),
 		withLedgerAccounts: _q.withLedgerAccounts.Clone(),
 		withTransactions:   _q.withTransactions.Clone(),
+		withSubscriptions:  _q.withSubscriptions.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -328,6 +353,17 @@ func (_q *LedgerEncryptionKeyQuery) WithTransactions(opts ...func(*TransactionQu
 		opt(query)
 	}
 	_q.withTransactions = query
+	return _q
+}
+
+// WithSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerEncryptionKeyQuery) WithSubscriptions(opts ...func(*SubscriptionQuery)) *LedgerEncryptionKeyQuery {
+	query := (&SubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSubscriptions = query
 	return _q
 }
 
@@ -409,9 +445,10 @@ func (_q *LedgerEncryptionKeyQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	var (
 		nodes       = []*LedgerEncryptionKey{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withLedgerAccounts != nil,
 			_q.withTransactions != nil,
+			_q.withSubscriptions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -448,6 +485,15 @@ func (_q *LedgerEncryptionKeyQuery) sqlAll(ctx context.Context, hooks ...queryHo
 		if err := _q.loadTransactions(ctx, query, nodes,
 			func(n *LedgerEncryptionKey) { n.Edges.Transactions = []*Transaction{} },
 			func(n *LedgerEncryptionKey, e *Transaction) { n.Edges.Transactions = append(n.Edges.Transactions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSubscriptions; query != nil {
+		if err := _q.loadSubscriptions(ctx, query, nodes,
+			func(n *LedgerEncryptionKey) { n.Edges.Subscriptions = []*Subscription{} },
+			func(n *LedgerEncryptionKey, e *Subscription) {
+				n.Edges.Subscriptions = append(n.Edges.Subscriptions, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -511,6 +557,37 @@ func (_q *LedgerEncryptionKeyQuery) loadTransactions(ctx context.Context, query 
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "ledger_encryption_key_transactions" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *LedgerEncryptionKeyQuery) loadSubscriptions(ctx context.Context, query *SubscriptionQuery, nodes []*LedgerEncryptionKey, init func(*LedgerEncryptionKey), assign func(*LedgerEncryptionKey, *Subscription)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*LedgerEncryptionKey)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ledgerencryptionkey.SubscriptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ledger_encryption_key_subscriptions
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "ledger_encryption_key_subscriptions" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ledger_encryption_key_subscriptions" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

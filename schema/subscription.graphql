@@ -1,0 +1,147 @@
+# Subscription Schema Definitions
+#
+# "Subscription" here is a recurring fixed-amount payment definition, not the
+# GraphQL subscription root type. common.graphql declares an explicit
+# `schema { query, mutation }` block so this name stays an ordinary type.
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELED
+}
+
+enum OccurrenceOutcome {
+  MATERIALIZED
+  SKIPPED
+}
+
+# The display palette. Named tokens rather than hex codes so the frontend can
+# resolve each one per theme (light/dark); the names follow Tailwind's palette.
+enum SubscriptionColor {
+  RED
+  ORANGE
+  AMBER
+  LIME
+  EMERALD
+  TEAL
+  SKY
+  BLUE
+  VIOLET
+  FUCHSIA
+  PINK
+  ROSE
+}
+
+# A template journal entry: the same shape as JournalEntry but without a date.
+type SubscriptionEntry {
+  ledgerAccount: LedgerAccount!
+  amount: Int!
+  kind: JournalEntryKind!
+}
+
+type Subscription implements Node {
+  id: ID!
+  name: String!
+  # The day the user signed up for the service (not this record's creation day).
+  registeredOn: Date!
+  # Base date deciding the day-of-month of occurrences (sticky month-end rounding).
+  anchorOn: Date!
+  # Next date to materialize. The daily job advances this monotonically.
+  nextOccurrenceOn: Date!
+  # Last day of the already-paid period (inclusive). Meaningful only after the
+  # first materialization; the UI hides it until then.
+  coveredThroughOn: Date!
+  intervalMonths: Int!
+  status: SubscriptionStatus!
+  # Null means automatic: the client derives a stable palette color from the ID.
+  color: SubscriptionColor
+  templateEntries: [SubscriptionEntry!]!
+  # Payment history, materialization-log first: an occurrence whose transaction
+  # was deleted afterwards still appears, with transaction: null.
+  occurrences(startDate: Date, endDate: Date): [SubscriptionOccurrence!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SubscriptionOccurrence {
+  occurrenceOn: Date!
+  outcome: OccurrenceOutcome!
+  # The materialized transaction. Null when it was deleted afterwards, or when
+  # the occurrence was skipped.
+  transaction: Transaction
+  createdAt: DateTime!
+}
+
+# One cell of the subscription calendar (an idealized month, days 1 to 31).
+type SubscriptionCalendarEntry {
+  occurrenceOn: Date!
+  subscription: Subscription!
+  # Null for occurrences the job has not processed yet (future ones).
+  outcome: OccurrenceOutcome
+  transaction: Transaction
+}
+
+extend type Query {
+  subscription(id: ID!): Subscription
+
+  # A plain array: at most ~100 subscriptions, no pagination needed.
+  # By default a canceled subscription is hidden once today > coveredThroughOn
+  # (the last covered day is still usable).
+  subscriptions(includeCanceled: Boolean = false): [Subscription!]!
+
+  # Computed on the server so the sticky month-end rounding lives in one place.
+  subscriptionCalendar(year: Int!, month: Int!): [SubscriptionCalendarEntry!]!
+}
+
+extend type Mutation {
+  # When nextOccurrenceOn lands on today, the first occurrence is materialized
+  # immediately instead of waiting for tomorrow's job run.
+  createSubscription(input: CreateSubscriptionInput!): Subscription!
+
+  # This mutation will delete and recreate all template entries based on input
+  # when input.entries is given.
+  updateSubscription(input: UpdateSubscriptionInput!): Subscription!
+
+  # Pause is a plain toggle: occurrences are skipped until an explicit resume.
+  pauseSubscription(id: ID!): Subscription!
+  # Resume and uncancel share one rule:
+  # nextOccurrenceOn = max(today, coveredThroughOn + 1 day),
+  # and anchorOn moves to it only when it actually changed.
+  resumeSubscription(id: ID!): Subscription!
+  # Cancel freezes nextOccurrenceOn; the job no longer touches this subscription.
+  cancelSubscription(id: ID!): Subscription!
+  uncancelSubscription(id: ID!): Subscription!
+
+  # There is deliberately no delete mutation (same reasoning as LedgerAccount:
+  # referential integrity; canceled records keep the payment history readable).
+}
+
+input SubscriptionEntryInput {
+  ledgerAccountId: ID!
+  amount: Int!
+  kind: JournalEntryKind!
+}
+
+input CreateSubscriptionInput {
+  name: String!
+  registeredOn: Date!
+  intervalMonths: Int!
+  color: SubscriptionColor
+  entries: [SubscriptionEntryInput!]!
+}
+
+input UpdateSubscriptionInput {
+  id: ID!
+  name: String
+  # Editable, but the schedule is recalculated only while no occurrence has
+  # been recorded yet; afterwards only the recorded fact changes.
+  registeredOn: Date
+  # A new interval takes effect from the next occurrence on; the current
+  # nextOccurrenceOn does not move.
+  intervalMonths: Int
+  color: SubscriptionColor
+  # Back to automatic coloring. Cannot be combined with color.
+  unsetColor: Boolean! = false
+  entries: [SubscriptionEntryInput!]
+  updatedAt: DateTime! # For optimistic locking
+}

@@ -9,6 +9,9 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
+	"github.com/suda-3156/kkb/go/ent/subscription"
+	"github.com/suda-3156/kkb/go/ent/subscriptionentry"
+	"github.com/suda-3156/kkb/go/ent/subscriptionoccurrence"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 )
 
@@ -95,6 +98,170 @@ func init() {
 	ledgerencryptionkey.DefaultUpdatedAt = ledgerencryptionkeyDescUpdatedAt.Default.(func() time.Time)
 	// ledgerencryptionkey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ledgerencryptionkey.UpdateDefaultUpdatedAt = ledgerencryptionkeyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	subscriptionFields := schema.Subscription{}.Fields()
+	_ = subscriptionFields
+	// subscriptionDescPublicID is the schema descriptor for public_id field.
+	subscriptionDescPublicID := subscriptionFields[0].Descriptor()
+	// subscription.PublicIDValidator is a validator for the "public_id" field. It is called by the builders before save.
+	subscription.PublicIDValidator = func() func(string) error {
+		validators := subscriptionDescPublicID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(public_id string) error {
+			for _, fn := range fns {
+				if err := fn(public_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescName is the schema descriptor for name field.
+	subscriptionDescName := subscriptionFields[1].Descriptor()
+	// subscription.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	subscription.NameValidator = func() func([]byte) error {
+		validators := subscriptionDescName.Validators
+		fns := [...]func([]byte) error{
+			validators[0].(func([]byte) error),
+			validators[1].(func([]byte) error),
+		}
+		return func(name []byte) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescRegisteredOn is the schema descriptor for registered_on field.
+	subscriptionDescRegisteredOn := subscriptionFields[2].Descriptor()
+	// subscription.RegisteredOnValidator is a validator for the "registered_on" field. It is called by the builders before save.
+	subscription.RegisteredOnValidator = func() func(string) error {
+		validators := subscriptionDescRegisteredOn.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(registered_on string) error {
+			for _, fn := range fns {
+				if err := fn(registered_on); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescAnchorOn is the schema descriptor for anchor_on field.
+	subscriptionDescAnchorOn := subscriptionFields[3].Descriptor()
+	// subscription.AnchorOnValidator is a validator for the "anchor_on" field. It is called by the builders before save.
+	subscription.AnchorOnValidator = func() func(string) error {
+		validators := subscriptionDescAnchorOn.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(anchor_on string) error {
+			for _, fn := range fns {
+				if err := fn(anchor_on); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescNextOccurrenceOn is the schema descriptor for next_occurrence_on field.
+	subscriptionDescNextOccurrenceOn := subscriptionFields[4].Descriptor()
+	// subscription.NextOccurrenceOnValidator is a validator for the "next_occurrence_on" field. It is called by the builders before save.
+	subscription.NextOccurrenceOnValidator = func() func(string) error {
+		validators := subscriptionDescNextOccurrenceOn.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(next_occurrence_on string) error {
+			for _, fn := range fns {
+				if err := fn(next_occurrence_on); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescCoveredThroughOn is the schema descriptor for covered_through_on field.
+	subscriptionDescCoveredThroughOn := subscriptionFields[5].Descriptor()
+	// subscription.CoveredThroughOnValidator is a validator for the "covered_through_on" field. It is called by the builders before save.
+	subscription.CoveredThroughOnValidator = func() func(string) error {
+		validators := subscriptionDescCoveredThroughOn.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(covered_through_on string) error {
+			for _, fn := range fns {
+				if err := fn(covered_through_on); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescIntervalMonths is the schema descriptor for interval_months field.
+	subscriptionDescIntervalMonths := subscriptionFields[6].Descriptor()
+	// subscription.IntervalMonthsValidator is a validator for the "interval_months" field. It is called by the builders before save.
+	subscription.IntervalMonthsValidator = subscriptionDescIntervalMonths.Validators[0].(func(int) error)
+	// subscriptionDescColor is the schema descriptor for color field.
+	subscriptionDescColor := subscriptionFields[8].Descriptor()
+	// subscription.ColorValidator is a validator for the "color" field. It is called by the builders before save.
+	subscription.ColorValidator = subscriptionDescColor.Validators[0].(func(string) error)
+	// subscriptionDescCreatedAt is the schema descriptor for created_at field.
+	subscriptionDescCreatedAt := subscriptionFields[9].Descriptor()
+	// subscription.DefaultCreatedAt holds the default value on creation for the created_at field.
+	subscription.DefaultCreatedAt = subscriptionDescCreatedAt.Default.(func() time.Time)
+	// subscriptionDescUpdatedAt is the schema descriptor for updated_at field.
+	subscriptionDescUpdatedAt := subscriptionFields[10].Descriptor()
+	// subscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	subscription.DefaultUpdatedAt = subscriptionDescUpdatedAt.Default.(func() time.Time)
+	// subscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	subscription.UpdateDefaultUpdatedAt = subscriptionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	subscriptionentryFields := schema.SubscriptionEntry{}.Fields()
+	_ = subscriptionentryFields
+	// subscriptionentryDescAmount is the schema descriptor for amount field.
+	subscriptionentryDescAmount := subscriptionentryFields[0].Descriptor()
+	// subscriptionentry.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
+	subscriptionentry.AmountValidator = subscriptionentryDescAmount.Validators[0].(func(int32) error)
+	subscriptionoccurrenceFields := schema.SubscriptionOccurrence{}.Fields()
+	_ = subscriptionoccurrenceFields
+	// subscriptionoccurrenceDescOccurrenceOn is the schema descriptor for occurrence_on field.
+	subscriptionoccurrenceDescOccurrenceOn := subscriptionoccurrenceFields[0].Descriptor()
+	// subscriptionoccurrence.OccurrenceOnValidator is a validator for the "occurrence_on" field. It is called by the builders before save.
+	subscriptionoccurrence.OccurrenceOnValidator = func() func(string) error {
+		validators := subscriptionoccurrenceDescOccurrenceOn.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(occurrence_on string) error {
+			for _, fn := range fns {
+				if err := fn(occurrence_on); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionoccurrenceDescCreatedAt is the schema descriptor for created_at field.
+	subscriptionoccurrenceDescCreatedAt := subscriptionoccurrenceFields[2].Descriptor()
+	// subscriptionoccurrence.DefaultCreatedAt holds the default value on creation for the created_at field.
+	subscriptionoccurrence.DefaultCreatedAt = subscriptionoccurrenceDescCreatedAt.Default.(func() time.Time)
 	transactionFields := schema.Transaction{}.Fields()
 	_ = transactionFields
 	// transactionDescPublicID is the schema descriptor for public_id field.

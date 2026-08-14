@@ -5,6 +5,7 @@ import (
 	"github.com/suda-3156/kkb/go/internal/encryption"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	ledgeraccount "github.com/suda-3156/kkb/go/internal/ledger_account"
+	"github.com/suda-3156/kkb/go/internal/subscription"
 	"github.com/suda-3156/kkb/go/internal/transaction"
 )
 
@@ -17,13 +18,16 @@ type Resolver struct {
 	agg *aggregation.AggregationManager
 	lac *ledgeraccount.LedgerAccountManager
 	tnx *transaction.TransactionManager
+	sub *subscription.SubscriptionManager
 }
 
 func New(db *database.DB, em *encryption.EncryptionManager) *Resolver {
+	tnx := transaction.New(db, em)
 	return &Resolver{
 		agg: aggregation.New(db, em),
 		lac: ledgeraccount.New(db, em),
-		tnx: transaction.New(db, em),
+		tnx: tnx,
+		sub: subscription.New(db, em, tnx),
 	}
 }
 

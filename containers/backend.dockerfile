@@ -1,4 +1,7 @@
-# Docker image for API Service
+# Docker image for the Go backend: the API service (/bin/server, default CMD)
+# and the daily tasks job (/bin/job, used by the kkb-tasks Cloud Run Job via a
+# command override). One image keeps the job's shared logic (subscription
+# materialization) at the same version as the deployed API.
 
 # Step 1: Modules caching
 FROM golang:1.26-alpine@sha256:0178a641fbb4858c5f1b48e34bdaabe0350a330a1b1149aabd498d0699ff5fb2 AS modules
@@ -19,12 +22,14 @@ COPY ./ ./
 # Step 2: Server building
 FROM modules AS builder
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-	go build -o /bin/server ./cmd/api/main.go
+	go build -o /bin/server ./cmd/api/main.go && \
+	go build -o /bin/job ./cmd/job/main.go
 
 # Step 3: Final image
 FROM gcr.io/distroless/static-debian12:latest-amd64@sha256:f0d7eda44aeaf164db7ac8e6672c1f8b0a79bd52c1990099c4250a3ef9f3d543
 
 COPY --from=builder /bin/server /bin/server
+COPY --from=builder /bin/job /bin/job
 
 EXPOSE 8080
 CMD ["/bin/server"]

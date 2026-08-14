@@ -6,9 +6,10 @@ import (
 
 // Account lifecycle
 var (
-	ErrAccountNotFound        = errors.New("ledger account not found")
-	ErrAccountAlreadyArchived = errors.New("ledger account is already archived")
-	ErrAccountModified        = errors.New("ledger account has been modified by another process")
+	ErrAccountNotFound           = errors.New("ledger account not found")
+	ErrAccountAlreadyArchived    = errors.New("ledger account is already archived")
+	ErrAccountModified           = errors.New("ledger account has been modified by another process")
+	ErrAccountUsedBySubscription = errors.New("cannot archive an account referenced by an active or paused subscription")
 )
 
 // Parent constraints

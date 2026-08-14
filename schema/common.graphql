@@ -1,3 +1,11 @@
+# Explicit root-type declaration. Without it, a type named "Subscription"
+# (subscription.graphql's domain type) would be picked up as the GraphQL
+# subscription root by naming convention.
+schema {
+  query: Query
+  mutation: Mutation
+}
+
 scalar DateTime
 scalar Date # 2006-01-02 format
 interface Node {

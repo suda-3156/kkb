@@ -14,6 +14,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/ledgeraccount"
 	"github.com/suda-3156/kkb/go/ent/ledgerencryptionkey"
 	"github.com/suda-3156/kkb/go/ent/schema"
+	"github.com/suda-3156/kkb/go/ent/subscriptionentry"
 	"github.com/suda-3156/kkb/go/internal/prid"
 )
 
@@ -137,6 +138,21 @@ func (_c *LedgerAccountCreate) AddJournalEntries(v ...*JournalEntry) *LedgerAcco
 		ids[i] = v[i].ID
 	}
 	return _c.AddJournalEntryIDs(ids...)
+}
+
+// AddSubscriptionEntryIDs adds the "subscription_entries" edge to the SubscriptionEntry entity by IDs.
+func (_c *LedgerAccountCreate) AddSubscriptionEntryIDs(ids ...int) *LedgerAccountCreate {
+	_c.mutation.AddSubscriptionEntryIDs(ids...)
+	return _c
+}
+
+// AddSubscriptionEntries adds the "subscription_entries" edges to the SubscriptionEntry entity.
+func (_c *LedgerAccountCreate) AddSubscriptionEntries(v ...*SubscriptionEntry) *LedgerAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSubscriptionEntryIDs(ids...)
 }
 
 // SetEncryptionKeyID sets the "encryption_key" edge to the LedgerEncryptionKey entity by ID.
@@ -334,6 +350,22 @@ func (_c *LedgerAccountCreate) createSpec() (*LedgerAccount, *sqlgraph.CreateSpe
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(journalentry.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SubscriptionEntriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgeraccount.SubscriptionEntriesTable,
+			Columns: []string{ledgeraccount.SubscriptionEntriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionentry.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
