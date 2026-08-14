@@ -50,6 +50,21 @@ tasks:
       - go build ./...
     silent: true
 
+  build:image:
+    desc: "Build all Go app images \t usage: `task <prefix>:build:images"
+    dir: .
+    cmds:
+      - |
+        docker buildx build \
+          --platform linux/amd64 \
+          --file ../containers/backend.dockerfile \
+          .
+        docker buildx build \
+          --platform linux/amd64 \
+          --file ../containers/migrate.dockerfile \
+          ../
+    silent: true
+
   generate:
     desc: "Regenerate ent/gqlgen output and fail if it is out of date \t usage: `task <prefix>:generate`"
     dir: .

@@ -36,6 +36,17 @@ tasks:
       - bun run build
     silent: true
 
+  build:image:
+    desc: "Build the Next.js app image \t usage: `task <prefix>:build:image`"
+    dir: .
+    cmds:
+      - |
+        docker buildx build \
+          --platform linux/amd64 \
+          --file ../containers/next.dockerfile \
+          .
+    silent: true
+
   generate:
     desc: "Regenerate the GraphQL client and fail if it is out of date \t usage: `task <prefix>:generate`"
     dir: .

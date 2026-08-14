@@ -24,6 +24,14 @@ ENV NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL}
 
 # Next.js telemetry off during build.
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Bun v1.13.14 includes a bug which causes a crash while building because of an invalid memory access.
+# This bug is already reported and fixed in a canary version.
+# Therefore, we use the canary version to build the app until new stable version released.
+# https://github.com/oven-sh/bun/issues/36866
+# https://github.com/oven-sh/bun/issues/37031
+RUN bun upgrade --canary
+
 RUN bun run build
 
 # --- Production runner ---
@@ -37,7 +45,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs \
-	&& adduser --system --uid 1001 nextjs
+  && adduser --system --uid 1001 nextjs
 
 # No ./public dir in this project; add a COPY here if one is introduced.
 
