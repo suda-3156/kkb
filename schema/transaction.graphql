@@ -29,7 +29,6 @@ type TransactionConnection {
   edges: [TransactionEdge]
   nodes: [Transaction]
   pageInfo: TransactionPageInfo!
-  totalCount: Int!
 }
 
 type TransactionPageInfo {
@@ -48,6 +47,8 @@ extend type Query {
   transaction(id: ID!): Transaction
 
   transactions(
+    # At most one of first and last. Omitting both reads the first 20.
+    # Either way the page size must be between 1 and 100.
     first: Int
     last: Int
     startDate: Date

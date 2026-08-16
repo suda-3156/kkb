@@ -125,10 +125,9 @@ type SubscriptionEntryInput struct {
 }
 
 type TransactionConnection struct {
-	Edges      []*TransactionEdge   `json:"edges,omitempty"`
-	Nodes      []*Transaction       `json:"nodes,omitempty"`
-	PageInfo   *TransactionPageInfo `json:"pageInfo"`
-	TotalCount int32                `json:"totalCount"`
+	Edges    []*TransactionEdge   `json:"edges,omitempty"`
+	Nodes    []*Transaction       `json:"nodes,omitempty"`
+	PageInfo *TransactionPageInfo `json:"pageInfo"`
 }
 
 type TransactionEdge struct {

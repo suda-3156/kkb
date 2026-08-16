@@ -62,9 +62,10 @@ func TestDecodeTransactionCursorRejectsWrongOrder(t *testing.T) {
 	}
 }
 
-func TestValidatePagination(t *testing.T) {
+func TestResolvePageRejectsInvalidPagination(t *testing.T) {
 	one := int32(1)
 	zero := int32(0)
+	tooLarge := int32(maxPageSize + 1)
 
 	tests := []struct {
 		name   string
@@ -72,21 +73,68 @@ func TestValidatePagination(t *testing.T) {
 	}{
 		{name: "nil filter"},
 		{name: "missing order", filter: &Filter{First: &one}},
-		{name: "missing direction", filter: &Filter{Order: graph.TransactionOrderCreatedAtDesc}},
 		{name: "both directions", filter: &Filter{First: &one, Last: &one, Order: graph.TransactionOrderCreatedAtDesc}},
 		{name: "zero first", filter: &Filter{First: &zero, Order: graph.TransactionOrderCreatedAtDesc}},
 		{name: "zero last", filter: &Filter{Last: &zero, Order: graph.TransactionOrderCreatedAtDesc}},
+		{name: "first over max", filter: &Filter{First: &tooLarge, Order: graph.TransactionOrderCreatedAtDesc}},
+		{name: "last over max", filter: &Filter{Last: &tooLarge, Order: graph.TransactionOrderCreatedAtDesc}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validatePagination(tt.filter); !errors.Is(err, ErrInvalidPagination) {
-				t.Errorf("validatePagination() error = %v, want %v", err, ErrInvalidPagination)
+			if _, err := resolvePage(tt.filter); !errors.Is(err, ErrInvalidPagination) {
+				t.Errorf("resolvePage() error = %v, want %v", err, ErrInvalidPagination)
 			}
 		})
 	}
+}
 
-	if err := validatePagination(&Filter{First: &one, Order: graph.TransactionOrderCreatedAtDesc}); err != nil {
-		t.Errorf("validatePagination() error = %v for valid filter", err)
+func TestResolvePage(t *testing.T) {
+	one := int32(1)
+	largest := int32(maxPageSize)
+
+	tests := []struct {
+		name   string
+		filter *Filter
+		want   page
+	}{
+		{
+			name:   "first",
+			filter: &Filter{First: &one, Order: graph.TransactionOrderCreatedAtDesc},
+			want:   page{limit: 1, reverse: false},
+		},
+		{
+			name:   "last scans from the other end",
+			filter: &Filter{Last: &one, Order: graph.TransactionOrderCreatedAtDesc},
+			want:   page{limit: 1, reverse: true},
+		},
+		{
+			name:   "neither falls back to the default page size",
+			filter: &Filter{Order: graph.TransactionOrderCreatedAtDesc},
+			want:   page{limit: defaultPageSize, reverse: false},
+		},
+		{
+			name:   "max is allowed",
+			filter: &Filter{First: &largest, Order: graph.TransactionOrderCreatedAtDesc},
+			want:   page{limit: maxPageSize, reverse: false},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resolvePage(tt.filter)
+			if err != nil {
+				t.Fatalf("resolvePage() error = %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("resolvePage() = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOrderOptionsRejectsUnknownOrder(t *testing.T) {
+	if _, err := orderOptions(graph.TransactionOrder("BOGUS"), false); !errors.Is(err, ErrInvalidPagination) {
+		t.Errorf("orderOptions() error = %v, want %v", err, ErrInvalidPagination)
 	}
 }

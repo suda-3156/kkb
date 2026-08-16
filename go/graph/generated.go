@@ -209,10 +209,9 @@ type ComplexityRoot struct {
 	}
 
 	TransactionConnection struct {
-		Edges      func(childComplexity int) int
-		Nodes      func(childComplexity int) int
-		PageInfo   func(childComplexity int) int
-		TotalCount func(childComplexity int) int
+		Edges    func(childComplexity int) int
+		Nodes    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
 	}
 
 	TransactionEdge struct {
@@ -1089,12 +1088,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.TransactionConnection.PageInfo(childComplexity), true
-	case "TransactionConnection.totalCount":
-		if e.ComplexityRoot.TransactionConnection.TotalCount == nil {
-			break
-		}
-
-		return e.ComplexityRoot.TransactionConnection.TotalCount(childComplexity), true
 
 	case "TransactionEdge.cursor":
 		if e.ComplexityRoot.TransactionEdge.Cursor == nil {
@@ -1616,7 +1609,6 @@ type TransactionConnection {
   edges: [TransactionEdge]
   nodes: [Transaction]
   pageInfo: TransactionPageInfo!
-  totalCount: Int!
 }
 
 type TransactionPageInfo {
@@ -1635,6 +1627,8 @@ extend type Query {
   transaction(id: ID!): Transaction
 
   transactions(
+    # At most one of first and last. Omitting both reads the first 20.
+    # Either way the page size must be between 1 and 100.
     first: Int
     last: Int
     startDate: Date
@@ -1963,8 +1957,6 @@ func (ec *executionContext) childFields_TransactionConnection(ctx context.Contex
 		return ec.fieldContext_TransactionConnection_nodes(ctx, field)
 	case "pageInfo":
 		return ec.fieldContext_TransactionConnection_pageInfo(ctx, field)
-	case "totalCount":
-		return ec.fieldContext_TransactionConnection_totalCount(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type TransactionConnection", field.Name)
 }
@@ -5956,29 +5948,6 @@ func (ec *executionContext) fieldContext_TransactionConnection_pageInfo(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _TransactionConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.TransactionConnection) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_TransactionConnection_totalCount(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.TotalCount, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
-			return ec.marshalNInt2int32(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_TransactionConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("TransactionConnection", field, false, false, errors.New("field of type Int does not have child fields"))
-}
-
 func (ec *executionContext) _TransactionEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.TransactionEdge) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -9495,11 +9464,6 @@ func (ec *executionContext) _TransactionConnection(ctx context.Context, sel ast.
 			}
 		case "pageInfo":
 			out.Values[i] = ec._TransactionConnection_pageInfo(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "totalCount":
-			out.Values[i] = ec._TransactionConnection_totalCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -125,6 +125,44 @@ func TestTransactionPaginationOrders(t *testing.T) {
 			if !backward.PageInfo.HasNextPage {
 				t.Error("backward page hasNextPage = false, want true")
 			}
+
+			// An empty page still has to report the side it came from, or the
+			// client loses the way back.
+			pastEnd, err := testTM.List(ctx, &transaction.Filter{
+				First:     &first,
+				After:     page2.PageInfo.EndCursor,
+				Order:     tt.order,
+				StartDate: &start,
+				EndDate:   &end,
+			})
+			if err != nil {
+				t.Fatalf("list past the end: %v", err)
+			}
+			assertTransactionIDs(t, pastEnd.Nodes, nil)
+			if !pastEnd.PageInfo.HasPreviousPage {
+				t.Error("page past the end hasPreviousPage = false, want true")
+			}
+			if pastEnd.PageInfo.HasNextPage {
+				t.Error("page past the end hasNextPage = true, want false")
+			}
+
+			beforeStart, err := testTM.List(ctx, &transaction.Filter{
+				Last:      &last,
+				Before:    backward.PageInfo.StartCursor,
+				Order:     tt.order,
+				StartDate: &start,
+				EndDate:   &end,
+			})
+			if err != nil {
+				t.Fatalf("list before the start: %v", err)
+			}
+			assertTransactionIDs(t, beforeStart.Nodes, nil)
+			if beforeStart.PageInfo.HasPreviousPage {
+				t.Error("page before the start hasPreviousPage = true, want false")
+			}
+			if !beforeStart.PageInfo.HasNextPage {
+				t.Error("page before the start hasNextPage = false, want true")
+			}
 		})
 	}
 }

@@ -102,12 +102,10 @@ func (m *TransactionManager) convertToGraphConnection(
 		})
 	}
 
-	result.TotalCount = int32(len(result.Nodes)) //nolint:gosec // TODO: Consider integer overflow
-
 	result.PageInfo = &graph.TransactionPageInfo{}
-	if result.TotalCount > 0 {
+	if len(result.Edges) > 0 {
 		result.PageInfo.StartCursor = &result.Edges[0].Cursor
-		result.PageInfo.EndCursor = &result.Edges[result.TotalCount-1].Cursor
+		result.PageInfo.EndCursor = &result.Edges[len(result.Edges)-1].Cursor
 	}
 
 	result.PageInfo.HasPreviousPage = hasPrevPage
