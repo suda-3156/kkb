@@ -1,4 +1,7 @@
-package model
+// Package cursor defines the opaque pagination cursor exposed as the GraphQL
+// Cursor scalar. The payload it carries is decided by whoever produces it: this
+// package only fixes the wire representation.
+package cursor
 
 import (
 	"fmt"

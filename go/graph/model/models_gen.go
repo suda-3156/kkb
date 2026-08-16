@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/suda-3156/kkb/go/internal/cursor"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
 )
@@ -131,15 +132,15 @@ type TransactionConnection struct {
 }
 
 type TransactionEdge struct {
-	Cursor Cursor       `json:"cursor"`
-	Node   *Transaction `json:"node"`
+	Cursor cursor.Cursor `json:"cursor"`
+	Node   *Transaction  `json:"node"`
 }
 
 type TransactionPageInfo struct {
-	StartCursor     *Cursor `json:"startCursor,omitempty"`
-	EndCursor       *Cursor `json:"endCursor,omitempty"`
-	HasPreviousPage bool    `json:"hasPreviousPage"`
-	HasNextPage     bool    `json:"hasNextPage"`
+	StartCursor     *cursor.Cursor `json:"startCursor,omitempty"`
+	EndCursor       *cursor.Cursor `json:"endCursor,omitempty"`
+	HasPreviousPage bool           `json:"hasPreviousPage"`
+	HasNextPage     bool           `json:"hasNextPage"`
 }
 
 type TrialBalance struct {

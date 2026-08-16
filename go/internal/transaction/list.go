@@ -8,6 +8,7 @@ import (
 	"github.com/suda-3156/kkb/go/ent/predicate"
 	"github.com/suda-3156/kkb/go/ent/transaction"
 	graph "github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/cursor"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/logging"
 	"github.com/suda-3156/kkb/go/internal/prid"
@@ -19,9 +20,9 @@ type Filter struct {
 	IDs []int
 
 	First  *int32
-	After  *graph.Cursor
+	After  *cursor.Cursor
 	Last   *int32
-	Before *graph.Cursor
+	Before *cursor.Cursor
 	Order  graph.TransactionOrder
 
 	StartDate *date.Date
@@ -100,19 +101,19 @@ func applyScope(filter *Filter, query *ent.TransactionQuery) (*ent.TransactionQu
 	query = applyBaseFilter(filter, query)
 
 	if filter.After != nil {
-		cursor, err := decodeTransactionCursor(*filter.After, filter.Order)
+		decoded, err := decodeTransactionCursor(*filter.After, filter.Order)
 		if err != nil {
 			return nil, fmt.Errorf("after: %w", err)
 		}
-		query = query.Where(afterPredicate(&cursor))
+		query = query.Where(afterPredicate(&decoded))
 	}
 
 	if filter.Before != nil {
-		cursor, err := decodeTransactionCursor(*filter.Before, filter.Order)
+		decoded, err := decodeTransactionCursor(*filter.Before, filter.Order)
 		if err != nil {
 			return nil, fmt.Errorf("before: %w", err)
 		}
-		query = query.Where(beforePredicate(&cursor))
+		query = query.Where(beforePredicate(&decoded))
 	}
 
 	return query, nil
@@ -165,41 +166,41 @@ func orderOptions(order graph.TransactionOrder, reverse bool) []transaction.Orde
 	}
 }
 
-func afterPredicate(cursor *transactionCursor) predicate.Transaction {
+func afterPredicate(c *transactionCursor) predicate.Transaction {
 	createdAfter := transaction.Or(
-		transaction.CreatedAtLT(cursor.CreatedAt),
+		transaction.CreatedAtLT(c.CreatedAt),
 		transaction.And(
-			transaction.CreatedAtEQ(cursor.CreatedAt),
-			transaction.PublicIDGT(cursor.PublicID),
+			transaction.CreatedAtEQ(c.CreatedAt),
+			transaction.PublicIDGT(c.PublicID),
 		),
 	)
-	if cursor.Order == graph.TransactionOrderCreatedAtDesc {
+	if c.Order == graph.TransactionOrderCreatedAtDesc {
 		return createdAfter
 	}
 	return transaction.Or(
-		transaction.DateLT(cursor.Date),
+		transaction.DateLT(c.Date),
 		transaction.And(
-			transaction.DateEQ(cursor.Date),
+			transaction.DateEQ(c.Date),
 			createdAfter,
 		),
 	)
 }
 
-func beforePredicate(cursor *transactionCursor) predicate.Transaction {
+func beforePredicate(c *transactionCursor) predicate.Transaction {
 	createdBefore := transaction.Or(
-		transaction.CreatedAtGT(cursor.CreatedAt),
+		transaction.CreatedAtGT(c.CreatedAt),
 		transaction.And(
-			transaction.CreatedAtEQ(cursor.CreatedAt),
-			transaction.PublicIDLT(cursor.PublicID),
+			transaction.CreatedAtEQ(c.CreatedAt),
+			transaction.PublicIDLT(c.PublicID),
 		),
 	)
-	if cursor.Order == graph.TransactionOrderCreatedAtDesc {
+	if c.Order == graph.TransactionOrderCreatedAtDesc {
 		return createdBefore
 	}
 	return transaction.Or(
-		transaction.DateGT(cursor.Date),
+		transaction.DateGT(c.Date),
 		transaction.And(
-			transaction.DateEQ(cursor.Date),
+			transaction.DateEQ(c.Date),
 			createdBefore,
 		),
 	)

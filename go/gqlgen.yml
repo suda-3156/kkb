@@ -44,7 +44,7 @@ models:
 
   Cursor:
     model:
-      - github.com/suda-3156/kkb/go/graph/model.Cursor
+      - github.com/suda-3156/kkb/go/internal/cursor.Cursor
 
   AccountBalance:
     fields:

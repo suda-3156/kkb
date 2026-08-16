@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/cursor"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -153,7 +154,7 @@ type ComplexityRoot struct {
 		SubscriptionCalendar    func(childComplexity int, year int32, month int32) int
 		Subscriptions           func(childComplexity int, includeCanceled *bool) int
 		Transaction             func(childComplexity int, id prid.ID) int
-		Transactions            func(childComplexity int, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *model.Cursor, before *model.Cursor) int
+		Transactions            func(childComplexity int, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *cursor.Cursor, before *cursor.Cursor) int
 		TrialBalance            func(childComplexity int, asOf date.Date) int
 	}
 
@@ -280,7 +281,7 @@ type QueryResolver interface {
 	Subscriptions(ctx context.Context, includeCanceled *bool) ([]*model.Subscription, error)
 	SubscriptionCalendar(ctx context.Context, year int32, month int32) ([]*model.SubscriptionCalendarEntry, error)
 	Transaction(ctx context.Context, id prid.ID) (*model.Transaction, error)
-	Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *model.Cursor, before *model.Cursor) (*model.TransactionConnection, error)
+	Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *cursor.Cursor, before *cursor.Cursor) (*model.TransactionConnection, error)
 }
 type SubscriptionResolver interface {
 	Occurrences(ctx context.Context, obj *model.Subscription, startDate *date.Date, endDate *date.Date) ([]*model.SubscriptionOccurrence, error)
@@ -854,7 +855,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.Transactions(childComplexity, args["first"].(*int32), args["last"].(*int32), args["startDate"].(*date.Date), args["endDate"].(*date.Date), args["orderBy"].(model.TransactionOrder), args["after"].(*model.Cursor), args["before"].(*model.Cursor)), true
+		return e.ComplexityRoot.Query.Transactions(childComplexity, args["first"].(*int32), args["last"].(*int32), args["startDate"].(*date.Date), args["endDate"].(*date.Date), args["orderBy"].(model.TransactionOrder), args["after"].(*cursor.Cursor), args["before"].(*cursor.Cursor)), true
 	case "Query.trialBalance":
 		if e.ComplexityRoot.Query.TrialBalance == nil {
 			break
@@ -2588,16 +2589,16 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "after",
-		func(ctx context.Context, v any) (*model.Cursor, error) {
-			return ec.unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, v)
+		func(ctx context.Context, v any) (*cursor.Cursor, error) {
+			return ec.unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
 	args["after"] = arg5
 	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "before",
-		func(ctx context.Context, v any) (*model.Cursor, error) {
-			return ec.unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, v)
+		func(ctx context.Context, v any) (*cursor.Cursor, error) {
+			return ec.unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4929,7 +4930,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["last"].(*int32), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date), fc.Args["orderBy"].(model.TransactionOrder), fc.Args["after"].(*model.Cursor), fc.Args["before"].(*model.Cursor))
+			return ec.Resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["last"].(*int32), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date), fc.Args["orderBy"].(model.TransactionOrder), fc.Args["after"].(*cursor.Cursor), fc.Args["before"].(*cursor.Cursor))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TransactionConnection) graphql.Marshaler {
@@ -5990,8 +5991,8 @@ func (ec *executionContext) _TransactionEdge_cursor(ctx context.Context, field g
 			return obj.Cursor, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v model.Cursor) graphql.Marshaler {
-			return ec.marshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v cursor.Cursor) graphql.Marshaler {
+			return ec.marshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6045,8 +6046,8 @@ func (ec *executionContext) _TransactionPageInfo_startCursor(ctx context.Context
 			return obj.StartCursor, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Cursor) graphql.Marshaler {
-			return ec.marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *cursor.Cursor) graphql.Marshaler {
+			return ec.marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx, selections, v)
 		},
 		true,
 		false,
@@ -6068,8 +6069,8 @@ func (ec *executionContext) _TransactionPageInfo_endCursor(ctx context.Context, 
 			return obj.EndCursor, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Cursor) graphql.Marshaler {
-			return ec.marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *cursor.Cursor) graphql.Marshaler {
+			return ec.marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx, selections, v)
 		},
 		true,
 		false,
@@ -10156,13 +10157,13 @@ func (ec *executionContext) unmarshalNCreateTransactionInput2githubᚗcomᚋsuda
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, v any) (model.Cursor, error) {
-	var res model.Cursor
+func (ec *executionContext) unmarshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx context.Context, v any) (cursor.Cursor, error) {
+	var res cursor.Cursor
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, sel ast.SelectionSet, v model.Cursor) graphql.Marshaler {
+func (ec *executionContext) marshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx context.Context, sel ast.SelectionSet, v cursor.Cursor) graphql.Marshaler {
 	return v
 }
 
@@ -10835,16 +10836,16 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, v any) (*model.Cursor, error) {
+func (ec *executionContext) unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx context.Context, v any) (*cursor.Cursor, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(model.Cursor)
+	var res = new(cursor.Cursor)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, sel ast.SelectionSet, v *model.Cursor) graphql.Marshaler {
+func (ec *executionContext) marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋcursorᚐCursor(ctx context.Context, sel ast.SelectionSet, v *cursor.Cursor) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
