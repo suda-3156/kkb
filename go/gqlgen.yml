@@ -42,6 +42,10 @@ models:
     model:
       - github.com/suda-3156/kkb/go/internal/date.Date
 
+  Cursor:
+    model:
+      - github.com/suda-3156/kkb/go/internal/cursor.Cursor
+
   AccountBalance:
     fields:
       ledgerAccount:

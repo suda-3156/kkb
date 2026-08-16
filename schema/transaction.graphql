@@ -5,6 +5,11 @@ enum JournalEntryKind {
   CREDIT
 }
 
+enum TransactionOrder {
+  TRANSACTION_DATE_DESC
+  CREATED_AT_DESC
+}
+
 type JournalEntry {
   ledgerAccount: LedgerAccount!
   amount: Int!
@@ -23,12 +28,18 @@ type Transaction implements Node {
 type TransactionConnection {
   edges: [TransactionEdge]
   nodes: [Transaction]
-  pageInfo: PageInfo!
-  totalCount: Int!
+  pageInfo: TransactionPageInfo!
+}
+
+type TransactionPageInfo {
+  startCursor: Cursor
+  endCursor: Cursor
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
 }
 
 type TransactionEdge {
-  cursor: ID!
+  cursor: Cursor!
   node: Transaction!
 }
 
@@ -36,13 +47,16 @@ extend type Query {
   transaction(id: ID!): Transaction
 
   transactions(
+    # At most one of first and last. Omitting both reads the first 20.
+    # Either way the page size must be between 1 and 100.
     first: Int
     last: Int
     startDate: Date
     endDate: Date
-    # Cursor-based pagination; 'after' and 'before' depend on the 'createdAt' timestamp of the accounts.
-    after: ID
-    before: ID
+    orderBy: TransactionOrder!
+    # Opaque cursors contain the complete ordering tuple selected by orderBy.
+    after: Cursor
+    before: Cursor
   ): TransactionConnection!
 }
 

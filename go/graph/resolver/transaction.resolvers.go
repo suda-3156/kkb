@@ -10,6 +10,7 @@ import (
 
 	"github.com/suda-3156/kkb/go/graph"
 	"github.com/suda-3156/kkb/go/graph/model"
+	"github.com/suda-3156/kkb/go/internal/cursor"
 	"github.com/suda-3156/kkb/go/internal/dataloader"
 	"github.com/suda-3156/kkb/go/internal/date"
 	"github.com/suda-3156/kkb/go/internal/prid"
@@ -47,12 +48,13 @@ func (r *queryResolver) Transaction(ctx context.Context, id prid.ID) (*model.Tra
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) (*model.TransactionConnection, error) {
+func (r *queryResolver) Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *cursor.Cursor, before *cursor.Cursor) (*model.TransactionConnection, error) {
 	filter := &transaction.Filter{
 		First:     first,
 		After:     after,
 		Last:      last,
 		Before:    before,
+		Order:     orderBy,
 		StartDate: startDate,
 		EndDate:   endDate,
 	}

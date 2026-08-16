@@ -31,6 +31,8 @@ func TestErrorPresenter_Mapping(t *testing.T) {
 		{"invalid date format", date.ErrInvalidDateFormat, "INVALID_DATE"},
 		{"invalid date", date.ErrInvalidDate, "INVALID_DATE"},
 		{"invalid request", graph.ErrInvalidRequest, "INVALID_REQUEST"},
+		{"invalid transaction pagination", txn.ErrInvalidPagination, "INVALID_REQUEST"},
+		{"invalid transaction cursor", txn.ErrInvalidCursor, "INVALID_REQUEST"},
 		{"account not found", lac.ErrAccountNotFound, "ACCOUNT_NOT_FOUND"},
 		{"parent kind mismatch", lac.ErrParentKindMismatch, "PARENT_KIND_MISMATCH"},
 		{"name required", lac.ErrNameRequired, "NAME_REQUIRED"},

@@ -16,7 +16,7 @@ const config: CodegenConfig = {
         // skipTypename: false,
         // withHooks: true,
         documentMode: "documentNode",
-        scalars: { Date: "string", DateTime: "string" },
+        scalars: { Cursor: "string", Date: "string", DateTime: "string" },
       },
     },
   },
