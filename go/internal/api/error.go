@@ -27,7 +27,9 @@ func ErrorPresenter(ctx context.Context, err error) *gqlerror.Error {
 		}
 
 	// graphql layer
-	case errors.Is(err, graph.ErrInvalidRequest):
+	case errors.Is(err, graph.ErrInvalidRequest),
+		errors.Is(err, txn.ErrInvalidPagination),
+		errors.Is(err, txn.ErrInvalidCursor):
 		return &gqlerror.Error{
 			Message: "Invalid request",
 			Extensions: map[string]interface{}{

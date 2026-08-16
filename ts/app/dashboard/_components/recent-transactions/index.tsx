@@ -10,8 +10,8 @@ import { query } from "@/lib/apollo-client"
 import { type RecentTransactionItem, RecentTransactionList } from "./list"
 
 const DashboardRecentTransactionsDoc = graphql(/* GraphQL */ `
-  query DashboardRecentTransactions($last: Int!) {
-    transactions(last: $last) {
+  query DashboardRecentTransactions($first: Int!) {
+    transactions(first: $first, orderBy: CREATED_AT_DESC) {
       nodes {
         id
         date
@@ -74,7 +74,7 @@ const formatDate = (dateStr: string): string => {
 export const RecentTransactions = async () => {
   const { data } = await query<DashboardRecentTransactionsQuery>({
     query: DashboardRecentTransactionsDoc,
-    variables: { last: 10 },
+    variables: { first: 10 },
   })
 
   const items: RecentTransactionItem[] = (data?.transactions.nodes ?? [])

@@ -153,7 +153,7 @@ type ComplexityRoot struct {
 		SubscriptionCalendar    func(childComplexity int, year int32, month int32) int
 		Subscriptions           func(childComplexity int, includeCanceled *bool) int
 		Transaction             func(childComplexity int, id prid.ID) int
-		Transactions            func(childComplexity int, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) int
+		Transactions            func(childComplexity int, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *model.Cursor, before *model.Cursor) int
 		TrialBalance            func(childComplexity int, asOf date.Date) int
 	}
 
@@ -219,6 +219,13 @@ type ComplexityRoot struct {
 		Node   func(childComplexity int) int
 	}
 
+	TransactionPageInfo struct {
+		EndCursor       func(childComplexity int) int
+		HasNextPage     func(childComplexity int) int
+		HasPreviousPage func(childComplexity int) int
+		StartCursor     func(childComplexity int) int
+	}
+
 	TrialBalance struct {
 		Accounts func(childComplexity int) int
 		AsOf     func(childComplexity int) int
@@ -273,7 +280,7 @@ type QueryResolver interface {
 	Subscriptions(ctx context.Context, includeCanceled *bool) ([]*model.Subscription, error)
 	SubscriptionCalendar(ctx context.Context, year int32, month int32) ([]*model.SubscriptionCalendarEntry, error)
 	Transaction(ctx context.Context, id prid.ID) (*model.Transaction, error)
-	Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, after *prid.ID, before *prid.ID) (*model.TransactionConnection, error)
+	Transactions(ctx context.Context, first *int32, last *int32, startDate *date.Date, endDate *date.Date, orderBy model.TransactionOrder, after *model.Cursor, before *model.Cursor) (*model.TransactionConnection, error)
 }
 type SubscriptionResolver interface {
 	Occurrences(ctx context.Context, obj *model.Subscription, startDate *date.Date, endDate *date.Date) ([]*model.SubscriptionOccurrence, error)
@@ -847,7 +854,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.Transactions(childComplexity, args["first"].(*int32), args["last"].(*int32), args["startDate"].(*date.Date), args["endDate"].(*date.Date), args["after"].(*prid.ID), args["before"].(*prid.ID)), true
+		return e.ComplexityRoot.Query.Transactions(childComplexity, args["first"].(*int32), args["last"].(*int32), args["startDate"].(*date.Date), args["endDate"].(*date.Date), args["orderBy"].(model.TransactionOrder), args["after"].(*model.Cursor), args["before"].(*model.Cursor)), true
 	case "Query.trialBalance":
 		if e.ComplexityRoot.Query.TrialBalance == nil {
 			break
@@ -1101,6 +1108,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.TransactionEdge.Node(childComplexity), true
 
+	case "TransactionPageInfo.endCursor":
+		if e.ComplexityRoot.TransactionPageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionPageInfo.EndCursor(childComplexity), true
+	case "TransactionPageInfo.hasNextPage":
+		if e.ComplexityRoot.TransactionPageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionPageInfo.HasNextPage(childComplexity), true
+	case "TransactionPageInfo.hasPreviousPage":
+		if e.ComplexityRoot.TransactionPageInfo.HasPreviousPage == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionPageInfo.HasPreviousPage(childComplexity), true
+	case "TransactionPageInfo.startCursor":
+		if e.ComplexityRoot.TransactionPageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionPageInfo.StartCursor(childComplexity), true
+
 	case "TrialBalance.accounts":
 		if e.ComplexityRoot.TrialBalance.Accounts == nil {
 			break
@@ -1305,6 +1337,7 @@ schema {
 
 scalar DateTime
 scalar Date # 2006-01-02 format
+scalar Cursor
 interface Node {
   id: ID! # Public ID (pulid ID format)
 }
@@ -1558,6 +1591,11 @@ enum JournalEntryKind {
   CREDIT
 }
 
+enum TransactionOrder {
+  TRANSACTION_DATE_DESC
+  CREATED_AT_DESC
+}
+
 type JournalEntry {
   ledgerAccount: LedgerAccount!
   amount: Int!
@@ -1576,12 +1614,19 @@ type Transaction implements Node {
 type TransactionConnection {
   edges: [TransactionEdge]
   nodes: [Transaction]
-  pageInfo: PageInfo!
+  pageInfo: TransactionPageInfo!
   totalCount: Int!
 }
 
+type TransactionPageInfo {
+  startCursor: Cursor
+  endCursor: Cursor
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+}
+
 type TransactionEdge {
-  cursor: ID!
+  cursor: Cursor!
   node: Transaction!
 }
 
@@ -1593,9 +1638,10 @@ extend type Query {
     last: Int
     startDate: Date
     endDate: Date
-    # Cursor-based pagination; 'after' and 'before' depend on the 'createdAt' timestamp of the accounts.
-    after: ID
-    before: ID
+    orderBy: TransactionOrder!
+    # Opaque cursors contain the complete ordering tuple selected by orderBy.
+    after: Cursor
+    before: Cursor
   ): TransactionConnection!
 }
 
@@ -1930,6 +1976,20 @@ func (ec *executionContext) childFields_TransactionEdge(ctx context.Context, fie
 		return ec.fieldContext_TransactionEdge_node(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type TransactionEdge", field.Name)
+}
+
+func (ec *executionContext) childFields_TransactionPageInfo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "startCursor":
+		return ec.fieldContext_TransactionPageInfo_startCursor(ctx, field)
+	case "endCursor":
+		return ec.fieldContext_TransactionPageInfo_endCursor(ctx, field)
+	case "hasPreviousPage":
+		return ec.fieldContext_TransactionPageInfo_hasPreviousPage(ctx, field)
+	case "hasNextPage":
+		return ec.fieldContext_TransactionPageInfo_hasNextPage(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TransactionPageInfo", field.Name)
 }
 
 func (ec *executionContext) childFields_TrialBalance(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2519,22 +2579,30 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 		return nil, err
 	}
 	args["endDate"] = arg3
-	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "after",
-		func(ctx context.Context, v any) (*prid.ID, error) {
-			return ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy",
+		func(ctx context.Context, v any) (model.TransactionOrder, error) {
+			return ec.unmarshalNTransactionOrder2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionOrder(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["after"] = arg4
-	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "before",
-		func(ctx context.Context, v any) (*prid.ID, error) {
-			return ec.unmarshalOID2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, v)
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "after",
+		func(ctx context.Context, v any) (*model.Cursor, error) {
+			return ec.unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["before"] = arg5
+	args["after"] = arg5
+	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "before",
+		func(ctx context.Context, v any) (*model.Cursor, error) {
+			return ec.unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg6
 	return args, nil
 }
 
@@ -4861,7 +4929,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["last"].(*int32), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date), fc.Args["after"].(*prid.ID), fc.Args["before"].(*prid.ID))
+			return ec.Resolvers.Query().Transactions(ctx, fc.Args["first"].(*int32), fc.Args["last"].(*int32), fc.Args["startDate"].(*date.Date), fc.Args["endDate"].(*date.Date), fc.Args["orderBy"].(model.TransactionOrder), fc.Args["after"].(*model.Cursor), fc.Args["before"].(*model.Cursor))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TransactionConnection) graphql.Marshaler {
@@ -5867,8 +5935,8 @@ func (ec *executionContext) _TransactionConnection_pageInfo(ctx context.Context,
 			return obj.PageInfo, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
-			return ec.marshalNPageInfo2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPageInfo(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TransactionPageInfo) graphql.Marshaler {
+			return ec.marshalNTransactionPageInfo2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionPageInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5881,7 +5949,7 @@ func (ec *executionContext) fieldContext_TransactionConnection_pageInfo(_ contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_PageInfo(ctx, field)
+			return ec.childFields_TransactionPageInfo(ctx, field)
 		},
 	}
 	return fc, nil
@@ -5922,15 +5990,15 @@ func (ec *executionContext) _TransactionEdge_cursor(ctx context.Context, field g
 			return obj.Cursor, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v prid.ID) graphql.Marshaler {
-			return ec.marshalNID2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋpridᚐID(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v model.Cursor) graphql.Marshaler {
+			return ec.marshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
 func (ec *executionContext) fieldContext_TransactionEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("TransactionEdge", field, false, false, errors.New("field of type ID does not have child fields"))
+	return graphql.NewScalarFieldContext("TransactionEdge", field, false, false, errors.New("field of type Cursor does not have child fields"))
 }
 
 func (ec *executionContext) _TransactionEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.TransactionEdge) (ret graphql.Marshaler) {
@@ -5963,6 +6031,98 @@ func (ec *executionContext) fieldContext_TransactionEdge_node(_ context.Context,
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _TransactionPageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.TransactionPageInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionPageInfo_startCursor(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartCursor, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Cursor) graphql.Marshaler {
+			return ec.marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionPageInfo_startCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionPageInfo", field, false, false, errors.New("field of type Cursor does not have child fields"))
+}
+
+func (ec *executionContext) _TransactionPageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.TransactionPageInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionPageInfo_endCursor(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndCursor, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Cursor) graphql.Marshaler {
+			return ec.marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionPageInfo_endCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionPageInfo", field, false, false, errors.New("field of type Cursor does not have child fields"))
+}
+
+func (ec *executionContext) _TransactionPageInfo_hasPreviousPage(ctx context.Context, field graphql.CollectedField, obj *model.TransactionPageInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionPageInfo_hasPreviousPage(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasPreviousPage, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionPageInfo_hasPreviousPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionPageInfo", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _TransactionPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.TransactionPageInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionPageInfo_hasNextPage(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasNextPage, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionPageInfo_hasNextPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionPageInfo", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _TrialBalance_asOf(ctx context.Context, field graphql.CollectedField, obj *model.TrialBalance) (ret graphql.Marshaler) {
@@ -9406,6 +9566,59 @@ func (ec *executionContext) _TransactionEdge(ctx context.Context, sel ast.Select
 	return out
 }
 
+var transactionPageInfoImplementors = []string{"TransactionPageInfo"}
+
+func (ec *executionContext) _TransactionPageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.TransactionPageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, transactionPageInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TransactionPageInfo")
+		case "startCursor":
+			out.Values[i] = ec._TransactionPageInfo_startCursor(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "endCursor":
+			out.Values[i] = ec._TransactionPageInfo_endCursor(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "hasPreviousPage":
+			out.Values[i] = ec._TransactionPageInfo_hasPreviousPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hasNextPage":
+			out.Values[i] = ec._TransactionPageInfo_hasNextPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var trialBalanceImplementors = []string{"TrialBalance"}
 
 func (ec *executionContext) _TrialBalance(ctx context.Context, sel ast.SelectionSet, obj *model.TrialBalance) graphql.Marshaler {
@@ -9943,6 +10156,16 @@ func (ec *executionContext) unmarshalNCreateTransactionInput2githubᚗcomᚋsuda
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, v any) (model.Cursor, error) {
+	var res model.Cursor
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCursor2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, sel ast.SelectionSet, v model.Cursor) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNDate2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx context.Context, v any) (date.Date, error) {
 	var res date.Date
 	err := res.UnmarshalGQL(v)
@@ -10393,6 +10616,26 @@ func (ec *executionContext) marshalNTransactionConnection2ᚖgithubᚗcomᚋsuda
 	return ec._TransactionConnection(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNTransactionOrder2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionOrder(ctx context.Context, v any) (model.TransactionOrder, error) {
+	var res model.TransactionOrder
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTransactionOrder2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionOrder(ctx context.Context, sel ast.SelectionSet, v model.TransactionOrder) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNTransactionPageInfo2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.TransactionPageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TransactionPageInfo(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNTrialBalance2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTrialBalance(ctx context.Context, sel ast.SelectionSet, v model.TrialBalance) graphql.Marshaler {
 	return ec._TrialBalance(ctx, sel, &v)
 }
@@ -10590,6 +10833,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	_ = ctx
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, v any) (*model.Cursor, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Cursor)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCursor2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐCursor(ctx context.Context, sel ast.SelectionSet, v *model.Cursor) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalODate2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋinternalᚋdateᚐDate(ctx context.Context, v any) (*date.Date, error) {

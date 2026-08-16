@@ -124,15 +124,22 @@ type SubscriptionEntryInput struct {
 }
 
 type TransactionConnection struct {
-	Edges      []*TransactionEdge `json:"edges,omitempty"`
-	Nodes      []*Transaction     `json:"nodes,omitempty"`
-	PageInfo   *PageInfo          `json:"pageInfo"`
-	TotalCount int32              `json:"totalCount"`
+	Edges      []*TransactionEdge   `json:"edges,omitempty"`
+	Nodes      []*Transaction       `json:"nodes,omitempty"`
+	PageInfo   *TransactionPageInfo `json:"pageInfo"`
+	TotalCount int32                `json:"totalCount"`
 }
 
 type TransactionEdge struct {
-	Cursor prid.ID      `json:"cursor"`
+	Cursor Cursor       `json:"cursor"`
 	Node   *Transaction `json:"node"`
+}
+
+type TransactionPageInfo struct {
+	StartCursor     *Cursor `json:"startCursor,omitempty"`
+	EndCursor       *Cursor `json:"endCursor,omitempty"`
+	HasPreviousPage bool    `json:"hasPreviousPage"`
+	HasNextPage     bool    `json:"hasNextPage"`
 }
 
 type TrialBalance struct {
@@ -524,6 +531,61 @@ func (e *SubscriptionStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e SubscriptionStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type TransactionOrder string
+
+const (
+	TransactionOrderTransactionDateDesc TransactionOrder = "TRANSACTION_DATE_DESC"
+	TransactionOrderCreatedAtDesc       TransactionOrder = "CREATED_AT_DESC"
+)
+
+var AllTransactionOrder = []TransactionOrder{
+	TransactionOrderTransactionDateDesc,
+	TransactionOrderCreatedAtDesc,
+}
+
+func (e TransactionOrder) IsValid() bool {
+	switch e {
+	case TransactionOrderTransactionDateDesc, TransactionOrderCreatedAtDesc:
+		return true
+	}
+	return false
+}
+
+func (e TransactionOrder) String() string {
+	return string(e)
+}
+
+func (e *TransactionOrder) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TransactionOrder(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TransactionOrder", str)
+	}
+	return nil
+}
+
+func (e TransactionOrder) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TransactionOrder) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TransactionOrder) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

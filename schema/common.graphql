@@ -8,6 +8,7 @@ schema {
 
 scalar DateTime
 scalar Date # 2006-01-02 format
+scalar Cursor
 interface Node {
   id: ID! # Public ID (pulid ID format)
 }

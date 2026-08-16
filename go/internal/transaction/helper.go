@@ -80,6 +80,7 @@ func (m *TransactionManager) convertToGraph(ctx context.Context, txn *ent.Transa
 func (m *TransactionManager) convertToGraphConnection(
 	ctx context.Context,
 	txns []*ent.Transaction,
+	order graph.TransactionOrder,
 	hasPrevPage bool,
 	hasNextPage bool,
 ) (*graph.TransactionConnection, error) {
@@ -90,15 +91,23 @@ func (m *TransactionManager) convertToGraphConnection(
 		if err != nil {
 			return nil, err
 		}
+		cursor, err := encodeTransactionCursor(txn, order)
+		if err != nil {
+			return nil, err
+		}
 		result.Nodes = append(result.Nodes, converted)
+		result.Edges = append(result.Edges, &graph.TransactionEdge{
+			Cursor: cursor,
+			Node:   converted,
+		})
 	}
 
 	result.TotalCount = int32(len(result.Nodes)) //nolint:gosec // TODO: Consider integer overflow
 
-	result.PageInfo = &graph.PageInfo{}
+	result.PageInfo = &graph.TransactionPageInfo{}
 	if result.TotalCount > 0 {
-		result.PageInfo.StartCursor = &result.Nodes[0].ID
-		result.PageInfo.EndCursor = &result.Nodes[result.TotalCount-1].ID
+		result.PageInfo.StartCursor = &result.Edges[0].Cursor
+		result.PageInfo.EndCursor = &result.Edges[result.TotalCount-1].Cursor
 	}
 
 	result.PageInfo.HasPreviousPage = hasPrevPage

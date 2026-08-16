@@ -8,6 +8,12 @@ var (
 	ErrTransactionModified = errors.New("transaction has been modified by another process")
 )
 
+// Pagination validation
+var (
+	ErrInvalidPagination = errors.New("invalid transaction pagination")
+	ErrInvalidCursor     = errors.New("invalid transaction cursor")
+)
+
 // Journal entries validation
 var (
 	ErrEntriesRequired      = errors.New("at least 2 journal entries are required")
