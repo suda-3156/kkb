@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	ariga.io/atlas v1.3.0
-	cloud.google.com/go/cloudsqlconn v1.24.0
+	cloud.google.com/go/cloudsqlconn v1.25.0
 	cloud.google.com/go/kms v1.33.0
 	cloud.google.com/go/secretmanager v1.21.0
 	entgo.io/ent v0.14.6
@@ -27,6 +27,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.12.0 // indirect
 	cloud.google.com/go/longrunning v1.2.0 // indirect
+	cloud.google.com/go/sql v0.1.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
