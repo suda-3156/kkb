@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	ariga.io/atlas v1.3.0
-	cloud.google.com/go/cloudsqlconn v1.25.0
+	cloud.google.com/go/cloudsqlconn v1.25.1
 	cloud.google.com/go/kms v1.33.0
 	cloud.google.com/go/secretmanager v1.21.0
 	entgo.io/ent v0.14.6
