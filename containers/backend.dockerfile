@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 	go build -o /bin/job ./cmd/job/main.go
 
 # Step 3: Final image
-FROM gcr.io/distroless/static-debian12:latest-amd64@sha256:f0d7eda44aeaf164db7ac8e6672c1f8b0a79bd52c1990099c4250a3ef9f3d543
+FROM gcr.io/distroless/static-debian12:latest-amd64@sha256:6d635b323e6ab633016668144d38e368e2894bd824500369151573225078ee03
 
 COPY --from=builder /bin/server /bin/server
 COPY --from=builder /bin/job /bin/job
