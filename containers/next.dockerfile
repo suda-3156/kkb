@@ -2,7 +2,7 @@
 # Based on https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 # Adapted for this repo: bun (not pnpm), Next.js standalone output.
 
-FROM oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0 AS base
+FROM oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb AS base
 
 # --- Install dependencies only when needed ---
 FROM base AS deps
