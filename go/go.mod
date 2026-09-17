@@ -1,6 +1,6 @@
 module github.com/suda-3156/kkb/go
 
-go 1.26.4
+go 1.27.1
 
 require (
 	ariga.io/atlas v1.3.0
