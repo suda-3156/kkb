@@ -141,6 +141,7 @@ func (em *EncryptionManager) isRefreshNeeded(
 		}
 	}
 
+	// XXX: not good
 	for old := range em.allowed {
 		if _, ok := allowedIDs[old]; !ok {
 			delete(em.allowed, old)
