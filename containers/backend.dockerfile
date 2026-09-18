@@ -4,7 +4,7 @@
 # materialization) at the same version as the deployed API.
 
 # Step 1: Modules caching
-FROM golang:1.27-alpine@sha256:cf6fca6641884b8433441b2b0652976f975e1d0fdd26d177eaaf8596087f3125 AS modules
+FROM golang:1.27-alpine@sha256:4cb7ac979db5fcc41cae44b2227ba5ab8a51e8807f40d9ba4dee20a0ad960b5b AS modules
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
