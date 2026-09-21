@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	ariga.io/atlas v1.3.0
 	cloud.google.com/go/cloudsqlconn v1.25.2
-	cloud.google.com/go/kms v1.33.0
+	cloud.google.com/go/kms v1.34.0
 	cloud.google.com/go/secretmanager v1.21.0
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.94
