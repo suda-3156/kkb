@@ -153,10 +153,11 @@ cp .env.example .env.local
 source .env.local
 
 # Initialization
-mkdir -p ./db/docker/logs;
-touch ./db/docker/logs/mysql-error.log;
-touch ./db/docker/logs/mysql-slow.log;
-touch ./db/docker/logs/mysql-query.log;
+mkdir -p ./db/docker/logs
+touch ./db/docker/logs/mysql-error.log
+touch ./db/docker/logs/mysql-slow.log
+touch ./db/docker/logs/mysql-query.log
+
 docker compose up -d
 python go/tools/seed/data/generate_transactions.py
 mkdir -p go/local/secrets
