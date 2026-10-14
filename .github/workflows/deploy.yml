@@ -69,9 +69,16 @@ jobs:
     permissions:
       contents: read
 
+  versions-checks:
+    uses: ./.github/workflows/versions-checks.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+    permissions:
+      contents: read
+
   deploy:
     name: Build and deploy
-    needs: [verify-ref, go-checks, ts-checks]
+    needs: [verify-ref, go-checks, ts-checks, versions-checks]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

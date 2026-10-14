@@ -20,10 +20,18 @@ tasks:
     silent: true
 
   check:
-    desc: Run every check for both go and ts. Run this before calling work done
+    desc: Run every check for tool versions, go and ts. Run this before calling work done
     cmds:
+      - task: versions
       - task: go:check
       - task: ts:check
+    silent: true
+
+  versions:
+    desc: Check that versions restated outside mise.toml (go.mod, Dockerfiles) agree with it
+    cmds:
+      - python3 -m unittest discover -s scripts -q
+      - python3 scripts/check_tool_versions.py
     silent: true
 
   start:db:

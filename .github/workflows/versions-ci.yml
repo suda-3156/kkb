@@ -1,0 +1,22 @@
+name: Tool Versions CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  # See go-ci.yml for why this is a literal and not ${{ github.workflow }}.
+  group: versions-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # No files-changed gate: the check takes seconds, and the files it reads
+  # (mise.toml, go.mod, Dockerfiles) cut across every filter there.
+  checks:
+    uses: ./.github/workflows/versions-checks.yml
+    permissions:
+      contents: read

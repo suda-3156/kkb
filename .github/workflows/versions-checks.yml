@@ -1,0 +1,27 @@
+name: Tool Version Checks
+
+# Fails when a version restated outside mise.toml (go.mod, Dockerfiles) drifts
+# from it. See go-checks.yml for why there is no `concurrency` block here.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit, tag or branch to check. Defaults to the caller's ref."
+        type: string
+        required: false
+
+jobs:
+  versions:
+    name: Versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+
+      # The runner's own python3 is enough: the script uses only the standard
+      # library (tomllib needs 3.11+), so there is nothing to install.
+      - run: python3 -m unittest discover -s scripts
+      - run: python3 scripts/check_tool_versions.py
