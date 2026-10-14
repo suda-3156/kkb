@@ -55,3 +55,4 @@ jobs:
             ci:
               - .github/workflows/**/*
               - .github/actions/**/*
+              - mise.toml
