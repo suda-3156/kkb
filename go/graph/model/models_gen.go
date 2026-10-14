@@ -216,7 +216,7 @@ func (e *Granularity) UnmarshalGQL(v any) error {
 }
 
 func (e Granularity) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *Granularity) UnmarshalJSON(b []byte) error {
@@ -271,7 +271,7 @@ func (e *JournalEntryKind) UnmarshalGQL(v any) error {
 }
 
 func (e JournalEntryKind) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *JournalEntryKind) UnmarshalJSON(b []byte) error {
@@ -332,7 +332,7 @@ func (e *LedgerAccountKind) UnmarshalGQL(v any) error {
 }
 
 func (e LedgerAccountKind) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *LedgerAccountKind) UnmarshalJSON(b []byte) error {
@@ -387,7 +387,7 @@ func (e *OccurrenceOutcome) UnmarshalGQL(v any) error {
 }
 
 func (e OccurrenceOutcome) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *OccurrenceOutcome) UnmarshalJSON(b []byte) error {
@@ -462,7 +462,7 @@ func (e *SubscriptionColor) UnmarshalGQL(v any) error {
 }
 
 func (e SubscriptionColor) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *SubscriptionColor) UnmarshalJSON(b []byte) error {
@@ -519,7 +519,7 @@ func (e *SubscriptionStatus) UnmarshalGQL(v any) error {
 }
 
 func (e SubscriptionStatus) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *SubscriptionStatus) UnmarshalJSON(b []byte) error {
@@ -574,7 +574,7 @@ func (e *TransactionOrder) UnmarshalGQL(v any) error {
 }
 
 func (e TransactionOrder) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 func (e *TransactionOrder) UnmarshalJSON(b []byte) error {

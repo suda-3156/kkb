@@ -10092,10 +10092,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNChildAccountBreakdown2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐChildAccountBreakdown(ctx context.Context, sel ast.SelectionSet, v model.ChildAccountBreakdown) graphql.Marshaler {
-	return ec._ChildAccountBreakdown(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNChildAccountBreakdown2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐChildAccountBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.ChildAccountBreakdown) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -10155,10 +10151,6 @@ func (ec *executionContext) marshalNDateTime2timeᚐTime(ctx context.Context, se
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNDeleteTransactionPayload2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐDeleteTransactionPayload(ctx context.Context, sel ast.SelectionSet, v model.DeleteTransactionPayload) graphql.Marshaler {
-	return ec._DeleteTransactionPayload(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐDeleteTransactionPayload(ctx context.Context, sel ast.SelectionSet, v *model.DeleteTransactionPayload) graphql.Marshaler {
@@ -10288,10 +10280,6 @@ func (ec *executionContext) marshalNJournalEntryKind2githubᚗcomᚋsudaᚑ3156�
 	return v
 }
 
-func (ec *executionContext) marshalNLedgerAccount2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount(ctx context.Context, sel ast.SelectionSet, v model.LedgerAccount) graphql.Marshaler {
-	return ec._LedgerAccount(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccount(ctx context.Context, sel ast.SelectionSet, v *model.LedgerAccount) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -10300,10 +10288,6 @@ func (ec *executionContext) marshalNLedgerAccount2ᚖgithubᚗcomᚋsudaᚑ3156�
 		return graphql.Null
 	}
 	return ec._LedgerAccount(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNLedgerAccountConnection2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccountConnection(ctx context.Context, sel ast.SelectionSet, v model.LedgerAccountConnection) graphql.Marshaler {
-	return ec._LedgerAccountConnection(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNLedgerAccountConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐLedgerAccountConnection(ctx context.Context, sel ast.SelectionSet, v *model.LedgerAccountConnection) graphql.Marshaler {
@@ -10346,10 +10330,6 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkb
 	return ec._PageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPeriodAggregation2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregation(ctx context.Context, sel ast.SelectionSet, v model.PeriodAggregation) graphql.Marshaler {
-	return ec._PeriodAggregation(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNPeriodAggregation2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PeriodAggregation) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -10374,10 +10354,6 @@ func (ec *executionContext) marshalNPeriodAggregation2ᚖgithubᚗcomᚋsudaᚑ3
 		return graphql.Null
 	}
 	return ec._PeriodAggregation(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPeriodAggregationSeries2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregationSeries(ctx context.Context, sel ast.SelectionSet, v model.PeriodAggregationSeries) graphql.Marshaler {
-	return ec._PeriodAggregationSeries(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNPeriodAggregationSeries2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐPeriodAggregationSeries(ctx context.Context, sel ast.SelectionSet, v *model.PeriodAggregationSeries) graphql.Marshaler {
@@ -10414,10 +10390,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNSubscription2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscription(ctx context.Context, sel ast.SelectionSet, v model.Subscription) graphql.Marshaler {
-	return ec._Subscription(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNSubscription2ᚕᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐSubscriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subscription) graphql.Marshaler {
@@ -10553,10 +10525,6 @@ func (ec *executionContext) marshalNSubscriptionStatus2githubᚗcomᚋsudaᚑ315
 	return v
 }
 
-func (ec *executionContext) marshalNTransaction2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v model.Transaction) graphql.Marshaler {
-	return ec._Transaction(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNTransaction2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v *model.Transaction) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -10565,10 +10533,6 @@ func (ec *executionContext) marshalNTransaction2ᚖgithubᚗcomᚋsudaᚑ3156ᚋ
 		return graphql.Null
 	}
 	return ec._Transaction(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNTransactionConnection2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionConnection(ctx context.Context, sel ast.SelectionSet, v model.TransactionConnection) graphql.Marshaler {
-	return ec._TransactionConnection(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTransactionConnection2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTransactionConnection(ctx context.Context, sel ast.SelectionSet, v *model.TransactionConnection) graphql.Marshaler {
@@ -10599,10 +10563,6 @@ func (ec *executionContext) marshalNTransactionPageInfo2ᚖgithubᚗcomᚋsuda�
 		return graphql.Null
 	}
 	return ec._TransactionPageInfo(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNTrialBalance2githubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTrialBalance(ctx context.Context, sel ast.SelectionSet, v model.TrialBalance) graphql.Marshaler {
-	return ec._TrialBalance(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTrialBalance2ᚖgithubᚗcomᚋsudaᚑ3156ᚋkkbᚋgoᚋgraphᚋmodelᚐTrialBalance(ctx context.Context, sel ast.SelectionSet, v *model.TrialBalance) graphql.Marshaler {
