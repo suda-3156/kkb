@@ -1,6 +1,5 @@
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage"
 import {
   DEFAULT_SETTINGS,
   parseSettings,
@@ -17,7 +16,9 @@ import {
 
 // Hand-rolled instead of createJSONStorage so every read goes through parseSettings.
 // A localStorage value can be broken, so the result of JSON.parse is not trusted.
-const settingsStorage: SyncStorage<Settings> = {
+// jotai keeps SyncStorage out of its public exports, so the type is read off
+// atomWithStorage: Parameters takes the last overload, which is the synchronous one.
+const settingsStorage: NonNullable<Parameters<typeof atomWithStorage<Settings>>[2]> = {
   getItem: (key, initialValue) => {
     if (typeof window === "undefined") return initialValue
     return parseSettings(window.localStorage.getItem(key))
