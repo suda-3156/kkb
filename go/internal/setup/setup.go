@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/sethvargo/go-envconfig"
+	"github.com/sethvargo/go-envconfig/v2"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/database"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/keys"
 	"github.com/suda-3156/kkb/go/internal/infrastructure/secrets"
