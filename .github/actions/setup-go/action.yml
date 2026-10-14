@@ -1,21 +1,52 @@
 name: Setup Go
 description: >-
-  Set up Go from go/go.mod with module caching and download dependencies.
+  Install Go (and any extra tools) from mise.toml with module caching and
+  download dependencies.
   The repository must already be checked out: local actions are resolved from
   the workspace, so this cannot include the checkout step itself.
+
+inputs:
+  extra-tools:
+    description: >-
+      Space-separated mise.toml tools to install alongside Go, e.g.
+      "golangci-lint".
+    required: false
+    default: ""
 
 runs:
   using: composite
   steps:
-    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+    # mise.toml is the source of tool versions.
+    - id: mise
+      uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
       with:
-        go-version-file: "./go/go.mod"
-        cache-dependency-path: "./go/go.sum"
-        check-latest: true
-        cache: true
+        install_args: go ${{ inputs.extra-tools }}
+
+    # Without this, a go.mod that asks for a newer Go than mise.toml makes the
+    # go command download that toolchain itself, and CI silently stops using
+    # the mise.toml version. Failing loudly is the point.
+    - run: echo "GOTOOLCHAIN=local" >> "$GITHUB_ENV"
+      shell: bash
+
+    # actions/setup-go used to cache these; mise-action only caches the tools.
+    - id: go-env
+      run: |
+        echo "modcache=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
+        echo "buildcache=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+        echo "version=$(go env GOVERSION)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ steps.go-env.outputs.modcache }}
+          ${{ steps.go-env.outputs.buildcache }}
+        key: go-${{ runner.os }}-${{ steps.go-env.outputs.version }}-${{ hashFiles('go/go.sum') }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ steps.go-env.outputs.version }}-
 
     # No `go clean -modcache` afterwards: the runner is disposable, and clearing
-    # the module cache defeats the cache: true above, whose post step saves it.
+    # the module cache defeats the cache above, whose post step saves it.
     - run: go mod download
       shell: bash
       working-directory: ./go

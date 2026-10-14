@@ -1,13 +1,16 @@
 name: Setup Bun
 description: >-
-  Set up Bun and install the frontend dependencies.
+  Install Bun from mise.toml and install the frontend dependencies.
   The repository must already be checked out: local actions are resolved from
   the workspace, so this cannot include the checkout step itself.
 
 runs:
   using: composite
   steps:
-    - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+    # mise.toml is the source of tool versions.
+    - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+      with:
+        install_args: bun
 
     - run: bun install
       shell: bash
