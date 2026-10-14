@@ -1,7 +1,7 @@
 # Docker image for Migration Job
 
 # Step 1: Modules caching
-FROM golang:1.27-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS modules
+FROM golang:1.27.2-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS modules
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
