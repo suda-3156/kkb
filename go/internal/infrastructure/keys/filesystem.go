@@ -103,6 +103,9 @@ func (k *Filesystem) Encrypt(_ context.Context, keyID string, plaintext, aad []b
 	}
 
 	nonce := make([]byte, aesgcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, fmt.Errorf("failed to generate nonce: %w", err)
+	}
 	ciphertext := aesgcm.Seal(nonce, nonce, plaintext, aad)
 
 	// Prepend the key version to the ciphertext so we know which key to use for decryption.
