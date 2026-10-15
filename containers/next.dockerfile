@@ -28,7 +28,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
 # --- Production runner ---
-FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS runner
+FROM node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS runner
 WORKDIR /app
 
 # libc6-compat: some native deps expect glibc symbols on alpine.
