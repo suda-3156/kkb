@@ -1,6 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>suda-3156/renovate-config"],
+  "extends": [
+    "github>suda-3156/renovate-config",
+    "github>suda-3156/renovate-config:toolchain.json5"
+  ],
   "assignees": ["suda-3156"],
   "packageRules": [
     {
@@ -8,16 +11,6 @@
       "matchPackageNames": ["mysql"],
       "allowedVersions": "<9",
       "description": "Match Cloud SQL (MYSQL_8_4)"
-    },
-    {
-      "matchDepNames": ["go", "golang"],
-      "groupName": "go toolchain",
-      "description": "mise.toml go and the golang image must move together: scripts/check_tool_versions.py fails a PR that bumps only one, so neither would automerge"
-    },
-    {
-      "matchDepNames": ["bun", "oven/bun"],
-      "groupName": "bun",
-      "description": "mise.toml bun and the oven/bun image must move together, for the same reason as go"
     }
   ]
 }
