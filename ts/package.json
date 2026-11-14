@@ -42,8 +42,8 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@graphql-codegen/cli": "^7.4.6",
-    "@graphql-codegen/client-preset": "^6.2.3",
-    "@graphql-codegen/introspection": "^6.1.0",
+    "@graphql-codegen/client-preset": "^7.0.0",
+    "@graphql-codegen/introspection": "^7.0.0",
     "@parcel/watcher": "^2.6.0",
     "@tailwindcss/postcss": "^4.3.5",
     "@testing-library/dom": "10.4.2",
