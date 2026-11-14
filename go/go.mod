@@ -5,7 +5,7 @@ go 1.27.2
 require (
 	ariga.io/atlas v1.3.0
 	cloud.google.com/go/cloudsqlconn v1.26.0
-	cloud.google.com/go/kms v1.36.1
+	cloud.google.com/go/kms v1.37.0
 	cloud.google.com/go/secretmanager v1.24.0
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.95
@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.3.0 // indirect
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	cloud.google.com/go/iam v1.14.0 // indirect
-	cloud.google.com/go/longrunning v1.3.0 // indirect
+	cloud.google.com/go/longrunning v1.5.0 // indirect
 	cloud.google.com/go/monitoring v1.31.0 // indirect
 	cloud.google.com/go/sql v0.3.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
