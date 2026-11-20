@@ -10,7 +10,7 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.95
 	github.com/go-chi/cors v1.2.2
-	github.com/go-sql-driver/mysql v1.10.1
+	github.com/go-sql-driver/mysql v1.10.2
 	github.com/graph-gophers/dataloader/v7 v7.2.0
 	github.com/sethvargo/go-envconfig/v2 v2.0.0
 	github.com/testcontainers/testcontainers-go v0.45.0
