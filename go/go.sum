@@ -1,5 +1,5 @@
-ariga.io/atlas v1.3.0 h1:/ZQLypoRURfNO0VJmXUNz8k6lGoeJLDPlSOZOhxG/1U=
-ariga.io/atlas v1.3.0/go.mod h1:v8ltuOKxFAU8ZF33HNfQs1iRWKuP3hJfu+dU0VE5O0Y=
+ariga.io/atlas v1.4.0 h1:ajHbgC62fv8svTV13o7sxWRtezi0ZrwQclu1d49fAxA=
+ariga.io/atlas v1.4.0/go.mod h1:eoZW+YoZ7Dt1O8BVl94u9TjF9eSLCQ7EY72EK2+aGm4=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.123.0 h1:2NAUJwPR47q+E35uaJeYoNhuNEM9kM8SjgRgdeOJUSE=
 cloud.google.com/go v0.123.0/go.mod h1:xBoMV08QcqUGuPW65Qfm1o9Y4zKZBpGS+7bImXLTAZU=
