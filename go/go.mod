@@ -3,7 +3,7 @@ module github.com/suda-3156/kkb/go
 go 1.27.2
 
 require (
-	ariga.io/atlas v1.3.0
+	ariga.io/atlas v1.4.0
 	cloud.google.com/go/cloudsqlconn v1.27.0
 	cloud.google.com/go/kms v1.37.0
 	cloud.google.com/go/secretmanager v1.24.0
