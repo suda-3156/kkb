@@ -16,7 +16,7 @@
         "date-fns": "^4.4.0",
         "graphql": "^17.1.0",
         "jotai": "^3.0.2",
-        "lucide-react": "^1.77.0",
+        "lucide-react": "^1.80.0",
         "motion": "^14.14.0",
         "next": "^16.4.6",
         "next-themes": "^0.4.6",
@@ -1104,7 +1104,7 @@
 
     "lru-cache": ["lru-cache@11.5.3", "", {}, "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg=="],
 
-    "lucide-react": ["lucide-react@1.77.0", "", { "peerDependencies": { "@types/react": "*", "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" }, "optionalPeers": ["@types/react"] }, "sha512-VS6sOi8ZUH1qm6swBL/tpI4xAhB6pFTdHvw3pfCJD+DaTJwpyynVzfOS6mdyMZ+OCdY/GMSQbqinOMOPbNSrQA=="],
+    "lucide-react": ["lucide-react@1.83.0", "", { "peerDependencies": { "@types/react": "*", "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" }, "optionalPeers": ["@types/react"] }, "sha512-bYosQeQphbbNtdWT4DvY1/wlen2CcsZEQI/pMykcQ8twiu+T7m7cY7s8hOTJiMEAs3nUxCkeCxTe4ohczS5jhA=="],
 
     "lz-string": ["lz-string@1.5.0", "", { "bin": { "lz-string": "bin/bin.js" } }, "sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ=="],
 
